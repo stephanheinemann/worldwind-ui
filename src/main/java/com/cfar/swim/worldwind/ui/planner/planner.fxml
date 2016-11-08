@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="768.0" prefWidth="1366.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.cfar.swim.worldwind.ui.planner.PlannerPresenter">
+   <children>
+      <MenuBar prefHeight="29.0" prefWidth="1366.0" AnchorPane.topAnchor="0.0">
+        <menus>
+          <Menu mnemonicParsing="false" text="Planner">
+            <items>
+                  <MenuItem mnemonicParsing="false" text="Plan" />
+                  <MenuItem mnemonicParsing="false" text="Execute" />
+                  <MenuItem mnemonicParsing="false" text="Exit" />
+            </items>
+          </Menu>
+            <Menu mnemonicParsing="false" text="Setup">
+              <items>
+                <MenuItem mnemonicParsing="false" text="Aircraft" />
+                  <MenuItem mnemonicParsing="false" text="Environment" />
+                  <MenuItem mnemonicParsing="false" text="Planner" />
+                  <MenuItem mnemonicParsing="false" text="SWIM" />
+              </items>
+            </Menu>
+            <Menu mnemonicParsing="false" text="Statistics">
+              <items>
+                <MenuItem mnemonicParsing="false" text="View" />
+              </items>
+            </Menu>
+          <Menu mnemonicParsing="false" text="Help">
+            <items>
+              <MenuItem mnemonicParsing="false" text="About" />
+            </items>
+          </Menu>
+        </menus>
+      </MenuBar>
+      <SplitPane dividerPositions="0.7077363896848138" layoutY="30.0" orientation="VERTICAL" prefHeight="714.0" prefWidth="1366.0">
+        <items>
+          <AnchorPane fx:id="worldPane" minHeight="0.0" minWidth="0.0" prefHeight="500.0" prefWidth="1366.0" />
+            <SplitPane dividerPositions="0.25, 0.5" prefHeight="160.0" prefWidth="1366.0">
+               <items>
+                  <AnchorPane />
+                  <AnchorPane />
+                  <AnchorPane fx:id="planPane" />
+               </items>
+            </SplitPane>
+        </items>
+      </SplitPane>
+      <ProgressBar layoutY="744.0" prefHeight="29.0" prefWidth="1366.0" progress="0.0" />
+   </children>
+</AnchorPane>

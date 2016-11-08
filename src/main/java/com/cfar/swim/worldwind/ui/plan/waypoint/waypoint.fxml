@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane prefHeight="200.0" prefWidth="339.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.cfar.swim.worldwind.ui.plan.waypoint.WaypointPresenter">
+   <children>
+      <Label layoutX="49.0" layoutY="44.0" prefHeight="15.0" prefWidth="54.0" text="Latitude" textAlignment="RIGHT" />
+      <Label layoutX="52.0" layoutY="111.0" text="Altitude" />
+      <Label layoutX="40.0" layoutY="75.0" prefHeight="21.0" prefWidth="65.0" text="Longitude" />
+      <TextField fx:id="latitude" layoutX="115.0" layoutY="38.0" />
+      <TextField fx:id="longitude" layoutX="115.0" layoutY="72.0" />
+      <TextField fx:id="altitude" layoutX="115.0" layoutY="105.0" />
+      <Label layoutX="289.0" layoutY="36.0" text="°" />
+      <Label layoutX="289.0" layoutY="70.0" text="°" />
+      <Label layoutX="290.0" layoutY="110.0" text="m" />
+      <Button layoutX="252.0" layoutY="161.0" mnemonicParsing="false" text="Ok" />
+      <Button layoutX="177.0" layoutY="161.0" mnemonicParsing="false" text="Cancel" />
+   </children>
+</AnchorPane>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<TitledPane prefHeight="200.0" prefWidth="800.0" text="Plan" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.cfar.swim.worldwind.ui.plan.PlanPresenter">
+   <content>
+      <TreeTableView fx:id="plan" tableMenuButtonVisible="true">
+        <columns>
+          <TreeTableColumn fx:id="positionColumn" minWidth="50.0" prefWidth="100.0" text="Position" />
+            <TreeTableColumn fx:id="costsColumn" minWidth="50.0" prefWidth="100.0" text="Costs" />
+            <TreeTableColumn fx:id="distanceToGoColumn" minWidth="50.0" prefWidth="100.0" text="DTG" />
+            <TreeTableColumn fx:id="timeToGoColumn" minWidth="50.0" prefWidth="100.0" text="TTG" />
+          <TreeTableColumn fx:id="estimatedTimeOverColumn" minWidth="50.0" prefWidth="100.0" text="ETO" />
+            <TreeTableColumn fx:id="actualTimeOverColumn" minWidth="50.0" prefWidth="100.0" text="ATO" />
+        </columns>
+         <contextMenu>
+            <ContextMenu>
+              <items>
+                <MenuItem mnemonicParsing="false" onAction="#addWaypoint" text="Add" />
+                  <MenuItem mnemonicParsing="false" onAction="#removeWaypoint" text="Remove" />
+              </items>
+            </ContextMenu>
+         </contextMenu>
+      </TreeTableView>
+   </content>
+</TitledPane>
