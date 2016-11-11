@@ -6,31 +6,50 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import javax.imageio.ImageIO;
+import javax.inject.Inject;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import com.cfar.swim.worldwind.render.annotations.ControlAnnotation;
+
 import gov.nasa.worldwind.BasicModel;
-import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.awt.WorldWindowGLJPanel;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.layers.AnnotationLayer;
 import gov.nasa.worldwind.layers.ViewControlsLayer;
 import gov.nasa.worldwind.layers.ViewControlsSelectListener;
 import gov.nasa.worldwind.util.StatusBar;
-import gov.nasa.worldwindx.examples.util.ButtonAnnotation;
 import javafx.embed.swing.SwingNode;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.layout.AnchorPane;
 
 public class WorldPresenter implements Initializable {
-
+	
+	@Inject private String aircraftIcon;
+	@Inject private String swimIcon;
+	@Inject private String environmentIcon;
+	@Inject private String poiIcon;
+	@Inject private String plannerIcon;
+	@Inject private String takeoffIcon;
+	@Inject private String landIcon;
+	
+	public static final String ACTION_AICRAFT_LOAD = "WorldPresenter.ActionCommand.AircraftLoad";
+	public static final String ACTION_AIRCAFT_SETUP = "WorldPresenter.ActionCommand.AircraftSetup";
+	public static final String ACTION_SWIM_LOAD = "WorldPresenter.ActionCommand.SwimLoad";
+	public static final String ACTION_SWIM_SETUP = "WorldPresenter.ActionCommand.SwimSetup";
+	public static final String ACTION_ENVIRONMENT_ENCLOSE = "WorldPresenter.ActionCommand.EnvironmentEnclose";
+	public static final String ACTION_ENVIRONMENT_SETUP = "WorldPresenter.ActionCommand.EnvironmentSetup";
+	public static final String ACTION_POI_EDIT = "WorldPresenter.ActionCommand.PointOfInterestEdit";
+	public static final String ACTION_POI_VIEW = "WorldPresenter.ActionCommand.PointOfInterestView";
+	public static final String ACTION_PLANNER_PLAN = "WorldPresenter.ActionCommand.PlannerPlan";
+	public static final String ACTION_PLANNER_SETUP = "WorldPresenter.ActionCommand.PlannerSetup";
+	public static final String ACTION_TAKEOFF = "WorldPresenter.ActionCommand.TakeOff";
+	public static final String ACTION_LAND = "WorldPresenter.ActionCommand.Land";
+	
 	@FXML
 	AnchorPane worldNodePane;
 	
@@ -62,118 +81,111 @@ public class WorldPresenter implements Initializable {
         		BufferedImage image = iconRetriever.createIcon("G-GPGPO--------", null);
         		*/
         		
-        		BufferedImage droneImage = null;
-        		BufferedImage swimImage = null;
-        		BufferedImage envImage = null;
-        		BufferedImage editImage = null;
-        		BufferedImage planImage = null;
-        		BufferedImage takeoffImage = null;
-        		BufferedImage landImage = null;
         		
-        		try {
-        			droneImage = ImageIO.read(this.getClass().getResourceAsStream("/icons/quadcopter-64x64.png"));
-        			swimImage = ImageIO.read(this.getClass().getResourceAsStream("/icons/swim-64x64.png"));
-        			envImage = ImageIO.read(this.getClass().getResourceAsStream("/icons/environment-64x64.png"));
-        			editImage = ImageIO.read(this.getClass().getResourceAsStream("/icons/edit-64x64.png"));
-					planImage = ImageIO.read(this.getClass().getResourceAsStream("/icons/plan-64x64.png"));
-					takeoffImage = ImageIO.read(this.getClass().getResourceAsStream("/icons/quadcopter-takeoff-64x64.png"));
-					landImage = ImageIO.read(this.getClass().getResourceAsStream("/icons/quadcopter-land-64x64.png"));
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
-        		
-        		ButtonAnnotation droneButton = new ButtonAnnotation(droneImage, droneImage);
-        		droneButton.getAttributes().setFrameShape(AVKey.SHAPE_CIRCLE);
-                droneButton.getAttributes().setDrawOffset(new Point(425, 25));
-                droneButton.addActionListener(new ActionListener() {
+        		ControlAnnotation aircraftControl = new ControlAnnotation(aircraftIcon);
+                aircraftControl.getAttributes().setDrawOffset(new Point(425, 25));
+                aircraftControl.setPrimaryActionCommand(WorldPresenter.ACTION_AICRAFT_LOAD);
+                aircraftControl.setSecondaryActionCommand(WorldPresenter.ACTION_AIRCAFT_SETUP);
+                aircraftControl.addActionListener(new ActionListener() {
 
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						System.out.println("pressed....");
+						System.out.println("pressed...." + e.getActionCommand());
 					}
                 	
                 });
         		
-                ButtonAnnotation swimButton = new ButtonAnnotation(swimImage, swimImage);
-        		swimButton.getAttributes().setFrameShape(AVKey.SHAPE_CIRCLE);
-                swimButton.getAttributes().setDrawOffset(new Point(500, 25));
-                swimButton.addActionListener(new ActionListener() {
+                ControlAnnotation swimControl = new ControlAnnotation(swimIcon);
+                swimControl.getAttributes().setDrawOffset(new Point(500, 25));
+                swimControl.setPrimaryActionCommand(WorldPresenter.ACTION_SWIM_LOAD);
+                swimControl.setSecondaryActionCommand(WorldPresenter.ACTION_SWIM_SETUP);
+                swimControl.addActionListener(new ActionListener() {
 
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						System.out.println("pressed....");
+						System.out.println("pressed...." + e.getActionCommand());
 					}
                 	
                 });
                 
-        		ButtonAnnotation envButton = new ButtonAnnotation(envImage, envImage);
-        		envButton.getAttributes().setFrameShape(AVKey.SHAPE_CIRCLE);
-                envButton.getAttributes().setDrawOffset(new Point(575, 25));
-                envButton.addActionListener(new ActionListener() {
+        		ControlAnnotation environmentControl = new ControlAnnotation(environmentIcon);
+                environmentControl.getAttributes().setDrawOffset(new Point(575, 25));
+                environmentControl.setPrimaryActionCommand(WorldPresenter.ACTION_ENVIRONMENT_ENCLOSE);
+                environmentControl.setSecondaryActionCommand(ACTION_ENVIRONMENT_SETUP);
+                environmentControl.addActionListener(new ActionListener() {
 
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						System.out.println("pressed....");
+						System.out.println("pressed...." + e.getActionCommand());
 					}
                 	
                 });
                 
-                ButtonAnnotation editButton = new ButtonAnnotation(editImage, editImage);
-        		editButton.getAttributes().setFrameShape(AVKey.SHAPE_CIRCLE);
-                editButton.getAttributes().setDrawOffset(new Point(650, 25));
-                editButton.addActionListener(new ActionListener() {
+                ControlAnnotation poiControl = new ControlAnnotation(poiIcon);
+                poiControl.getAttributes().setDrawOffset(new Point(650, 25));
+                poiControl.setPrimaryActionCommand(WorldPresenter.ACTION_POI_EDIT);
+                poiControl.setSecondaryActionCommand(WorldPresenter.ACTION_POI_VIEW);
+                poiControl.addActionListener(new ActionListener() {
 
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						System.out.println("pressed....");
+						System.out.println("pressed...."  + e.getActionCommand());
 					}
                 	
                 });
                 
-                ButtonAnnotation planButton = new ButtonAnnotation(planImage, planImage);
-        		planButton.getAttributes().setFrameShape(AVKey.SHAPE_CIRCLE);
-                planButton.getAttributes().setDrawOffset(new Point(725, 25));
-                planButton.addActionListener(new ActionListener() {
+                ControlAnnotation plannerControl = new ControlAnnotation(plannerIcon);
+                plannerControl.getAttributes().setDrawOffset(new Point(725, 25));
+                plannerControl.setPrimaryActionCommand(WorldPresenter.ACTION_PLANNER_PLAN);
+                plannerControl.setSecondaryActionCommand(WorldPresenter.ACTION_PLANNER_SETUP);
+                plannerControl.addActionListener(new ActionListener() {
 
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						System.out.println("pressed....");
+						System.out.println("pressed...." + e.getActionCommand());
 					}
                 	
                 });
                 
-                ButtonAnnotation takeoffButton = new ButtonAnnotation(takeoffImage, takeoffImage);
-        		takeoffButton.getAttributes().setFrameShape(AVKey.SHAPE_CIRCLE);
-                takeoffButton.getAttributes().setDrawOffset(new Point(800, 25));
-                takeoffButton.addActionListener(new ActionListener() {
+                ControlAnnotation takeoffControl = new ControlAnnotation(takeoffIcon);
+                takeoffControl.getAttributes().setDrawOffset(new Point(800, 25));
+                takeoffControl.setPrimaryActionCommand(WorldPresenter.ACTION_TAKEOFF);
+                takeoffControl.addActionListener(new ActionListener() {
 
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						System.out.println("pressed....");
+						System.out.println("pressed...." + e.getActionCommand());
 					}
                 	
                 });
                 
-                ButtonAnnotation landButton = new ButtonAnnotation(landImage, landImage);
-        		landButton.getAttributes().setFrameShape(AVKey.SHAPE_CIRCLE);
-                landButton.getAttributes().setDrawOffset(new Point(875, 25));
-                landButton.addActionListener(new ActionListener() {
+                ControlAnnotation landControl = new ControlAnnotation(landIcon);
+                landControl.getAttributes().setDrawOffset(new Point(875, 25));
+                landControl.setPrimaryActionCommand(WorldPresenter.ACTION_LAND);
+                landControl.addActionListener(new ActionListener() {
 
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						System.out.println("pressed....");
+						System.out.println("pressed...."  + e.getActionCommand());
 					}
                 	
                 });
                 
                 AnnotationLayer annotationLayer = new AnnotationLayer();
-                annotationLayer.addAnnotation(droneButton);
-                annotationLayer.addAnnotation(swimButton);
-                annotationLayer.addAnnotation(envButton);
-                annotationLayer.addAnnotation(editButton);
-                annotationLayer.addAnnotation(planButton);
-                annotationLayer.addAnnotation(takeoffButton);
-                annotationLayer.addAnnotation(landButton);
+                annotationLayer.addAnnotation(aircraftControl);
+                wwd.addSelectListener(aircraftControl);
+                annotationLayer.addAnnotation(swimControl);
+                wwd.addSelectListener(swimControl);
+                annotationLayer.addAnnotation(environmentControl);
+                wwd.addSelectListener(environmentControl);
+                annotationLayer.addAnnotation(poiControl);
+                wwd.addSelectListener(poiControl);
+                annotationLayer.addAnnotation(plannerControl);
+                wwd.addSelectListener(plannerControl);
+                annotationLayer.addAnnotation(takeoffControl);
+                wwd.addSelectListener(takeoffControl);
+                annotationLayer.addAnnotation(landControl);
+                wwd.addSelectListener(landControl);
                 wwd.getModel().getLayers().add(annotationLayer);
         		
         		worldPanel.add(wwd, BorderLayout.PAGE_START);
