@@ -206,12 +206,12 @@ public class WorldPresenter implements Initializable {
 			if (null != clickedPosition) {
 				Waypoint waypoint = new Waypoint(clickedPosition);
 				waypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, waypoint, null)));
-				waypoint.getDepiction().setModifier(SymbologyConstants.UNIQUE_DESIGNATION, waypoint.getDesignator());
 				waypoint.getDepiction().setVisible(true);
-				planningLayer.addRenderable(waypoint);
 				
-				Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getScenario("default");
+				Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getDefaultScenario();
 				scenario.addPointOfInterest(waypoint);
+				
+				planningLayer.addRenderable(waypoint);
 			}
 		}
 	}

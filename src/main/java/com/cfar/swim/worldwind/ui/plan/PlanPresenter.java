@@ -64,7 +64,7 @@ public class PlanPresenter implements Initializable {
 		
 		this.designationColumn.setCellValueFactory(
 			(TreeTableColumn.CellDataFeatures<Waypoint, String> param) ->
-			new ReadOnlyStringWrapper(param.getValue().getValue().getDesignator()));
+			new ReadOnlyStringWrapper(param.getValue().getValue().getId()));
 		
 		this.locationColumn.setCellValueFactory(
 			(TreeTableColumn.CellDataFeatures<Waypoint, String> param) ->
@@ -76,7 +76,7 @@ public class PlanPresenter implements Initializable {
 		this.costsColumn.setCellValueFactory(
 				new TreeItemPropertyValueFactory<Waypoint, Double>("g"));
 		
-		Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getScenario("default");
+		Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getDefaultScenario();
 		scenario.addPointsOfInterestChangeListener(new PointsOfInterestChangeListener());
 	}
 
