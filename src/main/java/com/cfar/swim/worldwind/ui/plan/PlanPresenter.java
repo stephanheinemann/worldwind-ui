@@ -100,6 +100,7 @@ public class PlanPresenter implements Initializable {
 	
 	private class PointsOfInterestChangeListener implements PropertyChangeListener {
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			plan.getRoot().getChildren().clear();
