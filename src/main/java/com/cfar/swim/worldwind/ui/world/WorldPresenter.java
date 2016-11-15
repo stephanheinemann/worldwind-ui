@@ -1,6 +1,7 @@
 package com.cfar.swim.worldwind.ui.world;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -15,16 +16,20 @@ import javax.swing.SwingUtilities;
 
 import com.cfar.swim.worldwind.planning.Waypoint;
 import com.cfar.swim.worldwind.render.annotations.ControlAnnotation;
-import com.cfar.swim.worldwind.session.Session;
+import com.cfar.swim.worldwind.session.Scenario;
+import com.cfar.swim.worldwind.session.SessionManager;
+import com.cfar.swim.worldwind.ui.Main;
 import com.cfar.swim.worldwind.util.Depiction;
 
 import gov.nasa.worldwind.BasicModel;
+import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.awt.WorldWindowGLJPanel;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.layers.AnnotationLayer;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import gov.nasa.worldwind.layers.ViewControlsLayer;
 import gov.nasa.worldwind.layers.ViewControlsSelectListener;
+import gov.nasa.worldwind.render.ScreenAnnotation;
 import gov.nasa.worldwind.symbology.SymbologyConstants;
 import gov.nasa.worldwind.symbology.milstd2525.MilStd2525GraphicFactory;
 import gov.nasa.worldwind.util.StatusBar;
@@ -63,10 +68,9 @@ public class WorldPresenter implements Initializable {
 	SwingNode worldNode;
 
 	WorldModel worldModel = new WorldModel();
-	
-	Session worldSession = new Session(this.getClass().getName());
-	WorldWindowGLJPanel wwd = null;
+	WorldWindowGLJPanel wwd = new WorldWindowGLJPanel();
 	AnnotationLayer controlLayer = new AnnotationLayer();
+	AnnotationLayer statusLayer = new AnnotationLayer();
 	RenderableLayer planningLayer = new RenderableLayer();
 	MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
 	
@@ -81,8 +85,7 @@ public class WorldPresenter implements Initializable {
 		public void run() {
 			JPanel worldPanel = new JPanel(new BorderLayout());
 			
-			// create world window
-			wwd = new WorldWindowGLJPanel();
+			// initialize world window
 			wwd.setPreferredSize(new java.awt.Dimension(1366, 480));
 			wwd.setModel(new BasicModel());
 			
@@ -136,7 +139,6 @@ public class WorldPresenter implements Initializable {
 			landControl.setSecondaryActionCommand(WorldPresenter.ACTION_NONE);
 			landControl.addActionListener(new LandControlListener());
 			
-			controlLayer = new AnnotationLayer();
 			controlLayer.addAnnotation(aircraftControl);
 			wwd.addSelectListener(aircraftControl);
 			controlLayer.addAnnotation(swimControl);
@@ -153,7 +155,20 @@ public class WorldPresenter implements Initializable {
 			wwd.addSelectListener(landControl);
 			wwd.getModel().getLayers().add(controlLayer);
 			
-			// set layout
+			// add on-screen status
+			ScreenAnnotation statusAnnotation = new ScreenAnnotation("----------", new Point(650, 400));
+			statusAnnotation.setAlwaysOnTop(true);
+			statusAnnotation.getAttributes().setAdjustWidthToText("----------");
+			statusAnnotation.getAttributes().setTextAlign(AVKey.CENTER);
+			statusAnnotation.getAttributes().setTextColor(Color.BLACK);
+			statusAnnotation.getAttributes().setBackgroundColor(Color.LIGHT_GRAY);
+			statusAnnotation.getAttributes().setBorderColor(Color.BLACK);
+			statusAnnotation.getAttributes().setOpacity(0.5d);
+			statusAnnotation.setText(WorldMode.VIEW.toString());
+			statusLayer.addAnnotation(statusAnnotation);
+			wwd.getModel().getLayers().add(statusLayer);
+			
+			// set world panel / node layout
 			worldPanel.add(wwd, BorderLayout.PAGE_START);
 			
 			StatusBar statusBar = new StatusBar();
@@ -191,9 +206,12 @@ public class WorldPresenter implements Initializable {
 			if (null != clickedPosition) {
 				Waypoint waypoint = new Waypoint(clickedPosition);
 				waypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, waypoint, null)));
+				waypoint.getDepiction().setModifier(SymbologyConstants.UNIQUE_DESIGNATION, waypoint.getDesignator());
 				waypoint.getDepiction().setVisible(true);
-				waypoint.getDepiction().setModifier(SymbologyConstants.UNIQUE_DESIGNATION, "?");
 				planningLayer.addRenderable(waypoint);
+				
+				Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getScenario("default");
+				scenario.addPointOfInterest(waypoint);
 			}
 		}
 	}
@@ -236,9 +254,11 @@ public class WorldPresenter implements Initializable {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_POI_EDIT:
 				worldModel.setMode(WorldMode.POI);
+				statusLayer.getAnnotations().iterator().next().setText(WorldMode.POI.toString());
 				break;
 			default:
 				worldModel.setMode(WorldMode.VIEW);
+				statusLayer.getAnnotations().iterator().next().setText(WorldMode.VIEW.toString());
 			}
 			System.out.println("pressed...." + e.getActionCommand());
 		}

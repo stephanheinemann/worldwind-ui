@@ -3,6 +3,7 @@ package com.cfar.swim.worldwind.ui.planner;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.ui.plan.PlanView;
 import com.cfar.swim.worldwind.ui.world.WorldView;
 
@@ -12,7 +13,7 @@ import javafx.scene.Parent;
 import javafx.scene.layout.AnchorPane;
 
 public class PlannerPresenter implements Initializable {
-
+	
 	@FXML
 	private AnchorPane worldPane;
 	

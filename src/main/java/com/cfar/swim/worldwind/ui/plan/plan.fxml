@@ -9,7 +9,9 @@
    <content>
       <TreeTableView fx:id="plan" tableMenuButtonVisible="true">
         <columns>
-          <TreeTableColumn fx:id="positionColumn" minWidth="50.0" prefWidth="100.0" text="Position" />
+            <TreeTableColumn fx:id="designationColumn" minWidth="50.0" prefWidth="100.0" text="Designation" />
+          <TreeTableColumn fx:id="locationColumn" minWidth="50.0" prefWidth="100.0" text="Location" />
+            <TreeTableColumn fx:id="altitudeColumn" minWidth="50.0" prefWidth="100.0" text="Altitude" />
             <TreeTableColumn fx:id="costsColumn" minWidth="50.0" prefWidth="100.0" text="Costs" />
             <TreeTableColumn fx:id="distanceToGoColumn" minWidth="50.0" prefWidth="100.0" text="DTG" />
             <TreeTableColumn fx:id="timeToGoColumn" minWidth="50.0" prefWidth="100.0" text="TTG" />

@@ -1,9 +1,14 @@
 package com.cfar.swim.worldwind.ui.plan;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.net.URL;
 import java.util.ResourceBundle;
 
 import com.cfar.swim.worldwind.planning.Waypoint;
+import com.cfar.swim.worldwind.session.Scenario;
+import com.cfar.swim.worldwind.session.SessionManager;
+import com.cfar.swim.worldwind.ui.Main;
 import com.cfar.swim.worldwind.ui.plan.waypoint.WaypointView;
 
 import gov.nasa.worldwind.geom.Angle;
@@ -13,7 +18,6 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableColumn;
@@ -28,13 +32,19 @@ public class PlanPresenter implements Initializable {
 	private TreeTableView<Waypoint> plan;
 	
 	@FXML
-	private TreeTableColumn<Waypoint, String> positionColumn;
+	private TreeTableColumn<Waypoint, String> designationColumn;
+	
+	@FXML
+	private TreeTableColumn<Waypoint, String> locationColumn;
+	
+	@FXML
+	private TreeTableColumn<Waypoint, Double> altitudeColumn;
 	
 	@FXML
 	private TreeTableColumn<Waypoint, Double> costsColumn;
 	
 	@FXML
-	private TreeTableColumn<Waypoint, String> distanceToGoColumn;
+	private TreeTableColumn<Waypoint, Double> distanceToGoColumn;
 	
 	@FXML
 	private TreeTableColumn<Waypoint, String> timeToGoColumn;
@@ -50,13 +60,24 @@ public class PlanPresenter implements Initializable {
 		LatLon latlon = new LatLon(Angle.ZERO, Angle.ZERO);
 		Waypoint waypoint = new Waypoint(new Position(latlon, 0));
 		plan.setRoot(new TreeItem<Waypoint>(waypoint));
+		plan.setShowRoot(false);
 		
-		this.positionColumn.setCellValueFactory(
+		this.designationColumn.setCellValueFactory(
+			(TreeTableColumn.CellDataFeatures<Waypoint, String> param) ->
+			new ReadOnlyStringWrapper(param.getValue().getValue().getDesignator()));
+		
+		this.locationColumn.setCellValueFactory(
 			(TreeTableColumn.CellDataFeatures<Waypoint, String> param) ->
 			new ReadOnlyStringWrapper(param.getValue().getValue().toString()));
 		
+		this.altitudeColumn.setCellValueFactory(
+				new TreeItemPropertyValueFactory<Waypoint, Double>("altitude"));
+		
 		this.costsColumn.setCellValueFactory(
 				new TreeItemPropertyValueFactory<Waypoint, Double>("g"));
+		
+		Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getScenario("default");
+		scenario.addPointsOfInterestChangeListener(new PointsOfInterestChangeListener());
 	}
 
 	public void addWaypoint(ActionEvent event) {
@@ -75,6 +96,18 @@ public class PlanPresenter implements Initializable {
 	
 	public void removeWaypoint() {
 		System.out.println("remove waypoint");
+	}
+	
+	private class PointsOfInterestChangeListener implements PropertyChangeListener {
+
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			plan.getRoot().getChildren().clear();
+			for (Waypoint waypoint : (Iterable<Waypoint>) evt.getNewValue()) {
+				plan.getRoot().getChildren().add(new TreeItem<Waypoint>(waypoint));
+			}
+		}
+		
 	}
 	
 }
