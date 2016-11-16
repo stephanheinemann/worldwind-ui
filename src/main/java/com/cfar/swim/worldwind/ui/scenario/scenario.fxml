@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+
+
+<TitledPane animated="false" prefHeight="200.0" prefWidth="800.0" text="Scenarios" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.cfar.swim.worldwind.ui.scenario.ScenarioPresenter">
+  <content>
+      <ListView fx:id="scenarios" prefHeight="200.0" prefWidth="800.0">
+         <contextMenu>
+            <ContextMenu>
+              <items>
+                  <MenuItem mnemonicParsing="false" onAction="#activateScenario" text="Activate" />
+                <MenuItem mnemonicParsing="false" onAction="#addScenario" text="Add" />
+                  <MenuItem mnemonicParsing="false" onAction="#removeScenario" text="Remove" />
+                  <MenuItem mnemonicParsing="false" onAction="#clearScenarios" text="Clear" />
+              </items>
+            </ContextMenu>
+         </contextMenu>
+      </ListView>
+  </content>
+</TitledPane>

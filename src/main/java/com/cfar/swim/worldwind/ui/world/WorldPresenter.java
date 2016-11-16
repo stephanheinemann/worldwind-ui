@@ -83,6 +83,10 @@ public class WorldPresenter implements Initializable {
 		SwingUtilities.invokeLater(new WorldInitializer());
 	}
 	
+	private void displayStatus(String status) {
+		statusLayer.getAnnotations().iterator().next().setText(status);
+	}
+	
 	private class WorldInitializer implements Runnable {
 
 		@Override
@@ -122,7 +126,7 @@ public class WorldPresenter implements Initializable {
 			ControlAnnotation poiControl = new ControlAnnotation(poiIcon);
 			poiControl.getAttributes().setDrawOffset(new Point(650, 25));
 			poiControl.setPrimaryActionCommand(WorldPresenter.ACTION_WAYPOINT_EDIT);
-			poiControl.setSecondaryActionCommand(WorldPresenter.ACTION_NONE);
+			poiControl.setSecondaryActionCommand(WorldPresenter.ACTION_WAYPOINT_SETUP);
 			poiControl.addActionListener(new WaypointsControlListener());
 			
 			ControlAnnotation plannerControl = new ControlAnnotation(plannerIcon);
@@ -255,11 +259,11 @@ public class WorldPresenter implements Initializable {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_ENVIRONMENT_ENCLOSE:
 				worldModel.setMode(WorldMode.ENVIRONMENT);
-				statusLayer.getAnnotations().iterator().next().setText(WorldMode.ENVIRONMENT.toString());
+				displayStatus(WorldMode.ENVIRONMENT.toString());
 				break;
 			case WorldPresenter.ACTION_ENVIRONMENT_SETUP:
 				worldModel.setMode(WorldMode.VIEW);
-				statusLayer.getAnnotations().iterator().next().setText(WorldMode.VIEW.toString());
+				displayStatus(WorldMode.VIEW.toString());
 				break;
 			}
 			System.out.println("pressed...." + e.getActionCommand());
@@ -273,13 +277,15 @@ public class WorldPresenter implements Initializable {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_WAYPOINT_EDIT:
 				worldModel.setMode(WorldMode.WAYPOINT);
-				statusLayer.getAnnotations().iterator().next().setText(WorldMode.WAYPOINT.toString());
+				displayStatus(WorldMode.WAYPOINT.toString());
 				break;
 			case WorldPresenter.ACTION_WAYPOINT_SETUP:
 				// TODO: waypoint setup (types of waypoint graphics: POI, RWP, ...)
 				worldModel.setMode(WorldMode.VIEW);
-				statusLayer.getAnnotations().iterator().next().setText(WorldMode.VIEW.toString());
+				displayStatus(WorldMode.VIEW.toString());
 				break;
+			default:
+				
 			}
 			System.out.println("pressed...." + e.getActionCommand());
 		}

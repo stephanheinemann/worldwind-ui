@@ -43,7 +43,7 @@
                <items>
                   <AnchorPane />
                   <AnchorPane />
-                  <AnchorPane fx:id="planPane" />
+                  <Accordion fx:id="plannerAccordion" />
                </items>
             </SplitPane>
         </items>
