@@ -56,7 +56,8 @@ public class WorldPresenter implements Initializable {
 	public static final String ACTION_SWIM_SETUP = "WorldPresenter.ActionCommand.SwimSetup";
 	public static final String ACTION_ENVIRONMENT_ENCLOSE = "WorldPresenter.ActionCommand.EnvironmentEnclose";
 	public static final String ACTION_ENVIRONMENT_SETUP = "WorldPresenter.ActionCommand.EnvironmentSetup";
-	public static final String ACTION_POI_EDIT = "WorldPresenter.ActionCommand.PointOfInterestEdit";
+	public static final String ACTION_WAYPOINT_EDIT = "WorldPresenter.ActionCommand.WaypointEdit";
+	public static final String ACTION_WAYPOINT_SETUP = "WorldPresenter.ActionCommand.WaypointSetup";
 	public static final String ACTION_PLANNER_PLAN = "WorldPresenter.ActionCommand.PlannerPlan";
 	public static final String ACTION_PLANNER_SETUP = "WorldPresenter.ActionCommand.PlannerSetup";
 	public static final String ACTION_TAKEOFF = "WorldPresenter.ActionCommand.TakeOff";
@@ -77,9 +78,9 @@ public class WorldPresenter implements Initializable {
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario();
+		scenario.addWaypointsChangeListener(new WaypointsChangeListener());
 		SwingUtilities.invokeLater(new WorldInitializer());
-		Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getDefaultScenario();
-		scenario.addPointsOfInterestChangeListener(new PointsOfInterestChangeListener());
 	}
 	
 	private class WorldInitializer implements Runnable {
@@ -120,9 +121,9 @@ public class WorldPresenter implements Initializable {
 			
 			ControlAnnotation poiControl = new ControlAnnotation(poiIcon);
 			poiControl.getAttributes().setDrawOffset(new Point(650, 25));
-			poiControl.setPrimaryActionCommand(WorldPresenter.ACTION_POI_EDIT);
+			poiControl.setPrimaryActionCommand(WorldPresenter.ACTION_WAYPOINT_EDIT);
 			poiControl.setSecondaryActionCommand(WorldPresenter.ACTION_NONE);
-			poiControl.addActionListener(new PointOfInterestControlListener());
+			poiControl.addActionListener(new WaypointsControlListener());
 			
 			ControlAnnotation plannerControl = new ControlAnnotation(plannerIcon);
 			plannerControl.getAttributes().setDrawOffset(new Point(725, 25));
@@ -191,13 +192,13 @@ public class WorldPresenter implements Initializable {
 	
 	private class WorldMouseListener extends MouseAdapter {
 		public void mouseClicked(MouseEvent e) {
-			if (worldModel.getMode().equals(WorldMode.POI)) {
-				SwingUtilities.invokeLater(new PointOfInterestMouseHandler());
+			if (worldModel.getMode().equals(WorldMode.WAYPOINT)) {
+				SwingUtilities.invokeLater(new WaypointMouseHandler());
 			}
 		}
 	}
 	
-	private class PointOfInterestMouseHandler implements Runnable {
+	private class WaypointMouseHandler implements Runnable {
 
 		@Override
 		public void run() {
@@ -207,15 +208,15 @@ public class WorldPresenter implements Initializable {
 				waypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, waypoint, null)));
 				waypoint.getDepiction().setVisible(true);
 				
-				Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getDefaultScenario();
-				scenario.addPointOfInterest(waypoint);
+				Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario();
+				scenario.addWaypoint(waypoint);
 				
 				waypointLayer.addRenderable(waypoint);
 			}
 		}
 	}
 	
-	private class PointsOfInterestChangeListener implements PropertyChangeListener {
+	private class WaypointsChangeListener implements PropertyChangeListener {
 
 		@SuppressWarnings("unchecked")
 		@Override
@@ -254,26 +255,31 @@ public class WorldPresenter implements Initializable {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_ENVIRONMENT_ENCLOSE:
 				worldModel.setMode(WorldMode.ENVIRONMENT);
+				statusLayer.getAnnotations().iterator().next().setText(WorldMode.ENVIRONMENT.toString());
 				break;
 			case WorldPresenter.ACTION_ENVIRONMENT_SETUP:
+				worldModel.setMode(WorldMode.VIEW);
+				statusLayer.getAnnotations().iterator().next().setText(WorldMode.VIEW.toString());
 				break;
 			}
 			System.out.println("pressed...." + e.getActionCommand());
 		}
 	}
 	
-	private class PointOfInterestControlListener implements ActionListener {
+	private class WaypointsControlListener implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
-			case WorldPresenter.ACTION_POI_EDIT:
-				worldModel.setMode(WorldMode.POI);
-				statusLayer.getAnnotations().iterator().next().setText(WorldMode.POI.toString());
+			case WorldPresenter.ACTION_WAYPOINT_EDIT:
+				worldModel.setMode(WorldMode.WAYPOINT);
+				statusLayer.getAnnotations().iterator().next().setText(WorldMode.WAYPOINT.toString());
 				break;
-			default:
+			case WorldPresenter.ACTION_WAYPOINT_SETUP:
+				// TODO: waypoint setup (types of waypoint graphics: POI, RWP, ...)
 				worldModel.setMode(WorldMode.VIEW);
 				statusLayer.getAnnotations().iterator().next().setText(WorldMode.VIEW.toString());
+				break;
 			}
 			System.out.println("pressed...." + e.getActionCommand());
 		}

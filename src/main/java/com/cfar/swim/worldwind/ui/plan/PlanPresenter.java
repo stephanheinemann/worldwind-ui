@@ -79,8 +79,8 @@ public class PlanPresenter implements Initializable {
 		this.costsColumn.setCellValueFactory(
 				new TreeItemPropertyValueFactory<Waypoint, Double>("g"));
 		
-		Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getDefaultScenario();
-		scenario.addPointsOfInterestChangeListener(new PointsOfInterestChangeListener());
+		Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario();
+		scenario.addWaypointsChangeListener(new WaypointsChangeListener());
 	}
 
 	public void addWaypoint(ActionEvent event) {
@@ -90,8 +90,8 @@ public class PlanPresenter implements Initializable {
 			Waypoint waypoint = optWaypoint.get();
 			waypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, waypoint, null)));
 			waypoint.getDepiction().setVisible(true);
-			Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getDefaultScenario();
-			scenario.addPointOfInterest(waypoint);
+			Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario();
+			scenario.addWaypoint(waypoint);
 		}
 		// TODO: check out ControlsFX (central repository)
 	}
@@ -107,8 +107,8 @@ public class PlanPresenter implements Initializable {
 				Waypoint editedWaypoint = optWaypoint.get();
 				editedWaypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, editedWaypoint, null)));
 				editedWaypoint.getDepiction().setVisible(true);
-				Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getDefaultScenario();
-				scenario.updatePointOfInterest(waypoint, editedWaypoint);
+				Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario();
+				scenario.updateWaypoint(waypoint, editedWaypoint);
 			}
 		}
 	}
@@ -117,18 +117,18 @@ public class PlanPresenter implements Initializable {
 		TreeItem<Waypoint> waypointItem = this.plan.getSelectionModel().getSelectedItem();
 		if (null != waypointItem) {
 			Waypoint waypoint = waypointItem.getValue();
-			Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getDefaultScenario();
-			scenario.removePointOfInterest(waypoint);
+			Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario();
+			scenario.removeWaypoint(waypoint);
 		}
 	}
 	
 	public void clearWaypoints() {
 		this.plan.getRoot().getChildren().clear();
-		Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getDefaultScenario();
-		scenario.clearPointsOfInterest();
+		Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario();
+		scenario.clearWaypoints();
 	}
 	
-	private class PointsOfInterestChangeListener implements PropertyChangeListener {
+	private class WaypointsChangeListener implements PropertyChangeListener {
 
 		@SuppressWarnings("unchecked")
 		@Override
