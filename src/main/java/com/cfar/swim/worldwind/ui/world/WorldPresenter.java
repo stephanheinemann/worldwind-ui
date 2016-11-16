@@ -7,6 +7,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -30,7 +32,6 @@ import gov.nasa.worldwind.layers.RenderableLayer;
 import gov.nasa.worldwind.layers.ViewControlsLayer;
 import gov.nasa.worldwind.layers.ViewControlsSelectListener;
 import gov.nasa.worldwind.render.ScreenAnnotation;
-import gov.nasa.worldwind.symbology.SymbologyConstants;
 import gov.nasa.worldwind.symbology.milstd2525.MilStd2525GraphicFactory;
 import gov.nasa.worldwind.util.StatusBar;
 import javafx.embed.swing.SwingNode;
@@ -71,12 +72,14 @@ public class WorldPresenter implements Initializable {
 	WorldWindowGLJPanel wwd = new WorldWindowGLJPanel();
 	AnnotationLayer controlLayer = new AnnotationLayer();
 	AnnotationLayer statusLayer = new AnnotationLayer();
-	RenderableLayer planningLayer = new RenderableLayer();
+	RenderableLayer waypointLayer = new RenderableLayer();
 	MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		SwingUtilities.invokeLater(new WorldInitializer());
+		Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getDefaultScenario();
+		scenario.addPointsOfInterestChangeListener(new PointsOfInterestChangeListener());
 	}
 	
 	private class WorldInitializer implements Runnable {
@@ -95,7 +98,7 @@ public class WorldPresenter implements Initializable {
 			wwd.addSelectListener(new ViewControlsSelectListener(wwd, viewControlsLayer));
 			
 			// add planner controls
-			wwd.getModel().getLayers().add(planningLayer);
+			wwd.getModel().getLayers().add(waypointLayer);
 			
 			ControlAnnotation aircraftControl = new ControlAnnotation(aircraftIcon);
 			aircraftControl.getAttributes().setDrawOffset(new Point(425, 25));
@@ -211,8 +214,24 @@ public class WorldPresenter implements Initializable {
 				Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getDefaultScenario();
 				scenario.addPointOfInterest(waypoint);
 				
-				planningLayer.addRenderable(waypoint);
+				waypointLayer.addRenderable(waypoint);
 			}
+		}
+	}
+	
+	private class PointsOfInterestChangeListener implements PropertyChangeListener {
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					waypointLayer.removeAllRenderables();
+					waypointLayer.addRenderables((Iterable<Waypoint>) evt.getNewValue());
+					wwd.redraw();
+				}
+			});
 		}
 	}
 	

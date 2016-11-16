@@ -22,7 +22,9 @@
             <ContextMenu>
               <items>
                 <MenuItem mnemonicParsing="false" onAction="#addWaypoint" text="Add" />
+                  <MenuItem mnemonicParsing="false" onAction="#editWaypoint" text="Edit" />
                   <MenuItem mnemonicParsing="false" onAction="#removeWaypoint" text="Remove" />
+                  <MenuItem mnemonicParsing="false" onAction="#clearWaypoints" text="Clear" />
               </items>
             </ContextMenu>
          </contextMenu>
