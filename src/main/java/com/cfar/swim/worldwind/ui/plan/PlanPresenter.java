@@ -11,7 +11,6 @@ import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.ui.Main;
 import com.cfar.swim.worldwind.ui.plan.waypoint.WaypointDialog;
-import com.cfar.swim.worldwind.ui.plan.waypoint.WaypointView;
 import com.cfar.swim.worldwind.util.Depiction;
 
 import gov.nasa.worldwind.geom.Angle;
@@ -23,15 +22,10 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
-import javafx.scene.Scene;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.TreeItemPropertyValueFactory;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 
 public class PlanPresenter implements Initializable {
 
