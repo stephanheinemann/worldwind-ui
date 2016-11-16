@@ -88,7 +88,7 @@ public class PlanPresenter implements Initializable {
 		Optional<Waypoint> optWaypoint = waypointDialog.showAndWait();
 		if (optWaypoint.isPresent()) {
 			Waypoint waypoint = optWaypoint.get();
-			waypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_REFERENCE, waypoint, null)));
+			waypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, waypoint, null)));
 			waypoint.getDepiction().setVisible(true);
 			Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getDefaultScenario();
 			scenario.addPointOfInterest(waypoint);
@@ -105,7 +105,7 @@ public class PlanPresenter implements Initializable {
 			Optional<Waypoint> optWaypoint = waypointDialog.showAndWait();
 			if (optWaypoint.isPresent()) {
 				Waypoint editedWaypoint = optWaypoint.get();
-				editedWaypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_REFERENCE, editedWaypoint, null)));
+				editedWaypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, editedWaypoint, null)));
 				editedWaypoint.getDepiction().setVisible(true);
 				Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getDefaultScenario();
 				scenario.updatePointOfInterest(waypoint, editedWaypoint);

@@ -42,8 +42,11 @@ public class WaypointDialog extends Dialog<Waypoint> {
 		
 		String iconPath = Configuration.getStringValue(AVKey.MIL_STD_2525_ICON_RETRIEVER_PATH);
 		MilStd2525PointGraphicRetriever iconRetriever = new MilStd2525PointGraphicRetriever(iconPath);
-		BufferedImage icon = iconRetriever.createIcon(Waypoint.SIDC_NAV_WAYPOINT_REFERENCE, null);
-		this.setGraphic(new ImageView(SwingFXUtils.toFXImage(icon, null)));
+		BufferedImage icon = iconRetriever.createIcon(Waypoint.SIDC_NAV_WAYPOINT_POI, null);
+		ImageView imageView = new ImageView(SwingFXUtils.toFXImage(icon, null));
+		imageView.setPreserveRatio(true);
+		imageView.setFitHeight(50d);
+		this.setGraphic(imageView);
 		
 		this.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 		this.getDialogPane().lookupButton(ButtonType.OK).setDisable(true);

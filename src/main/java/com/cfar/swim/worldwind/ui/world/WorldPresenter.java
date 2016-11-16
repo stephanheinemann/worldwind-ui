@@ -179,12 +179,8 @@ public class WorldPresenter implements Initializable {
 			worldPanel.add(statusBar, BorderLayout.PAGE_END);
 			
 			worldNode.setContent(worldPanel);
-    		
-    		// TODO: implement an edit mode for the plan
-    		// TODO: click on positions during edit - locations will be added to plan
+			
     		// TODO: use safe default altitude (to be edited)
-    		// TODO: locations and altitudes can be edited once added
-    		
     		// TODO: selected waypoints will be displayed as POINT waypoints
     		// TODO: computed waypoints will be displayed as ROUTE waypoints
     		// TODO: OPTIMAL / LEAST RISK routes can be tagged using appropriate symbology
