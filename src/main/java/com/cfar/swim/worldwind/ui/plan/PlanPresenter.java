@@ -8,6 +8,7 @@ import java.util.ResourceBundle;
 
 import com.cfar.swim.worldwind.planning.Waypoint;
 import com.cfar.swim.worldwind.session.Scenario;
+import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.ui.Main;
 import com.cfar.swim.worldwind.ui.plan.waypoint.WaypointDialog;
@@ -19,7 +20,6 @@ import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.symbology.milstd2525.MilStd2525GraphicFactory;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyStringWrapper;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TreeItem;
@@ -56,6 +56,9 @@ public class PlanPresenter implements Initializable {
 	@FXML
 	private TreeTableColumn<Waypoint, String> actualTimeOverColumn;
 	
+	Scenario scenario = null;
+	WaypointsChangeListener wcl = new WaypointsChangeListener();
+	
 	MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
 	
 	@Override
@@ -67,7 +70,7 @@ public class PlanPresenter implements Initializable {
 		
 		this.designationColumn.setCellValueFactory(
 			(TreeTableColumn.CellDataFeatures<Waypoint, String> param) ->
-			new ReadOnlyStringWrapper(param.getValue().getValue().getId()));
+			new ReadOnlyStringWrapper(param.getValue().getValue().getDesignator()));
 		
 		this.locationColumn.setCellValueFactory(
 			(TreeTableColumn.CellDataFeatures<Waypoint, String> param) ->
@@ -79,24 +82,45 @@ public class PlanPresenter implements Initializable {
 		this.costsColumn.setCellValueFactory(
 				new TreeItemPropertyValueFactory<Waypoint, Double>("g"));
 		
-		Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario();
-		scenario.addWaypointsChangeListener(new WaypointsChangeListener());
+		Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
+		session.addActiveScenarioChangeListener(new ActiveScenarioChangeListener());
+		this.initScenario();
+		this.initPlan();
+	}
+	
+	public void initScenario() {
+		if (null != this.scenario) {
+			this.scenario.removePropertyChangeListener(this.wcl);
+		}
+		this.scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario();
+		this.scenario.addWaypointsChangeListener(this.wcl);
+	}
+	
+	public void initPlan() {
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				plan.getRoot().getChildren().clear();
+				for (Waypoint waypoint : scenario.getWaypoints()) {
+					plan.getRoot().getChildren().add(new TreeItem<Waypoint>(waypoint));
+				}
+			}
+		});
 	}
 
-	public void addWaypoint(ActionEvent event) {
+	public void addWaypoint() {
 		WaypointDialog waypointDialog = new WaypointDialog(WaypointDialog.TITLE_ADD, WaypointDialog.HEADER_ADD);
 		Optional<Waypoint> optWaypoint = waypointDialog.showAndWait();
 		if (optWaypoint.isPresent()) {
 			Waypoint waypoint = optWaypoint.get();
 			waypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, waypoint, null)));
 			waypoint.getDepiction().setVisible(true);
-			Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario();
-			scenario.addWaypoint(waypoint);
+			this.scenario.addWaypoint(waypoint);
 		}
 		// TODO: check out ControlsFX (central repository)
 	}
 	
-	public void editWaypoint(ActionEvent event) {
+	public void editWaypoint() {
 		TreeItem<Waypoint> waypointItem = this.plan.getSelectionModel().getSelectedItem();
 		if (null != waypointItem) {
 			Waypoint waypoint = waypointItem.getValue();
@@ -107,8 +131,7 @@ public class PlanPresenter implements Initializable {
 				Waypoint editedWaypoint = optWaypoint.get();
 				editedWaypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, editedWaypoint, null)));
 				editedWaypoint.getDepiction().setVisible(true);
-				Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario();
-				scenario.updateWaypoint(waypoint, editedWaypoint);
+				this.scenario.updateWaypoint(waypoint, editedWaypoint);
 			}
 		}
 	}
@@ -117,31 +140,28 @@ public class PlanPresenter implements Initializable {
 		TreeItem<Waypoint> waypointItem = this.plan.getSelectionModel().getSelectedItem();
 		if (null != waypointItem) {
 			Waypoint waypoint = waypointItem.getValue();
-			Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario();
-			scenario.removeWaypoint(waypoint);
+			this.scenario.removeWaypoint(waypoint);
 		}
 	}
 	
 	public void clearWaypoints() {
-		this.plan.getRoot().getChildren().clear();
-		Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario();
-		scenario.clearWaypoints();
+		this.scenario.clearWaypoints();
 	}
 	
 	private class WaypointsChangeListener implements PropertyChangeListener {
 
-		@SuppressWarnings("unchecked")
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			Platform.runLater(new Runnable() {
-				@Override
-				public void run() {
-					plan.getRoot().getChildren().clear();
-					for (Waypoint waypoint : (Iterable<Waypoint>) evt.getNewValue()) {
-						plan.getRoot().getChildren().add(new TreeItem<Waypoint>(waypoint));
-					}
-				}
-			});
+			initPlan();
+		}
+	}
+	
+	private class ActiveScenarioChangeListener implements PropertyChangeListener {
+
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			initScenario();
+			initPlan();
 		}
 	}
 	

@@ -19,6 +19,7 @@ import javax.swing.SwingUtilities;
 import com.cfar.swim.worldwind.planning.Waypoint;
 import com.cfar.swim.worldwind.render.annotations.ControlAnnotation;
 import com.cfar.swim.worldwind.session.Scenario;
+import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.ui.Main;
 import com.cfar.swim.worldwind.util.Depiction;
@@ -76,11 +77,35 @@ public class WorldPresenter implements Initializable {
 	RenderableLayer waypointLayer = new RenderableLayer();
 	MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
 	
+	Scenario scenario = null;
+	WaypointsChangeListener wcl = new WaypointsChangeListener();
+	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario();
-		scenario.addWaypointsChangeListener(new WaypointsChangeListener());
 		SwingUtilities.invokeLater(new WorldInitializer());
+		Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
+		session.addActiveScenarioChangeListener(new ActiveScenarioChangeListener());
+		this.initScenario();
+		this.initPlan();
+	}
+	
+	public void initScenario() {
+		if (null != this.scenario) {
+			this.scenario.removePropertyChangeListener(this.wcl);
+		}
+		this.scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario();
+		this.scenario.addWaypointsChangeListener(this.wcl);
+	}
+	
+	public void initPlan() {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				waypointLayer.removeAllRenderables();
+				waypointLayer.addRenderables(scenario.getWaypoints());
+				wwd.redraw();
+			}
+		});
 	}
 	
 	private void displayStatus(String status) {
@@ -211,28 +236,25 @@ public class WorldPresenter implements Initializable {
 				Waypoint waypoint = new Waypoint(clickedPosition);
 				waypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, waypoint, null)));
 				waypoint.getDepiction().setVisible(true);
-				
-				Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario();
 				scenario.addWaypoint(waypoint);
-				
-				waypointLayer.addRenderable(waypoint);
 			}
 		}
 	}
 	
 	private class WaypointsChangeListener implements PropertyChangeListener {
-
-		@SuppressWarnings("unchecked")
+		
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-					waypointLayer.removeAllRenderables();
-					waypointLayer.addRenderables((Iterable<Waypoint>) evt.getNewValue());
-					wwd.redraw();
-				}
-			});
+			initPlan();
+		}
+	}
+	
+	private class ActiveScenarioChangeListener implements PropertyChangeListener {
+
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			initScenario();
+			initPlan();
 		}
 	}
 	
