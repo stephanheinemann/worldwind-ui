@@ -75,6 +75,7 @@ public class WorldPresenter implements Initializable {
 	AnnotationLayer controlLayer = new AnnotationLayer();
 	AnnotationLayer statusLayer = new AnnotationLayer();
 	RenderableLayer waypointLayer = new RenderableLayer();
+	RenderableLayer environmentLayer = new RenderableLayer();
 	MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
 	
 	Scenario scenario = null;
@@ -86,6 +87,7 @@ public class WorldPresenter implements Initializable {
 		Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
 		session.addActiveScenarioChangeListener(new ActiveScenarioChangeListener());
 		this.initScenario();
+		this.initEnvironment();
 		this.initPlan();
 	}
 	
@@ -95,6 +97,17 @@ public class WorldPresenter implements Initializable {
 		}
 		this.scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario();
 		this.scenario.addWaypointsChangeListener(this.wcl);
+	}
+	
+	public void initEnvironment() {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				environmentLayer.removeAllRenderables();
+				environmentLayer.addRenderable(scenario.getEnvironment());
+				wwd.redraw();
+			}
+		});
 	}
 	
 	public void initPlan() {
@@ -121,15 +134,19 @@ public class WorldPresenter implements Initializable {
 			// initialize world window
 			wwd.setPreferredSize(new java.awt.Dimension(1366, 480));
 			wwd.setModel(new BasicModel());
+			// TODO: load higher quality bing maps
+			// possibly configurable (street or bing) and per session
 			
 			// add view controls
 			ViewControlsLayer viewControlsLayer = new ViewControlsLayer();
 			wwd.getModel().getLayers().add(viewControlsLayer);
 			wwd.addSelectListener(new ViewControlsSelectListener(wwd, viewControlsLayer));
 			
-			// add planner controls
+			// add scenario data
+			wwd.getModel().getLayers().add(environmentLayer);
 			wwd.getModel().getLayers().add(waypointLayer);
 			
+			// add planner controls
 			ControlAnnotation aircraftControl = new ControlAnnotation(aircraftIcon);
 			aircraftControl.getAttributes().setDrawOffset(new Point(425, 25));
 			aircraftControl.setPrimaryActionCommand(WorldPresenter.ACTION_AICRAFT_LOAD);
