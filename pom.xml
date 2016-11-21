@@ -120,6 +120,7 @@ limitations under the License.
                     <include>**/*.css</include>
                     <include>**/*.properties</include>
                     <include>icons/**/*</include>
+                    <include>symbols/**/*</include>
                 </includes>
             </resource>
         </resources>

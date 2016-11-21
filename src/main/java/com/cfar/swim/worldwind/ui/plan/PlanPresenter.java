@@ -6,7 +6,10 @@ import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
+import javax.inject.Inject;
+
 import com.cfar.swim.worldwind.planning.Waypoint;
+import com.cfar.swim.worldwind.render.annotations.DepictionAnnotation;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
@@ -29,6 +32,8 @@ import javafx.scene.control.cell.TreeItemPropertyValueFactory;
 
 public class PlanPresenter implements Initializable {
 
+	@Inject private String waypointSymbol;
+	
 	@FXML
 	private TreeTableView<Waypoint> plan;
 	
@@ -116,6 +121,7 @@ public class PlanPresenter implements Initializable {
 			waypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, waypoint, null)));
 			waypoint.getDepiction().setVisible(true);
 			this.scenario.addWaypoint(waypoint);
+			waypoint.getDepiction().setAnnotation(new DepictionAnnotation(this.waypointSymbol, waypoint.getDesignator(), waypoint));
 		}
 		// TODO: check out ControlsFX (central repository)
 	}
@@ -129,7 +135,14 @@ public class PlanPresenter implements Initializable {
 			Optional<Waypoint> optWaypoint = waypointDialog.showAndWait();
 			if (optWaypoint.isPresent()) {
 				Waypoint editedWaypoint = optWaypoint.get();
-				editedWaypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, editedWaypoint, null)));
+				editedWaypoint.setDesignator(waypoint.getDesignator());
+				editedWaypoint.setDepiction(waypoint.getDepiction());
+				if (editedWaypoint.getDepiction().hasAnnotation()) {
+					editedWaypoint.getDepiction().getAnnotation().setText(editedWaypoint.getDesignator());
+					editedWaypoint.getDepiction().getAnnotation().setPosition(editedWaypoint);
+				} else {
+					editedWaypoint.getDepiction().setAnnotation(new DepictionAnnotation(this.waypointSymbol, editedWaypoint.getDesignator(), editedWaypoint));
+				}
 				editedWaypoint.getDepiction().setVisible(true);
 				this.scenario.updateWaypoint(waypoint, editedWaypoint);
 			}
