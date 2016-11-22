@@ -119,9 +119,9 @@ public class PlanPresenter implements Initializable {
 		if (optWaypoint.isPresent()) {
 			Waypoint waypoint = optWaypoint.get();
 			waypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, waypoint, null)));
+			waypoint.getDepiction().setAnnotation(new DepictionAnnotation(this.waypointSymbol, "?", waypoint));
 			waypoint.getDepiction().setVisible(true);
 			this.scenario.addWaypoint(waypoint);
-			waypoint.getDepiction().setAnnotation(new DepictionAnnotation(this.waypointSymbol, waypoint.getDesignator(), waypoint));
 		}
 		// TODO: check out ControlsFX (central repository)
 	}
@@ -135,14 +135,8 @@ public class PlanPresenter implements Initializable {
 			Optional<Waypoint> optWaypoint = waypointDialog.showAndWait();
 			if (optWaypoint.isPresent()) {
 				Waypoint editedWaypoint = optWaypoint.get();
-				editedWaypoint.setDesignator(waypoint.getDesignator());
-				editedWaypoint.setDepiction(waypoint.getDepiction());
-				if (editedWaypoint.getDepiction().hasAnnotation()) {
-					editedWaypoint.getDepiction().getAnnotation().setText(editedWaypoint.getDesignator());
-					editedWaypoint.getDepiction().getAnnotation().setPosition(editedWaypoint);
-				} else {
-					editedWaypoint.getDepiction().setAnnotation(new DepictionAnnotation(this.waypointSymbol, editedWaypoint.getDesignator(), editedWaypoint));
-				}
+				editedWaypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, editedWaypoint, null)));
+				editedWaypoint.getDepiction().setAnnotation(new DepictionAnnotation(this.waypointSymbol, editedWaypoint.getDesignator(), editedWaypoint));
 				editedWaypoint.getDepiction().setVisible(true);
 				this.scenario.updateWaypoint(waypoint, editedWaypoint);
 			}
