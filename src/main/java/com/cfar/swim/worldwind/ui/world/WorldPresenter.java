@@ -10,24 +10,30 @@ import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import com.cfar.swim.worldwind.planning.Environment;
 import com.cfar.swim.worldwind.planning.Waypoint;
+import com.cfar.swim.worldwind.registries.Specification;
 import com.cfar.swim.worldwind.render.annotations.ControlAnnotation;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
+import com.cfar.swim.worldwind.session.Setup;
 import com.cfar.swim.worldwind.ui.Main;
+import com.cfar.swim.worldwind.ui.setup.SetupDialog;
 import com.cfar.swim.worldwind.util.Depiction;
 
 import gov.nasa.worldwind.BasicModel;
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.awt.WorldWindowGLJPanel;
 import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.geom.Sector;
 import gov.nasa.worldwind.layers.AnnotationLayer;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import gov.nasa.worldwind.layers.ViewControlsLayer;
@@ -35,6 +41,8 @@ import gov.nasa.worldwind.layers.ViewControlsSelectListener;
 import gov.nasa.worldwind.render.ScreenAnnotation;
 import gov.nasa.worldwind.symbology.milstd2525.MilStd2525GraphicFactory;
 import gov.nasa.worldwind.util.StatusBar;
+import gov.nasa.worldwindx.examples.util.SectorSelector;
+import javafx.application.Platform;
 import javafx.embed.swing.SwingNode;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -49,6 +57,7 @@ public class WorldPresenter implements Initializable {
 	@Inject private String plannerIcon;
 	@Inject private String takeoffIcon;
 	@Inject private String landIcon;
+	@Inject private String setupIcon;
 	
 	public static final String ACTION_NONE = "WorldPresenter.ActionCommand.None";
 	public static final String ACTION_AICRAFT_LOAD = "WorldPresenter.ActionCommand.AircraftLoad";
@@ -65,19 +74,20 @@ public class WorldPresenter implements Initializable {
 	public static final String ACTION_LAND = "WorldPresenter.ActionCommand.Land";
 	
 	@FXML
-	AnchorPane worldNodePane;
+	private AnchorPane worldNodePane;
 	
 	@FXML
-	SwingNode worldNode;
-
-	WorldModel worldModel = new WorldModel();
+	private SwingNode worldNode;
+	
 	WorldWindowGLJPanel wwd = new WorldWindowGLJPanel();
 	AnnotationLayer controlLayer = new AnnotationLayer();
 	AnnotationLayer statusLayer = new AnnotationLayer();
-	RenderableLayer waypointLayer = new RenderableLayer();
 	RenderableLayer environmentLayer = new RenderableLayer();
+	RenderableLayer waypointLayer = new RenderableLayer();
 	MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
+	SectorSelector sectorSelector = new SectorSelector(wwd);
 	
+	WorldModel worldModel = new WorldModel();
 	Scenario scenario = null;
 	WaypointsChangeListener wcl = new WaypointsChangeListener();
 	
@@ -86,6 +96,13 @@ public class WorldPresenter implements Initializable {
 		SwingUtilities.invokeLater(new WorldInitializer());
 		Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
 		session.addActiveScenarioChangeListener(new ActiveScenarioChangeListener());
+		
+		this.sectorSelector.setInteriorColor(Color.MAGENTA);
+		this.sectorSelector.setInteriorOpacity(0.5d);
+		this.sectorSelector.setBorderColor(Color.MAGENTA);
+		this.sectorSelector.setBorderWidth(1d);
+		this.sectorSelector.addPropertyChangeListener(SectorSelector.SECTOR_PROPERTY, new SectorChangeListener());
+		
 		this.initScenario();
 		this.initEnvironment();
 		this.initPlan();
@@ -123,6 +140,20 @@ public class WorldPresenter implements Initializable {
 	
 	private void displayStatus(String status) {
 		statusLayer.getAnnotations().iterator().next().setText(status);
+	}
+	
+	private void openSetupDialog() {
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				SetupDialog setupDialog = new SetupDialog(SetupDialog.TITLE_SETUP, SetupDialog.HEADER_SETUP, setupIcon);
+				Optional<Setup> optSetup = setupDialog.showAndWait();
+				if (optSetup.isPresent()) {
+					
+				}
+			}
+			
+		});
 	}
 	
 	private class WorldInitializer implements Runnable {
@@ -241,6 +272,28 @@ public class WorldPresenter implements Initializable {
 			if (worldModel.getMode().equals(WorldMode.WAYPOINT)) {
 				SwingUtilities.invokeLater(new WaypointMouseHandler());
 			}
+			// TODO: pickable support ...
+		}
+	}
+	
+	private class SectorChangeListener implements PropertyChangeListener {
+
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			if (worldModel.getMode().equals(WorldMode.ENVIRONMENT)) {
+				if (null == evt.getNewValue()) {
+					Sector envSector = sectorSelector.getSector();
+					if (null != envSector) {
+						Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
+						session.getActiveScenario().setSector(envSector);
+						Specification<Environment> envSpec = session.getSetup().getEnvironmentSpecification();
+						Environment env = session.getEnvironmentFactory().createInstance(envSpec);
+						session.getActiveScenario().setEnvironment(env);
+						initEnvironment();
+					}
+					sectorSelector.disable();
+				}
+			}
 		}
 	}
 	
@@ -271,6 +324,7 @@ public class WorldPresenter implements Initializable {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initScenario();
+			initEnvironment();
 			initPlan();
 		}
 	}
@@ -299,10 +353,12 @@ public class WorldPresenter implements Initializable {
 			case WorldPresenter.ACTION_ENVIRONMENT_ENCLOSE:
 				worldModel.setMode(WorldMode.ENVIRONMENT);
 				displayStatus(WorldMode.ENVIRONMENT.toString());
+				sectorSelector.enable();
 				break;
 			case WorldPresenter.ACTION_ENVIRONMENT_SETUP:
 				worldModel.setMode(WorldMode.VIEW);
 				displayStatus(WorldMode.VIEW.toString());
+				openSetupDialog();
 				break;
 			}
 			System.out.println("pressed...." + e.getActionCommand());

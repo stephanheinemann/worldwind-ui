@@ -1,18 +1,14 @@
 package com.cfar.swim.worldwind.ui.setup;
 
-import java.util.function.Function;
-
 import com.airhacks.afterburner.views.FXMLView;
 
+import javafx.scene.control.TabPane;
+
 public class SetupView extends FXMLView {
-
-	public SetupView() {
-		// TODO Auto-generated constructor stub
+	
+	@Override
+	public TabPane getView() {
+		return (TabPane) super.getView();
 	}
-
-	public SetupView(Function<String, Object> injectionContext) {
-		super(injectionContext);
-		// TODO Auto-generated constructor stub
-	}
-
+	
 }
