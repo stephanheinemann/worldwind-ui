@@ -3,6 +3,7 @@ package com.cfar.swim.worldwind.ui.planner;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import com.cfar.swim.worldwind.ui.environment.EnvironmentView;
 import com.cfar.swim.worldwind.ui.plan.PlanView;
 import com.cfar.swim.worldwind.ui.scenario.ScenarioView;
 import com.cfar.swim.worldwind.ui.world.WorldView;
@@ -27,6 +28,9 @@ public class PlannerPresenter implements Initializable {
 		
 		ScenarioView scenarioView = new ScenarioView();
 		this.plannerAccordion.getPanes().add(scenarioView.getView());
+		
+		EnvironmentView environmentView = new EnvironmentView();
+		this.plannerAccordion.getPanes().add(environmentView.getView());
 		
 		PlanView planView = new PlanView();
 		this.plannerAccordion.getPanes().add(planView.getView());
