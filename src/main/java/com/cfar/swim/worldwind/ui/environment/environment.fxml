@@ -5,16 +5,14 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.layout.AnchorPane?>
 
-
 <TitledPane animated="false" prefHeight="200.0" prefWidth="800.0" text="Envrionment" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.cfar.swim.worldwind.ui.environment.EnvironmentPresenter">
   <content>
       <TreeView fx:id="environment">
          <contextMenu>
             <ContextMenu>
               <items>
-                <MenuItem mnemonicParsing="false" text="Add" />
-                  <MenuItem mnemonicParsing="false" text="Remove" />
-                  <MenuItem mnemonicParsing="false" text="Clear" />
+                <MenuItem mnemonicParsing="false" onAction="#refineEnvironment" text="Refine" />
+                  <MenuItem mnemonicParsing="false" onAction="#coarsenEnvironment" text="Coarsen" />
               </items>
             </ContextMenu>
          </contextMenu>

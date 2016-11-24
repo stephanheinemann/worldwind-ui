@@ -57,8 +57,8 @@ public class EnvironmentPresenter implements Initializable {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				if (parentItem.getValue().hasChildren()) {
-					for (Environment child : parentItem.getValue().getChildren()) {
+				if (parentItem.getValue().isRefined()) {
+					for (Environment child : parentItem.getValue().getRefinements()) {
 						TreeItem<Environment> childItem = new TreeItem<>(child);
 						parentItem.getChildren().add(childItem);
 						initEnvironment(childItem);
@@ -68,11 +68,29 @@ public class EnvironmentPresenter implements Initializable {
 		});
 	}
 	
+	public void refineEnvironment() {
+		Environment selectedEnv = this.environment.getSelectionModel().getSelectedItem().getValue();
+		if (!selectedEnv.isRefined()) {
+			Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
+			selectedEnv.refine(2);
+			session.getActiveScenario().notifyEnvironmentChange();
+		}
+	}
+	
+	public void coarsenEnvironment() {
+		Environment selectedEnv = this.environment.getSelectionModel().getSelectedItem().getValue();
+		if (selectedEnv.isRefined()) {
+			Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
+			selectedEnv.coarsen();
+			session.getActiveScenario().notifyEnvironmentChange();
+		}
+	}
+	
 	private class EnvironmentConverter extends StringConverter<Environment> {
 
 		@Override
 		public String toString(Environment environment) {
-			return Integer.toString(environment.getChildren().size());
+			return Integer.toString(environment.getRefinements().size());
 		}
 
 		@Override

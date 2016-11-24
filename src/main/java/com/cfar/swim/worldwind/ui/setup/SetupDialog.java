@@ -11,6 +11,12 @@ public class SetupDialog extends Dialog<Setup> {
 	public static final String TITLE_SETUP = "Setup Planner Session";
 	public static final String HEADER_SETUP = "Setup the Planning Session";
 	
+	public static final int AIRCRAFT_TAB_INDEX = 0;
+	public static final int ENVIRONMENT_TAB_INDEX = 1;
+	public static final int SWIM_TAB_INDEX = 2;
+	public static final int PLANNER_TAB_INDEX = 3;
+	
+	private SetupView setupView = null;
 	private Setup setup = null;
 	
 	public SetupDialog(String title, String header, String icon) {
@@ -22,8 +28,8 @@ public class SetupDialog extends Dialog<Setup> {
 		imageView.setFitHeight(50d);
 		this.setGraphic(imageView);
 		
-		SetupView setupView = new SetupView();
-		this.getDialogPane().setContent(setupView.getView());
+		this.setupView = new SetupView();
+		this.getDialogPane().setContent(this.setupView.getView());
 		this.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 	
 		this.setResultConverter(dialogButton -> {
@@ -42,8 +48,16 @@ public class SetupDialog extends Dialog<Setup> {
 	
 	}
 	
+	public void selectTab(int index) {	
+		this.setupView.getView().getSelectionModel().select(index);
+	}
+	
+	public Setup getSetup() {
+		return this.setup;
+	}
+	
 	public void setSetup(Setup setup) {
 		this.setup = setup;
 	}
-
+	
 }

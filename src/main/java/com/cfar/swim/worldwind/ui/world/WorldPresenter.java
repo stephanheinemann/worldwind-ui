@@ -89,6 +89,7 @@ public class WorldPresenter implements Initializable {
 	
 	WorldModel worldModel = new WorldModel();
 	Scenario scenario = null;
+	EnvironmentChangeListener ecl = new EnvironmentChangeListener();
 	WaypointsChangeListener wcl = new WaypointsChangeListener();
 	
 	@Override
@@ -113,6 +114,7 @@ public class WorldPresenter implements Initializable {
 			this.scenario.removePropertyChangeListener(this.wcl);
 		}
 		this.scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario();
+		this.scenario.addEnvironmentChangeListener(this.ecl);
 		this.scenario.addWaypointsChangeListener(this.wcl);
 	}
 	
@@ -142,14 +144,15 @@ public class WorldPresenter implements Initializable {
 		statusLayer.getAnnotations().iterator().next().setText(status);
 	}
 	
-	private void openSetupDialog() {
+	private void openSetupDialog(int tabIndex) {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
 				SetupDialog setupDialog = new SetupDialog(SetupDialog.TITLE_SETUP, SetupDialog.HEADER_SETUP, setupIcon);
+				setupDialog.selectTab(tabIndex);
 				Optional<Setup> optSetup = setupDialog.showAndWait();
 				if (optSetup.isPresent()) {
-					
+					// TODO: implement
 				}
 			}
 			
@@ -311,6 +314,14 @@ public class WorldPresenter implements Initializable {
 		}
 	}
 	
+	private class EnvironmentChangeListener implements PropertyChangeListener {
+		
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			initEnvironment();
+		}
+	}
+	
 	private class WaypointsChangeListener implements PropertyChangeListener {
 		
 		@Override
@@ -358,7 +369,7 @@ public class WorldPresenter implements Initializable {
 			case WorldPresenter.ACTION_ENVIRONMENT_SETUP:
 				worldModel.setMode(WorldMode.VIEW);
 				displayStatus(WorldMode.VIEW.toString());
-				openSetupDialog();
+				openSetupDialog(SetupDialog.ENVIRONMENT_TAB_INDEX);
 				break;
 			}
 			System.out.println("pressed...." + e.getActionCommand());
