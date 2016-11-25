@@ -6,6 +6,7 @@ import java.util.ResourceBundle;
 import org.controlsfx.control.PropertySheet;
 import org.controlsfx.property.BeanPropertyUtils;
 
+import com.cfar.swim.worldwind.ai.Planner;
 import com.cfar.swim.worldwind.planning.Environment;
 import com.cfar.swim.worldwind.registries.Specification;
 import com.cfar.swim.worldwind.session.Session;
@@ -26,23 +27,60 @@ public class SetupPresenter implements Initializable {
 	private ScrollPane envPropertiesPane;
 	
 	@FXML
+	private ScrollPane plannerPropertiesPane;
+	
+	@FXML
 	private ComboBox<String> environment;
+	
+	@FXML
+	private ComboBox<String> planner;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
-		for (Specification<Environment> envSpec : session.getEnvironmentSpecifications()) {
-			this.environment.getItems().add(envSpec.getId());
-		}
-		this.environment.layout();
-		this.environment.getSelectionModel().selectFirst();
-		
-		String envId = environment.getSelectionModel().getSelectedItem();
-		Specification<Environment> envSpec = session.getEnvironmentSpecification(envId);
-		PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(envSpec.getProperties()));
-		this.envPropertiesPane.setContent(propertySheet);
-		
-		this.environment.valueProperty().addListener(new EnvironmentChangeListener());
+		this.initEnvironment();
+		this.initPlanner();
+	}
+	
+	public void initEnvironment() {
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
+				for (Specification<Environment> envSpec : session.getEnvironmentSpecifications()) {
+					environment.getItems().add(envSpec.getId());
+				}
+				environment.layout();
+				environment.getSelectionModel().selectFirst();
+				
+				String envId = environment.getSelectionModel().getSelectedItem();
+				Specification<Environment> envSpec = session.getEnvironmentSpecification(envId);
+				PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(envSpec.getProperties()));
+				envPropertiesPane.setContent(propertySheet);
+				
+				environment.valueProperty().addListener(new EnvironmentChangeListener());
+			}
+		});
+	}
+	
+	public void initPlanner() {
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
+				for (Specification<Planner> plannerSpec : session.getPlannerSpecifications()) {
+					planner.getItems().add(plannerSpec.getId());
+				}
+				planner.layout();
+				planner.getSelectionModel().selectFirst();
+				
+				String plannerId = planner.getSelectionModel().getSelectedItem();
+				Specification<Planner> plannerSpec = session.getPlannerSpecification(plannerId);
+				PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(plannerSpec.getProperties()));
+				plannerPropertiesPane.setContent(propertySheet);
+				
+				planner.valueProperty().addListener(new PlannerChangeListener());
+			}
+		});
 	}
 	
 	private class EnvironmentChangeListener implements ChangeListener<String> {
@@ -61,5 +99,23 @@ public class SetupPresenter implements Initializable {
 			});
 		}
 	}
+	
+	private class PlannerChangeListener implements ChangeListener<String> {
+
+		@Override
+		public void changed(ObservableValue<? extends String> observable, String oldPlannerId, String newPlannerId) {
+			Platform.runLater(new Runnable() {
+				@Override
+				public void run() {
+					Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
+					Specification<Planner> plannerSpec = session.getPlannerSpecification(newPlannerId);
+					PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(plannerSpec.getProperties()));
+					plannerPropertiesPane.setContent(propertySheet);
+					plannerPropertiesPane.layout();
+				}
+			});
+		}
+	}
+	
 
 }

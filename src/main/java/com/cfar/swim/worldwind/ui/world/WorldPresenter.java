@@ -10,6 +10,10 @@ import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
@@ -17,7 +21,9 @@ import javax.inject.Inject;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import com.cfar.swim.worldwind.ai.Planner;
 import com.cfar.swim.worldwind.planning.Environment;
+import com.cfar.swim.worldwind.planning.Trajectory;
 import com.cfar.swim.worldwind.planning.Waypoint;
 import com.cfar.swim.worldwind.registries.Specification;
 import com.cfar.swim.worldwind.render.annotations.ControlAnnotation;
@@ -38,6 +44,8 @@ import gov.nasa.worldwind.layers.AnnotationLayer;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import gov.nasa.worldwind.layers.ViewControlsLayer;
 import gov.nasa.worldwind.layers.ViewControlsSelectListener;
+import gov.nasa.worldwind.render.BasicShapeAttributes;
+import gov.nasa.worldwind.render.Material;
 import gov.nasa.worldwind.render.ScreenAnnotation;
 import gov.nasa.worldwind.symbology.milstd2525.MilStd2525GraphicFactory;
 import gov.nasa.worldwind.util.StatusBar;
@@ -135,6 +143,7 @@ public class WorldPresenter implements Initializable {
 			public void run() {
 				waypointLayer.removeAllRenderables();
 				waypointLayer.addRenderables(scenario.getWaypoints());
+				waypointLayer.addRenderable(scenario.getTrajectory());
 				wwd.redraw();
 			}
 		});
@@ -144,7 +153,7 @@ public class WorldPresenter implements Initializable {
 		statusLayer.getAnnotations().iterator().next().setText(status);
 	}
 	
-	private void openSetupDialog(int tabIndex) {
+	private void setup(int tabIndex) {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
@@ -157,6 +166,57 @@ public class WorldPresenter implements Initializable {
 			}
 			
 		});
+	}
+	
+	private void plan() {
+		Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
+		Specification<Planner> plannerSpec = session.getSetup().getPlannerSpecification();
+		Planner planner = session.getPlannerFactory().createInstance(plannerSpec);
+		Waypoint origin = null;
+		Waypoint destination = null;
+		List<Position> waypoints = new ArrayList<Position>();
+		
+		Iterator<Waypoint> waypointIterator = session.getActiveScenario().getWaypoints().iterator();
+		if (waypointIterator.hasNext()) {
+			origin = waypointIterator.next();
+		}
+		
+		while (waypointIterator.hasNext()) {
+			Waypoint last = waypointIterator.next();
+			if (waypointIterator.hasNext()) {
+				waypoints.add(last);
+			} else {
+				destination = last;
+			}
+		}
+		
+		if ((null != origin) && (null != destination)) {
+			Trajectory trajectory = null;
+			// TODO: ETD either from UI/Scenario time (easier) or waypoint time
+			if (waypoints.isEmpty()) {
+				System.out.println("planning from " + origin + " to " + destination);
+				trajectory = planner.plan(origin, destination, ZonedDateTime.now());
+			} else {
+				System.out.println("planning from " + origin + " to " + destination + " via waypoints");
+				trajectory = planner.plan(origin, destination, waypoints, ZonedDateTime.now());
+			}
+			System.out.println("finished planning");
+			for (Waypoint w : trajectory.getWaypoints()) {
+				System.out.println(w);
+			}
+			
+			// TODO: find better place for this stuff
+			trajectory.setVisible(true);
+			trajectory.setShowPositions(true);
+			trajectory.setDrawVerticals(true);
+			trajectory.setAttributes(new BasicShapeAttributes());
+			trajectory.getAttributes().setOutlineMaterial(Material.MAGENTA);
+			trajectory.getAttributes().setOutlineWidth(5d);
+			trajectory.getAttributes().setOutlineOpacity(0.5d);
+			
+			session.getActiveScenario().setTrajectory(trajectory);
+			session.getActiveScenario().notifyWaypointsChange();
+		}
 	}
 	
 	private class WorldInitializer implements Runnable {
@@ -369,7 +429,7 @@ public class WorldPresenter implements Initializable {
 			case WorldPresenter.ACTION_ENVIRONMENT_SETUP:
 				worldModel.setMode(WorldMode.VIEW);
 				displayStatus(WorldMode.VIEW.toString());
-				openSetupDialog(SetupDialog.ENVIRONMENT_TAB_INDEX);
+				setup(SetupDialog.ENVIRONMENT_TAB_INDEX);
 				break;
 			}
 			System.out.println("pressed...." + e.getActionCommand());
@@ -390,8 +450,6 @@ public class WorldPresenter implements Initializable {
 				worldModel.setMode(WorldMode.VIEW);
 				displayStatus(WorldMode.VIEW.toString());
 				break;
-			default:
-				
 			}
 			System.out.println("pressed...." + e.getActionCommand());
 		}
@@ -401,6 +459,19 @@ public class WorldPresenter implements Initializable {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			switch (e.getActionCommand()) {
+			case WorldPresenter.ACTION_PLANNER_PLAN:
+				worldModel.setMode(WorldMode.VIEW);
+				displayStatus(WorldMode.VIEW.toString());
+				plan();
+				// TODO: possibly busy indicator and thread
+				break;
+			case WorldPresenter.ACTION_PLANNER_SETUP:
+				worldModel.setMode(WorldMode.VIEW);
+				displayStatus(WorldMode.VIEW.toString());
+				setup(SetupDialog.PLANNER_TAB_INDEX);
+				break;
+			}
 			System.out.println("pressed...." + e.getActionCommand());
 		}
 	}
