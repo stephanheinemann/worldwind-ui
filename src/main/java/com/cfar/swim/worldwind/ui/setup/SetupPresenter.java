@@ -11,7 +11,7 @@ import com.cfar.swim.worldwind.planning.Environment;
 import com.cfar.swim.worldwind.registries.Specification;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
-import com.cfar.swim.worldwind.ui.Main;
+import com.cfar.swim.worldwind.ui.WorldwindPlanner;
 
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -45,7 +45,7 @@ public class SetupPresenter implements Initializable {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
+				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 				for (Specification<Environment> envSpec : session.getEnvironmentSpecifications()) {
 					environment.getItems().add(envSpec.getId());
 				}
@@ -66,7 +66,7 @@ public class SetupPresenter implements Initializable {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
+				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 				for (Specification<Planner> plannerSpec : session.getPlannerSpecifications()) {
 					planner.getItems().add(plannerSpec.getId());
 				}
@@ -90,7 +90,7 @@ public class SetupPresenter implements Initializable {
 			Platform.runLater(new Runnable() {
 				@Override
 				public void run() {
-					Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
+					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 					Specification<Environment> envSpec = session.getEnvironmentSpecification(newEnvId);
 					PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(envSpec.getProperties()));
 					envPropertiesPane.setContent(propertySheet);
@@ -107,7 +107,7 @@ public class SetupPresenter implements Initializable {
 			Platform.runLater(new Runnable() {
 				@Override
 				public void run() {
-					Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
+					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 					Specification<Planner> plannerSpec = session.getPlannerSpecification(newPlannerId);
 					PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(plannerSpec.getProperties()));
 					plannerPropertiesPane.setContent(propertySheet);

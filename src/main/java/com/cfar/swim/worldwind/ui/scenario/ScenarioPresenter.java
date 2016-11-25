@@ -8,7 +8,7 @@ import java.util.ResourceBundle;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
-import com.cfar.swim.worldwind.ui.Main;
+import com.cfar.swim.worldwind.ui.WorldwindPlanner;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -26,7 +26,7 @@ public class ScenarioPresenter implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
+		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 		session.addScenariosChangeListener(new ScenariosChangeListener());
 		session.addActiveScenarioChangeListener(new ActiveScenarioChangeListener());
 		this.scenarios.setCellFactory(listView -> new ScenarioListCell());
@@ -37,7 +37,7 @@ public class ScenarioPresenter implements Initializable {
 		if (!this.scenarios.isEditable()) {
 			Scenario scenario = this.scenarios.getSelectionModel().getSelectedItem();
 			if (null != scenario) {
-				SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).setActiveScenario(scenario);
+				SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).setActiveScenario(scenario);
 			}
 		}
 	}
@@ -57,14 +57,14 @@ public class ScenarioPresenter implements Initializable {
 		if (!this.scenarios.isEditable()) {
 			Scenario scenario = this.scenarios.getSelectionModel().getSelectedItem();
 			if (null != scenario) {
-				SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).removeScenario(scenario);
+				SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).removeScenario(scenario);
 			}
 		}
 	}
 	
 	public void clearScenarios() {
 		if (!this.scenarios.isEditable()) {
-			SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).clearScenarios();
+			SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).clearScenarios();
 		}
 	}
 	
@@ -116,7 +116,7 @@ public class ScenarioPresenter implements Initializable {
 			if (!scenarios.getItems().contains(scenario) && !scenario.getId().trim().isEmpty()) {
 				super.commitEdit(scenario);
 				scenarios.setEditable(false);
-				SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).addScenario(scenario);
+				SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).addScenario(scenario);
 			}
 		}
 		

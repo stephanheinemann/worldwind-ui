@@ -31,7 +31,7 @@ import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.session.Setup;
-import com.cfar.swim.worldwind.ui.Main;
+import com.cfar.swim.worldwind.ui.WorldwindPlanner;
 import com.cfar.swim.worldwind.ui.setup.SetupDialog;
 import com.cfar.swim.worldwind.util.Depiction;
 
@@ -103,7 +103,7 @@ public class WorldPresenter implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		SwingUtilities.invokeLater(new WorldInitializer());
-		Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
+		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 		session.addActiveScenarioChangeListener(new ActiveScenarioChangeListener());
 		
 		this.sectorSelector.setInteriorColor(Color.MAGENTA);
@@ -121,7 +121,7 @@ public class WorldPresenter implements Initializable {
 		if (null != this.scenario) {
 			this.scenario.removePropertyChangeListener(this.wcl);
 		}
-		this.scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario();
+		this.scenario = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario();
 		this.scenario.addEnvironmentChangeListener(this.ecl);
 		this.scenario.addWaypointsChangeListener(this.wcl);
 	}
@@ -169,7 +169,7 @@ public class WorldPresenter implements Initializable {
 	}
 	
 	private void plan() {
-		Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
+		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 		Specification<Planner> plannerSpec = session.getSetup().getPlannerSpecification();
 		Planner planner = session.getPlannerFactory().createInstance(plannerSpec);
 		Waypoint origin = null;
@@ -347,7 +347,7 @@ public class WorldPresenter implements Initializable {
 				if (null == evt.getNewValue()) {
 					Sector envSector = sectorSelector.getSector();
 					if (null != envSector) {
-						Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
+						Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 						session.getActiveScenario().setSector(envSector);
 						Specification<Environment> envSpec = session.getSetup().getEnvironmentSpecification();
 						Environment env = session.getEnvironmentFactory().createInstance(envSpec);

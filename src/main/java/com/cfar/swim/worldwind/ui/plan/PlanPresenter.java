@@ -13,7 +13,7 @@ import com.cfar.swim.worldwind.render.annotations.DepictionAnnotation;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
-import com.cfar.swim.worldwind.ui.Main;
+import com.cfar.swim.worldwind.ui.WorldwindPlanner;
 import com.cfar.swim.worldwind.ui.plan.waypoint.WaypointDialog;
 import com.cfar.swim.worldwind.util.Depiction;
 
@@ -87,7 +87,7 @@ public class PlanPresenter implements Initializable {
 		this.costsColumn.setCellValueFactory(
 				new TreeItemPropertyValueFactory<Waypoint, Double>("g"));
 		
-		Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
+		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 		session.addActiveScenarioChangeListener(new ActiveScenarioChangeListener());
 		this.initScenario();
 		this.initPlan();
@@ -97,7 +97,7 @@ public class PlanPresenter implements Initializable {
 		if (null != this.scenario) {
 			this.scenario.removePropertyChangeListener(this.wcl);
 		}
-		this.scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario();
+		this.scenario = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario();
 		this.scenario.addWaypointsChangeListener(this.wcl);
 	}
 	

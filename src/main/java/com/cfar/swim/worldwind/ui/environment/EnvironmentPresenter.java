@@ -9,7 +9,7 @@ import com.cfar.swim.worldwind.planning.Environment;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
-import com.cfar.swim.worldwind.ui.Main;
+import com.cfar.swim.worldwind.ui.WorldwindPlanner;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -29,14 +29,14 @@ public class EnvironmentPresenter implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		this.environment.setCellFactory(TextFieldTreeCell.forTreeView(new EnvironmentConverter()));
-		Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
+		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 		session.addActiveScenarioChangeListener(new ActiveScenarioChangeListener());
 		initScenario();
 		initEnvironment();
 	}
 	
 	public void initScenario() {
-		Scenario scenario = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario();
+		Scenario scenario = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario();
 		scenario.removePropertyChangeListener(this.ecl);
 		scenario.addEnvironmentChangeListener(this.ecl);
 	}
@@ -45,7 +45,7 @@ public class EnvironmentPresenter implements Initializable {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				Environment activeEnvironment = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE).getActiveScenario().getEnvironment();
+				Environment activeEnvironment = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario().getEnvironment();
 				environment.setRoot(new TreeItem<Environment>(activeEnvironment));
 				environment.getRoot().setExpanded(false);
 				initEnvironment(environment.getRoot());
@@ -71,7 +71,7 @@ public class EnvironmentPresenter implements Initializable {
 	public void refineEnvironment() {
 		Environment selectedEnv = this.environment.getSelectionModel().getSelectedItem().getValue();
 		if (!selectedEnv.isRefined()) {
-			Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
+			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 			selectedEnv.refine(2);
 			session.getActiveScenario().notifyEnvironmentChange();
 		}
@@ -80,7 +80,7 @@ public class EnvironmentPresenter implements Initializable {
 	public void coarsenEnvironment() {
 		Environment selectedEnv = this.environment.getSelectionModel().getSelectedItem().getValue();
 		if (selectedEnv.isRefined()) {
-			Session session = SessionManager.getInstance().getSession(Main.APPLICATION_TITLE);
+			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 			selectedEnv.coarsen();
 			session.getActiveScenario().notifyEnvironmentChange();
 		}
