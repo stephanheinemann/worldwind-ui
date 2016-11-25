@@ -54,16 +54,14 @@ public class SetupPresenter implements Initializable {
 				for (Specification<Environment> envSpec : session.getEnvironmentSpecifications()) {
 					environment.getItems().add(envSpec.getId());
 				}
-				environment.layout();
-				environment.getSelectionModel().selectFirst();
 				
-				String envId = environment.getSelectionModel().getSelectedItem();
-				Specification<Environment> envSpec = session.getEnvironmentSpecification(envId);
+				Specification<Environment> envSpec = session.getSetup().getEnvironmentSpecification();
+				environment.getSelectionModel().select(envSpec.getId());
 				setupModel.setEnvironmentProperties(envSpec.getProperties().clone());
 				PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getEnvironmentProperties()));
 				envPropertiesPane.setContent(propertySheet);
-				
 				environment.valueProperty().addListener(new EnvironmentChangeListener());
+				environment.layout();
 			}
 		});
 	}
@@ -76,16 +74,14 @@ public class SetupPresenter implements Initializable {
 				for (Specification<Planner> plannerSpec : session.getPlannerSpecifications()) {
 					planner.getItems().add(plannerSpec.getId());
 				}
-				planner.layout();
-				planner.getSelectionModel().selectFirst();
 				
-				String plannerId = planner.getSelectionModel().getSelectedItem();
-				Specification<Planner> plannerSpec = session.getPlannerSpecification(plannerId);
+				Specification<Planner> plannerSpec = session.getSetup().getPlannerSpecification();
+				planner.getSelectionModel().select(plannerSpec.getId());
 				setupModel.setPlannerProperties(plannerSpec.getProperties().clone());
 				PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getPlannerProperties()));
 				plannerPropertiesPane.setContent(propertySheet);
-				
 				planner.valueProperty().addListener(new PlannerChangeListener());
+				planner.layout();
 			}
 		});
 	}
