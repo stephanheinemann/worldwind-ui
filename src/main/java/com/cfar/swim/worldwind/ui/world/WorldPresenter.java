@@ -14,7 +14,6 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.ResourceBundle;
 
 import javax.inject.Inject;
@@ -30,9 +29,9 @@ import com.cfar.swim.worldwind.render.annotations.ControlAnnotation;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
-import com.cfar.swim.worldwind.session.Setup;
 import com.cfar.swim.worldwind.ui.WorldwindPlanner;
 import com.cfar.swim.worldwind.ui.setup.SetupDialog;
+import com.cfar.swim.worldwind.ui.setup.SetupModel;
 import com.cfar.swim.worldwind.util.Depiction;
 
 import gov.nasa.worldwind.BasicModel;
@@ -87,6 +86,12 @@ public class WorldPresenter implements Initializable {
 	@FXML
 	private SwingNode worldNode;
 	
+	@Inject
+	WorldModel worldModel;
+	
+	@Inject
+	SetupModel setupModel;
+	
 	WorldWindowGLJPanel wwd = new WorldWindowGLJPanel();
 	AnnotationLayer controlLayer = new AnnotationLayer();
 	AnnotationLayer statusLayer = new AnnotationLayer();
@@ -95,7 +100,6 @@ public class WorldPresenter implements Initializable {
 	MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
 	SectorSelector sectorSelector = new SectorSelector(wwd);
 	
-	WorldModel worldModel = new WorldModel();
 	Scenario scenario = null;
 	EnvironmentChangeListener ecl = new EnvironmentChangeListener();
 	WaypointsChangeListener wcl = new WaypointsChangeListener();
@@ -157,14 +161,10 @@ public class WorldPresenter implements Initializable {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				SetupDialog setupDialog = new SetupDialog(SetupDialog.TITLE_SETUP, SetupDialog.HEADER_SETUP, setupIcon);
+				SetupDialog setupDialog = new SetupDialog(SetupDialog.TITLE_SETUP, SetupDialog.HEADER_SETUP, setupIcon, setupModel);
 				setupDialog.selectTab(tabIndex);
-				Optional<Setup> optSetup = setupDialog.showAndWait();
-				if (optSetup.isPresent()) {
-					// TODO: implement
-				}
-			}
-			
+				setupDialog.showAndWait();
+			}			
 		});
 	}
 	

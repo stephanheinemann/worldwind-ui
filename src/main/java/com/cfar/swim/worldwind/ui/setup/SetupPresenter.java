@@ -3,6 +3,8 @@ package com.cfar.swim.worldwind.ui.setup;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import javax.inject.Inject;
+
 import org.controlsfx.control.PropertySheet;
 import org.controlsfx.property.BeanPropertyUtils;
 
@@ -34,6 +36,9 @@ public class SetupPresenter implements Initializable {
 	
 	@FXML
 	private ComboBox<String> planner;
+	
+	@Inject
+	private SetupModel setupModel;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -54,7 +59,8 @@ public class SetupPresenter implements Initializable {
 				
 				String envId = environment.getSelectionModel().getSelectedItem();
 				Specification<Environment> envSpec = session.getEnvironmentSpecification(envId);
-				PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(envSpec.getProperties()));
+				setupModel.setEnvironmentProperties(envSpec.getProperties().clone());
+				PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getEnvironmentProperties()));
 				envPropertiesPane.setContent(propertySheet);
 				
 				environment.valueProperty().addListener(new EnvironmentChangeListener());
@@ -75,7 +81,8 @@ public class SetupPresenter implements Initializable {
 				
 				String plannerId = planner.getSelectionModel().getSelectedItem();
 				Specification<Planner> plannerSpec = session.getPlannerSpecification(plannerId);
-				PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(plannerSpec.getProperties()));
+				setupModel.setPlannerProperties(plannerSpec.getProperties().clone());
+				PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getPlannerProperties()));
 				plannerPropertiesPane.setContent(propertySheet);
 				
 				planner.valueProperty().addListener(new PlannerChangeListener());
@@ -92,7 +99,8 @@ public class SetupPresenter implements Initializable {
 				public void run() {
 					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 					Specification<Environment> envSpec = session.getEnvironmentSpecification(newEnvId);
-					PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(envSpec.getProperties()));
+					setupModel.setEnvironmentProperties(envSpec.getProperties().clone());
+					PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getEnvironmentProperties()));
 					envPropertiesPane.setContent(propertySheet);
 					envPropertiesPane.layout();
 				}
@@ -109,7 +117,8 @@ public class SetupPresenter implements Initializable {
 				public void run() {
 					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 					Specification<Planner> plannerSpec = session.getPlannerSpecification(newPlannerId);
-					PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(plannerSpec.getProperties()));
+					setupModel.setPlannerProperties(plannerSpec.getProperties().clone());
+					PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getPlannerProperties()));
 					plannerPropertiesPane.setContent(propertySheet);
 					plannerPropertiesPane.layout();
 				}
@@ -117,5 +126,4 @@ public class SetupPresenter implements Initializable {
 		}
 	}
 	
-
 }
