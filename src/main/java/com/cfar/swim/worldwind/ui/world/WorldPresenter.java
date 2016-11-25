@@ -12,7 +12,6 @@ import java.beans.PropertyChangeListener;
 import java.net.URL;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -30,6 +29,7 @@ import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.ui.WorldwindPlanner;
+import com.cfar.swim.worldwind.ui.planner.PlannerAlert;
 import com.cfar.swim.worldwind.ui.setup.SetupDialog;
 import com.cfar.swim.worldwind.ui.setup.SetupModel;
 import com.cfar.swim.worldwind.util.Depiction;
@@ -53,6 +53,7 @@ import javafx.application.Platform;
 import javafx.embed.swing.SwingNode;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.AnchorPane;
 
 public class WorldPresenter implements Initializable {
@@ -168,29 +169,36 @@ public class WorldPresenter implements Initializable {
 		});
 	}
 	
+	private void alert(AlertType type, String title, String header, String content) {
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				PlannerAlert alert = new PlannerAlert(type);
+				alert.setTitle(title);
+				alert.setHeaderText(header);
+				alert.setContentText(content);
+				alert.showAndWait();
+			}
+		});
+	}
+	
 	private void plan() {
 		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 		Specification<Planner> plannerSpec = session.getSetup().getPlannerSpecification();
 		Planner planner = session.getPlannerFactory().createInstance(plannerSpec);
-		Waypoint origin = null;
-		Waypoint destination = null;
+		Position origin = null;
+		Position destination = null;
 		List<Position> waypoints = new ArrayList<Position>();
+		waypoints.addAll(session.getActiveScenario().getWaypoints());
 		
-		Iterator<Waypoint> waypointIterator = session.getActiveScenario().getWaypoints().iterator();
-		if (waypointIterator.hasNext()) {
-			origin = waypointIterator.next();
-		}
-		
-		while (waypointIterator.hasNext()) {
-			Waypoint last = waypointIterator.next();
-			if (waypointIterator.hasNext()) {
-				waypoints.add(last);
-			} else {
-				destination = last;
-			}
-		}
-		
-		if ((null != origin) && (null != destination)) {
+		if (planner.supports(planner.getAircraft()) &&
+			planner.supports(planner.getEnvironment()) &&
+			planner.supports(waypoints) &&
+			1 < waypoints.size()) {
+			
+			origin = waypoints.remove(0);
+			destination = waypoints.remove(waypoints.size() - 1);
+			
 			Trajectory trajectory = null;
 			// TODO: ETD either from UI/Scenario time (easier) or waypoint time
 			if (waypoints.isEmpty()) {
@@ -216,6 +224,12 @@ public class WorldPresenter implements Initializable {
 			
 			session.getActiveScenario().setTrajectory(trajectory);
 			session.getActiveScenario().notifyWaypointsChange();
+		} else {
+			this.alert(
+					AlertType.ERROR,
+					PlannerAlert.ALERT_TITLE_PLANNER_INVALID,
+					PlannerAlert.ALERT_HEADER_PLANNER_INVALID,
+					PlannerAlert.ALERT_CONTENT_PLANNER_INVALID);
 		}
 	}
 	
