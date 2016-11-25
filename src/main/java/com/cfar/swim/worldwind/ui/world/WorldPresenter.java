@@ -25,6 +25,7 @@ import com.cfar.swim.worldwind.planning.Trajectory;
 import com.cfar.swim.worldwind.planning.Waypoint;
 import com.cfar.swim.worldwind.registries.Specification;
 import com.cfar.swim.worldwind.render.annotations.ControlAnnotation;
+import com.cfar.swim.worldwind.render.annotations.DepictionAnnotation;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
@@ -213,14 +214,7 @@ public class WorldPresenter implements Initializable {
 				System.out.println(w);
 			}
 			
-			// TODO: find better place for this stuff
-			trajectory.setVisible(true);
-			trajectory.setShowPositions(true);
-			trajectory.setDrawVerticals(true);
-			trajectory.setAttributes(new BasicShapeAttributes());
-			trajectory.getAttributes().setOutlineMaterial(Material.MAGENTA);
-			trajectory.getAttributes().setOutlineWidth(5d);
-			trajectory.getAttributes().setOutlineOpacity(0.5d);
+			this.styleTrajectory(trajectory);
 			
 			session.getActiveScenario().setTrajectory(trajectory);
 			session.getActiveScenario().notifyWaypointsChange();
@@ -230,6 +224,22 @@ public class WorldPresenter implements Initializable {
 					PlannerAlert.ALERT_TITLE_PLANNER_INVALID,
 					PlannerAlert.ALERT_HEADER_PLANNER_INVALID,
 					PlannerAlert.ALERT_CONTENT_PLANNER_INVALID);
+		}
+	}
+	
+	private void styleTrajectory(Trajectory trajectory) {
+		trajectory.setVisible(true);
+		trajectory.setShowPositions(true);
+		trajectory.setDrawVerticals(true);
+		trajectory.setAttributes(new BasicShapeAttributes());
+		trajectory.getAttributes().setOutlineMaterial(Material.MAGENTA);
+		trajectory.getAttributes().setOutlineWidth(5d);
+		trajectory.getAttributes().setOutlineOpacity(0.5d);
+		for (Waypoint waypoint : trajectory.getWaypoints()) {
+			Depiction depiction = new Depiction(symbolFactory.createPoint(Waypoint.SICD_NAV_WAYPOINT_ROUTE, waypoint, null));
+			depiction.setAnnotation(new DepictionAnnotation(waypoint.getEto().toString(), waypoint));
+			depiction.setVisible(true);
+			waypoint.setDepiction(depiction);
 		}
 	}
 	
