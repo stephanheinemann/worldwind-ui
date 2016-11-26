@@ -10,6 +10,7 @@ import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,10 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import com.cfar.swim.worldwind.ai.Planner;
+import com.cfar.swim.worldwind.aircraft.Aircraft;
+import com.cfar.swim.worldwind.aircraft.CombatIdentification;
+import com.cfar.swim.worldwind.aircraft.Iris;
+import com.cfar.swim.worldwind.planning.CostInterval;
 import com.cfar.swim.worldwind.planning.Environment;
 import com.cfar.swim.worldwind.planning.Trajectory;
 import com.cfar.swim.worldwind.planning.Waypoint;
@@ -69,7 +74,7 @@ public class WorldPresenter implements Initializable {
 	@Inject private String setupIcon;
 	
 	public static final String ACTION_NONE = "WorldPresenter.ActionCommand.None";
-	public static final String ACTION_AICRAFT_LOAD = "WorldPresenter.ActionCommand.AircraftLoad";
+	public static final String ACTION_AICRAFT_SET = "WorldPresenter.ActionCommand.AircraftSet";
 	public static final String ACTION_AIRCAFT_SETUP = "WorldPresenter.ActionCommand.AircraftSetup";
 	public static final String ACTION_SWIM_LOAD = "WorldPresenter.ActionCommand.SwimLoad";
 	public static final String ACTION_SWIM_SETUP = "WorldPresenter.ActionCommand.SwimSetup";
@@ -97,12 +102,14 @@ public class WorldPresenter implements Initializable {
 	WorldWindowGLJPanel wwd = new WorldWindowGLJPanel();
 	AnnotationLayer controlLayer = new AnnotationLayer();
 	AnnotationLayer statusLayer = new AnnotationLayer();
+	RenderableLayer aircraftLayer = new RenderableLayer();
 	RenderableLayer environmentLayer = new RenderableLayer();
 	RenderableLayer waypointLayer = new RenderableLayer();
 	MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
 	SectorSelector sectorSelector = new SectorSelector(wwd);
 	
 	Scenario scenario = null;
+	AircraftChangeListener acl = new AircraftChangeListener();
 	EnvironmentChangeListener ecl = new EnvironmentChangeListener();
 	WaypointsChangeListener wcl = new WaypointsChangeListener();
 	TrajectoryChangeListener tcl = new TrajectoryChangeListener();
@@ -120,6 +127,7 @@ public class WorldPresenter implements Initializable {
 		this.sectorSelector.addPropertyChangeListener(SectorSelector.SECTOR_PROPERTY, new SectorChangeListener());
 		
 		this.initScenario();
+		this.initAircraft();
 		this.initEnvironment();
 		this.initPlan();
 	}
@@ -129,9 +137,23 @@ public class WorldPresenter implements Initializable {
 			this.scenario.removePropertyChangeListener(this.wcl);
 		}
 		this.scenario = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario();
+		this.scenario.addAircraftChangeListener(this.acl);
 		this.scenario.addEnvironmentChangeListener(this.ecl);
 		this.scenario.addWaypointsChangeListener(this.wcl);
 		this.scenario.addTrajectoryChangeListener(this.tcl);
+	}
+	
+	public void initAircraft() {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				aircraftLayer.removeAllRenderables();
+				if (scenario.hasAircraft()) {
+					aircraftLayer.addRenderable(scenario.getAircraft());
+				}
+				wwd.redraw();
+			}
+		});
 	}
 	
 	public void initEnvironment() {
@@ -255,13 +277,14 @@ public class WorldPresenter implements Initializable {
 			wwd.addSelectListener(new ViewControlsSelectListener(wwd, viewControlsLayer));
 			
 			// add scenario data
+			wwd.getModel().getLayers().add(aircraftLayer);
 			wwd.getModel().getLayers().add(environmentLayer);
 			wwd.getModel().getLayers().add(waypointLayer);
 			
 			// add planner controls
 			ControlAnnotation aircraftControl = new ControlAnnotation(aircraftIcon);
 			aircraftControl.getAttributes().setDrawOffset(new Point(425, 25));
-			aircraftControl.setPrimaryActionCommand(WorldPresenter.ACTION_AICRAFT_LOAD);
+			aircraftControl.setPrimaryActionCommand(WorldPresenter.ACTION_AICRAFT_SET);
 			aircraftControl.setSecondaryActionCommand(WorldPresenter.ACTION_AIRCAFT_SETUP);
 			aircraftControl.addActionListener(new AircraftControlListener());
 			
@@ -350,7 +373,10 @@ public class WorldPresenter implements Initializable {
 	
 	private class WorldMouseListener extends MouseAdapter {
 		public void mouseClicked(MouseEvent e) {
-			if (worldModel.getMode().equals(WorldMode.WAYPOINT)) {
+			// TODO: swing thread maybe not necessary
+			if (worldModel.getMode().equals(WorldMode.AIRCRAFT)) {
+				SwingUtilities.invokeLater(new AircraftMouseHandler());
+			} else if (worldModel.getMode().equals(WorldMode.WAYPOINT)) {
 				SwingUtilities.invokeLater(new WaypointMouseHandler());
 			}
 			// TODO: pickable support ...
@@ -378,6 +404,38 @@ public class WorldPresenter implements Initializable {
 		}
 	}
 	
+	private class AircraftMouseHandler implements Runnable {
+
+		@Override
+		public void run() {
+			Position clickedPosition = wwd.getCurrentPosition();
+			if (null != clickedPosition) {
+				Waypoint waypoint = new Waypoint(clickedPosition);
+				waypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, waypoint, null)));
+				waypoint.getDepiction().setVisible(true);
+				
+				if (scenario.hasAircraft() && (0 < scenario.getWaypoints().size())) {
+					scenario.removeWaypoint(0);
+				}
+				scenario.addWaypoint(0, waypoint);
+				
+				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+				Specification<Aircraft> aircraftSpec = session.getSetup().getAircraftSpecification();
+				Aircraft aircraft = session.getAircraftFactory().createInstance(aircraftSpec);
+				aircraft.moveTo(waypoint);
+				aircraft.setCostInterval(new CostInterval(
+        				aircraftSpec.getId(),
+        				ZonedDateTime.now(ZoneId.of("UTC")).minusYears(10),
+        				ZonedDateTime.now(ZoneId.of("UTC")).plusYears(10),
+        				100d));
+				scenario.setAircraft(aircraft);
+				
+				worldModel.setMode(WorldMode.VIEW);
+				displayStatus(WorldMode.VIEW.toString());
+			}
+		}
+	}
+	
 	private class WaypointMouseHandler implements Runnable {
 
 		@Override
@@ -389,6 +447,14 @@ public class WorldPresenter implements Initializable {
 				waypoint.getDepiction().setVisible(true);
 				scenario.addWaypoint(waypoint);
 			}
+		}
+	}
+	
+	private class AircraftChangeListener implements PropertyChangeListener {
+		
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			initAircraft();
 		}
 	}
 	
@@ -430,6 +496,17 @@ public class WorldPresenter implements Initializable {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			switch (e.getActionCommand()) {
+			case WorldPresenter.ACTION_AICRAFT_SET:
+				worldModel.setMode(WorldMode.AIRCRAFT);
+				displayStatus(WorldMode.AIRCRAFT.toString());
+				break;
+			case WorldPresenter.ACTION_AIRCAFT_SETUP:
+				worldModel.setMode(WorldMode.VIEW);
+				displayStatus(WorldMode.VIEW.toString());
+				setup(SetupDialog.AIRCRAFT_TAB_INDEX);
+				break;
+			}
 			System.out.println("pressed...." + e.getActionCommand());
 		}
 	}

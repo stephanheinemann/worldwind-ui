@@ -9,6 +9,7 @@ import org.controlsfx.control.PropertySheet;
 import org.controlsfx.property.BeanPropertyUtils;
 
 import com.cfar.swim.worldwind.ai.Planner;
+import com.cfar.swim.worldwind.aircraft.Aircraft;
 import com.cfar.swim.worldwind.planning.Environment;
 import com.cfar.swim.worldwind.registries.Specification;
 import com.cfar.swim.worldwind.session.Session;
@@ -26,10 +27,16 @@ import javafx.scene.control.ScrollPane;
 public class SetupPresenter implements Initializable {
 	
 	@FXML
+	private ScrollPane aircraftPropertiesPane;
+	
+	@FXML
 	private ScrollPane envPropertiesPane;
 	
 	@FXML
 	private ScrollPane plannerPropertiesPane;
+	
+	@FXML
+	private ComboBox<String> aircraft;
 	
 	@FXML
 	private ComboBox<String> environment;
@@ -42,8 +49,29 @@ public class SetupPresenter implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		this.initAircraft();
 		this.initEnvironment();
 		this.initPlanner();
+	}
+	
+	public void initAircraft() {
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+				for (Specification<Aircraft> aircraftSpec : session.getAircraftSpecifications()) {
+					aircraft.getItems().add(aircraftSpec.getId());
+				}
+				
+				Specification<Aircraft> aircraftSpec = session.getSetup().getAircraftSpecification();
+				aircraft.getSelectionModel().select(aircraftSpec.getId());
+				setupModel.setAircraftProperties(aircraftSpec.getProperties().clone());
+				PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getAircraftProperties()));
+				aircraftPropertiesPane.setContent(propertySheet);
+				aircraft.valueProperty().addListener(new AircraftChangeListener());
+				aircraft.layout();
+			}
+		});
 	}
 	
 	public void initEnvironment() {
@@ -84,6 +112,24 @@ public class SetupPresenter implements Initializable {
 				planner.layout();
 			}
 		});
+	}
+	
+	private class AircraftChangeListener implements ChangeListener<String> {
+
+		@Override
+		public void changed(ObservableValue<? extends String> observable, String oldAircraftId, String newAircraftId) {
+			Platform.runLater(new Runnable() {
+				@Override
+				public void run() {
+					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+					Specification<Aircraft> aircraftSpec = session.getAircraftSpecification(newAircraftId);
+					setupModel.setAircraftProperties(aircraftSpec.getProperties().clone());
+					PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getAircraftProperties()));
+					aircraftPropertiesPane.setContent(propertySheet);
+					aircraftPropertiesPane.layout();
+				}
+			});
+		}
 	}
 	
 	private class EnvironmentChangeListener implements ChangeListener<String> {
