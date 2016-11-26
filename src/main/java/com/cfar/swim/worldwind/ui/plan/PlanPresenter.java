@@ -3,6 +3,7 @@ package com.cfar.swim.worldwind.ui.plan;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
@@ -23,12 +24,15 @@ import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.symbology.milstd2525.MilStd2525GraphicFactory;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableColumn;
+import javafx.scene.control.TreeTableColumn.CellDataFeatures;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.TreeItemPropertyValueFactory;
+import javafx.util.Callback;
 
 public class PlanPresenter implements Initializable {
 
@@ -63,6 +67,7 @@ public class PlanPresenter implements Initializable {
 	
 	Scenario scenario = null;
 	WaypointsChangeListener wcl = new WaypointsChangeListener();
+	TrajectoryChangeListener tcl = new TrajectoryChangeListener();
 	
 	MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
 	
@@ -82,10 +87,12 @@ public class PlanPresenter implements Initializable {
 			new ReadOnlyStringWrapper(param.getValue().getValue().toString()));
 		
 		this.altitudeColumn.setCellValueFactory(
-				new TreeItemPropertyValueFactory<Waypoint, Double>("altitude"));
+			new TreeItemPropertyValueFactory<Waypoint, Double>("altitude"));
 		
 		this.costsColumn.setCellValueFactory(
-				new TreeItemPropertyValueFactory<Waypoint, Double>("g"));
+			new TreeItemPropertyValueFactory<Waypoint, Double>("g"));
+		
+		this.estimatedTimeOverColumn.setCellValueFactory(new EtoCellValueFactory());
 		
 		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 		session.addActiveScenarioChangeListener(new ActiveScenarioChangeListener());
@@ -99,6 +106,7 @@ public class PlanPresenter implements Initializable {
 		}
 		this.scenario = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario();
 		this.scenario.addWaypointsChangeListener(this.wcl);
+		this.scenario.addTrajectoryChangeListener(this.tcl);
 	}
 	
 	public void initPlan() {
@@ -106,8 +114,24 @@ public class PlanPresenter implements Initializable {
 			@Override
 			public void run() {
 				plan.getRoot().getChildren().clear();
-				for (Waypoint waypoint : scenario.getWaypoints()) {
-					plan.getRoot().getChildren().add(new TreeItem<Waypoint>(waypoint));
+				
+				Iterator<Waypoint> waypointIterator = scenario.getWaypoints().iterator();
+				
+				if (waypointIterator.hasNext()) {
+					Waypoint current = waypointIterator.next();
+					TreeItem<Waypoint> waypointItem = new TreeItem<Waypoint>(current);
+					plan.getRoot().getChildren().add(waypointItem);
+					
+					while (waypointIterator.hasNext()) {
+						Waypoint next = waypointIterator.next();
+						for (Waypoint legWaypoint : scenario.getTrajectoryLeg(current, next)) {
+							TreeItem<Waypoint> legWaypointItem = new TreeItem<Waypoint>(legWaypoint);
+							waypointItem.getChildren().add(legWaypointItem);
+						}
+						current = next;
+						waypointItem = new TreeItem<Waypoint>(current);
+						plan.getRoot().getChildren().add(waypointItem);
+					}
 				}
 			}
 		});
@@ -121,6 +145,7 @@ public class PlanPresenter implements Initializable {
 			waypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, waypoint, null)));
 			waypoint.getDepiction().setAnnotation(new DepictionAnnotation(this.waypointSymbol, "?", waypoint));
 			waypoint.getDepiction().setVisible(true);
+			this.scenario.clearTrajectory();
 			this.scenario.addWaypoint(waypoint);
 		}
 		// TODO: check out ControlsFX (central repository)
@@ -138,6 +163,7 @@ public class PlanPresenter implements Initializable {
 				editedWaypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, editedWaypoint, null)));
 				editedWaypoint.getDepiction().setAnnotation(new DepictionAnnotation(this.waypointSymbol, editedWaypoint.getDesignator(), editedWaypoint));
 				editedWaypoint.getDepiction().setVisible(true);
+				this.scenario.clearTrajectory();
 				this.scenario.updateWaypoint(waypoint, editedWaypoint);
 			}
 		}
@@ -147,15 +173,26 @@ public class PlanPresenter implements Initializable {
 		TreeItem<Waypoint> waypointItem = this.plan.getSelectionModel().getSelectedItem();
 		if (null != waypointItem) {
 			Waypoint waypoint = waypointItem.getValue();
+			this.scenario.clearTrajectory();
 			this.scenario.removeWaypoint(waypoint);
+			
 		}
 	}
 	
 	public void clearWaypoints() {
+		this.scenario.clearTrajectory();
 		this.scenario.clearWaypoints();
 	}
 	
 	private class WaypointsChangeListener implements PropertyChangeListener {
+
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			initPlan();
+		}
+	}
+	
+	private class TrajectoryChangeListener implements PropertyChangeListener {
 
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
@@ -169,6 +206,21 @@ public class PlanPresenter implements Initializable {
 		public void propertyChange(PropertyChangeEvent evt) {
 			initScenario();
 			initPlan();
+		}
+	}
+	
+	private class EtoCellValueFactory implements Callback<CellDataFeatures<Waypoint, String>, ObservableValue<String>> {
+
+		@Override
+		public ObservableValue<String> call(CellDataFeatures<Waypoint, String> param) {
+			ReadOnlyStringWrapper value = null;
+			Waypoint waypoint = param.getValue().getValue();
+			
+			if (null != waypoint.getEto()) {
+				value = new ReadOnlyStringWrapper(waypoint.getEto().toString());
+			}
+			
+			return value;
 		}
 	}
 	

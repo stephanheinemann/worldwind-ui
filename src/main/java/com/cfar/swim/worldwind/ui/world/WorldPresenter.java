@@ -105,6 +105,7 @@ public class WorldPresenter implements Initializable {
 	Scenario scenario = null;
 	EnvironmentChangeListener ecl = new EnvironmentChangeListener();
 	WaypointsChangeListener wcl = new WaypointsChangeListener();
+	TrajectoryChangeListener tcl = new TrajectoryChangeListener();
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -130,6 +131,7 @@ public class WorldPresenter implements Initializable {
 		this.scenario = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario();
 		this.scenario.addEnvironmentChangeListener(this.ecl);
 		this.scenario.addWaypointsChangeListener(this.wcl);
+		this.scenario.addTrajectoryChangeListener(this.tcl);
 	}
 	
 	public void initEnvironment() {
@@ -203,21 +205,13 @@ public class WorldPresenter implements Initializable {
 			Trajectory trajectory = null;
 			// TODO: ETD either from UI/Scenario time (easier) or waypoint time
 			if (waypoints.isEmpty()) {
-				System.out.println("planning from " + origin + " to " + destination);
 				trajectory = planner.plan(origin, destination, ZonedDateTime.now());
 			} else {
-				System.out.println("planning from " + origin + " to " + destination + " via waypoints");
 				trajectory = planner.plan(origin, destination, waypoints, ZonedDateTime.now());
-			}
-			System.out.println("finished planning");
-			for (Waypoint w : trajectory.getWaypoints()) {
-				System.out.println(w);
 			}
 			
 			this.styleTrajectory(trajectory);
-			
 			session.getActiveScenario().setTrajectory(trajectory);
-			session.getActiveScenario().notifyWaypointsChange();
 		} else {
 			this.alert(
 					AlertType.ERROR,
@@ -407,6 +401,14 @@ public class WorldPresenter implements Initializable {
 	}
 	
 	private class WaypointsChangeListener implements PropertyChangeListener {
+		
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			initPlan();
+		}
+	}
+	
+	private class TrajectoryChangeListener implements PropertyChangeListener {
 		
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
