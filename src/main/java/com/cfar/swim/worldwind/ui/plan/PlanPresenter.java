@@ -133,6 +133,8 @@ public class PlanPresenter implements Initializable {
 						plan.getRoot().getChildren().add(waypointItem);
 					}
 				}
+				
+				plan.refresh();
 			}
 		});
 	}
@@ -145,7 +147,6 @@ public class PlanPresenter implements Initializable {
 			waypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, waypoint, null)));
 			waypoint.getDepiction().setAnnotation(new DepictionAnnotation(this.waypointSymbol, "?", waypoint));
 			waypoint.getDepiction().setVisible(true);
-			this.scenario.clearTrajectory();
 			this.scenario.addWaypoint(waypoint);
 		}
 		// TODO: check out ControlsFX (central repository)
