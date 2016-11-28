@@ -6,6 +6,8 @@ import java.util.ResourceBundle;
 import com.cfar.swim.worldwind.ui.environment.EnvironmentView;
 import com.cfar.swim.worldwind.ui.plan.PlanView;
 import com.cfar.swim.worldwind.ui.scenario.ScenarioView;
+import com.cfar.swim.worldwind.ui.threshold.ThresholdView;
+import com.cfar.swim.worldwind.ui.time.TimeView;
 import com.cfar.swim.worldwind.ui.world.WorldView;
 
 import javafx.fxml.FXML;
@@ -19,12 +21,26 @@ public class PlannerPresenter implements Initializable {
 	private AnchorPane worldPane;
 	
 	@FXML
+	private Accordion timeAccordion;
+	
+	@FXML
+	private Accordion swimAccordion;
+	
+	@FXML
 	private Accordion plannerAccordion;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		WorldView worldView = new WorldView();
 		this.worldPane.getChildren().add(worldView.getView());
+		
+		TimeView timeView = new TimeView();
+		this.timeAccordion.getPanes().add(timeView.getView());
+		this.timeAccordion.setExpandedPane(timeView.getView());
+		
+		ThresholdView thresholdView = new ThresholdView();
+		this.swimAccordion.getPanes().add(thresholdView.getView());
+		this.swimAccordion.setExpandedPane(thresholdView.getView());
 		
 		ScenarioView scenarioView = new ScenarioView();
 		this.plannerAccordion.getPanes().add(scenarioView.getView());
@@ -34,6 +50,7 @@ public class PlannerPresenter implements Initializable {
 		
 		PlanView planView = new PlanView();
 		this.plannerAccordion.getPanes().add(planView.getView());
+		this.plannerAccordion.setExpandedPane(planView.getView());
 	}
 	
 }

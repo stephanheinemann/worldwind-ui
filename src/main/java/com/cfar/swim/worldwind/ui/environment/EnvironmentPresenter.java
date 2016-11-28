@@ -24,6 +24,7 @@ public class EnvironmentPresenter implements Initializable {
 	@FXML
 	private TreeView<Environment> environment;
 	
+	Scenario scenario = null;
 	private EnvironmentChangeListener ecl = new EnvironmentChangeListener();
 	
 	@Override
@@ -36,9 +37,12 @@ public class EnvironmentPresenter implements Initializable {
 	}
 	
 	public void initScenario() {
-		Scenario scenario = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario();
-		scenario.removePropertyChangeListener(this.ecl);
-		scenario.addEnvironmentChangeListener(this.ecl);
+		// remove change listeners from the previous scenario if any
+		if (null != this.scenario) {
+			this.scenario.removePropertyChangeListener(this.ecl);
+		}
+		this.scenario = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario();
+		this.scenario.addEnvironmentChangeListener(this.ecl);
 	}
 	
 	public void initEnvironment() {

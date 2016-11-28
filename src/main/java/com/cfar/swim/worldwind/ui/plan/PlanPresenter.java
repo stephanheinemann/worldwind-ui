@@ -102,8 +102,10 @@ public class PlanPresenter implements Initializable {
 	}
 	
 	public void initScenario() {
+		// remove change listeners from the previous scenario if any
 		if (null != this.scenario) {
 			this.scenario.removePropertyChangeListener(this.wcl);
+			this.scenario.removePropertyChangeListener(this.tcl);
 		}
 		this.scenario = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario();
 		this.scenario.addWaypointsChangeListener(this.wcl);

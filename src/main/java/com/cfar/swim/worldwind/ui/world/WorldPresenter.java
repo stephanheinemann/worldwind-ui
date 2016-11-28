@@ -22,8 +22,6 @@ import javax.swing.SwingUtilities;
 
 import com.cfar.swim.worldwind.ai.Planner;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
-import com.cfar.swim.worldwind.aircraft.CombatIdentification;
-import com.cfar.swim.worldwind.aircraft.Iris;
 import com.cfar.swim.worldwind.planning.CostInterval;
 import com.cfar.swim.worldwind.planning.Environment;
 import com.cfar.swim.worldwind.planning.Trajectory;
@@ -109,10 +107,12 @@ public class WorldPresenter implements Initializable {
 	SectorSelector sectorSelector = new SectorSelector(wwd);
 	
 	Scenario scenario = null;
-	AircraftChangeListener acl = new AircraftChangeListener();
-	EnvironmentChangeListener ecl = new EnvironmentChangeListener();
-	WaypointsChangeListener wcl = new WaypointsChangeListener();
-	TrajectoryChangeListener tcl = new TrajectoryChangeListener();
+	TimeChangeListener timeCl = new TimeChangeListener();
+	ThresholdChangeListener thresholdCl = new ThresholdChangeListener();
+	AircraftChangeListener aircraftCl = new AircraftChangeListener();
+	EnvironmentChangeListener environmentCl = new EnvironmentChangeListener();
+	WaypointsChangeListener waypointsCl = new WaypointsChangeListener();
+	TrajectoryChangeListener trajectoryCl = new TrajectoryChangeListener();
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -133,14 +133,22 @@ public class WorldPresenter implements Initializable {
 	}
 	
 	public void initScenario() {
+		// remove change listeners from the previous scenario if any
 		if (null != this.scenario) {
-			this.scenario.removePropertyChangeListener(this.wcl);
+			this.scenario.removePropertyChangeListener(this.timeCl);
+			this.scenario.removePropertyChangeListener(this.thresholdCl);
+			this.scenario.removePropertyChangeListener(this.aircraftCl);
+			this.scenario.removePropertyChangeListener(this.environmentCl);
+			this.scenario.removePropertyChangeListener(this.waypointsCl);
+			this.scenario.removePropertyChangeListener(this.trajectoryCl);
 		}
 		this.scenario = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario();
-		this.scenario.addAircraftChangeListener(this.acl);
-		this.scenario.addEnvironmentChangeListener(this.ecl);
-		this.scenario.addWaypointsChangeListener(this.wcl);
-		this.scenario.addTrajectoryChangeListener(this.tcl);
+		this.scenario.addTimeChangeListener(this.timeCl);
+		this.scenario.addThresholdChangeListener(this.thresholdCl);
+		this.scenario.addAircraftChangeListener(this.aircraftCl);
+		this.scenario.addEnvironmentChangeListener(this.environmentCl);
+		this.scenario.addWaypointsChangeListener(this.waypointsCl);
+		this.scenario.addTrajectoryChangeListener(this.trajectoryCl);
 	}
 	
 	public void initAircraft() {
@@ -225,11 +233,10 @@ public class WorldPresenter implements Initializable {
 			destination = waypoints.remove(waypoints.size() - 1);
 			
 			Trajectory trajectory = null;
-			// TODO: ETD either from UI/Scenario time (easier) or waypoint time
 			if (waypoints.isEmpty()) {
-				trajectory = planner.plan(origin, destination, ZonedDateTime.now());
+				trajectory = planner.plan(origin, destination, session.getActiveScenario().getTime());
 			} else {
-				trajectory = planner.plan(origin, destination, waypoints, ZonedDateTime.now());
+				trajectory = planner.plan(origin, destination, waypoints, session.getActiveScenario().getTime());
 			}
 			
 			this.styleTrajectory(trajectory);
@@ -447,6 +454,25 @@ public class WorldPresenter implements Initializable {
 				waypoint.getDepiction().setVisible(true);
 				scenario.addWaypoint(waypoint);
 			}
+		}
+	}
+	
+	private class TimeChangeListener implements PropertyChangeListener {
+
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			// TODO: environment, aircraft, obstacles
+			initEnvironment();
+			System.out.println("new time = " + evt.getNewValue());
+		}
+	}
+	
+	private class ThresholdChangeListener implements PropertyChangeListener {
+
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			// TODO: environment, aircraft, obstacles
+			System.out.println("new threshold = " + evt.getNewValue());
 		}
 	}
 	
