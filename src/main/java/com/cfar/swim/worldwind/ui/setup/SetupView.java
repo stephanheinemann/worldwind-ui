@@ -13,6 +13,11 @@ public class SetupView extends FXMLView {
 	}
 	
 	@SuppressWarnings("unchecked")
+	public ComboBox<String> getAircraft() {
+		return (ComboBox<String>) this.getView().lookup("#aircraft");
+	}
+	
+	@SuppressWarnings("unchecked")
 	public ComboBox<String> getEnvironment() {
 		return (ComboBox<String>) this.getView().lookup("#environment");
 	}

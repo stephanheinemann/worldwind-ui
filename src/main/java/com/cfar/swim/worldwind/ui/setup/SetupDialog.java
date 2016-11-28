@@ -1,6 +1,7 @@
 package com.cfar.swim.worldwind.ui.setup;
 
 import com.cfar.swim.worldwind.ai.Planner;
+import com.cfar.swim.worldwind.aircraft.Aircraft;
 import com.cfar.swim.worldwind.planning.Environment;
 import com.cfar.swim.worldwind.registries.Specification;
 import com.cfar.swim.worldwind.session.Session;
@@ -43,6 +44,12 @@ public class SetupDialog extends Dialog<Setup> {
 			if (dialogButton.equals(ButtonType.OK)) {
 				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 				setup = session.getSetup();
+				
+				String aircraftId = this.setupView.getAircraft().getValue();
+				Specification<Aircraft> aircraftSpec = session.getAircraftSpecification(aircraftId);
+				aircraftSpec.setProperties(setupModel.getAircraftProperties());
+				setup.setAircraftSpecification(aircraftSpec);
+				
 				String envId = this.setupView.getEnvironment().getValue();
 				Specification<Environment> envSpec = session.getEnvironmentSpecification(envId);
 				envSpec.setProperties(setupModel.getEnvironmentProperties());
