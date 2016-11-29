@@ -33,6 +33,10 @@ public class PlannerPresenter implements Initializable {
 	public void initialize(URL location, ResourceBundle resources) {
 		WorldView worldView = new WorldView();
 		this.worldPane.getChildren().add(worldView.getView());
+		AnchorPane.setTopAnchor(worldView.getView(), 0d);
+		AnchorPane.setLeftAnchor(worldView.getView(), 0d);
+		AnchorPane.setRightAnchor(worldView.getView(), 0d);
+		AnchorPane.setBottomAnchor(worldView.getView(), 0d);
 		
 		TimeView timeView = new TimeView();
 		this.timeAccordion.getPanes().add(timeView.getView());

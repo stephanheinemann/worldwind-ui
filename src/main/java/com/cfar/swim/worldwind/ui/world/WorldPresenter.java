@@ -273,7 +273,6 @@ public class WorldPresenter implements Initializable {
 			JPanel worldPanel = new JPanel(new BorderLayout());
 			
 			// initialize world window
-			wwd.setPreferredSize(new java.awt.Dimension(1366, 480));
 			wwd.setModel(new BasicModel());
 			// TODO: load higher quality bing maps
 			// possibly configurable (street or bing) and per session
@@ -361,7 +360,7 @@ public class WorldPresenter implements Initializable {
 			wwd.getModel().getLayers().add(statusLayer);
 			
 			// set world panel / node layout
-			worldPanel.add(wwd, BorderLayout.PAGE_START);
+			worldPanel.add(wwd, BorderLayout.CENTER);
 			
 			StatusBar statusBar = new StatusBar();
 			statusBar.setEventSource(wwd);
