@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<TitledPane animated="false" text="SWIM" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.cfar.swim.worldwind.ui.swim.SwimPresenter">
+  <content>
+      <ListView fx:id="swimList">
+         <contextMenu>
+            <ContextMenu>
+              <items>
+                <MenuItem mnemonicParsing="false" onAction="#enableSwimItem" text="Enable" />
+                  <MenuItem mnemonicParsing="false" onAction="#disableSwimItem" text="Disable" />
+              </items>
+            </ContextMenu>
+         </contextMenu></ListView>
+  </content>
+</TitledPane>

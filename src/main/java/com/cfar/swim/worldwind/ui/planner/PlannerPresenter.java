@@ -6,6 +6,7 @@ import java.util.ResourceBundle;
 import com.cfar.swim.worldwind.ui.environment.EnvironmentView;
 import com.cfar.swim.worldwind.ui.plan.PlanView;
 import com.cfar.swim.worldwind.ui.scenario.ScenarioView;
+import com.cfar.swim.worldwind.ui.swim.SwimView;
 import com.cfar.swim.worldwind.ui.threshold.ThresholdView;
 import com.cfar.swim.worldwind.ui.time.TimeView;
 import com.cfar.swim.worldwind.ui.world.WorldView;
@@ -45,6 +46,9 @@ public class PlannerPresenter implements Initializable {
 		ThresholdView thresholdView = new ThresholdView();
 		this.swimAccordion.getPanes().add(thresholdView.getView());
 		this.swimAccordion.setExpandedPane(thresholdView.getView());
+		
+		SwimView swimView = new SwimView();
+		this.swimAccordion.getPanes().add(swimView.getView());
 		
 		ScenarioView scenarioView = new ScenarioView();
 		this.plannerAccordion.getPanes().add(scenarioView.getView());

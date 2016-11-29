@@ -61,6 +61,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.AnchorPane;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 
 public class WorldPresenter implements Initializable {
 	
@@ -86,6 +88,10 @@ public class WorldPresenter implements Initializable {
 	public static final String ACTION_PLANNER_SETUP = "WorldPresenter.ActionCommand.PlannerSetup";
 	public static final String ACTION_TAKEOFF = "WorldPresenter.ActionCommand.TakeOff";
 	public static final String ACTION_LAND = "WorldPresenter.ActionCommand.Land";
+	
+	public static final String FILE_CHOOSER_TITLE_SWIM = "Open SWIM File";
+	public static final String FILE_CHOOSER_SWIM = "SWIM Files";
+	public static final String FILE_CHOOSER_EXTENSION_SWIM = "*.xml";
 	
 	@FXML
 	private AnchorPane worldNodePane;
@@ -204,6 +210,18 @@ public class WorldPresenter implements Initializable {
 		});
 	}
 	
+	private void load(String title, ExtensionFilter[] extensions) {
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				FileChooser fileChooser = new FileChooser();
+				fileChooser.setTitle(title);
+				fileChooser.getExtensionFilters().addAll(extensions);
+				fileChooser.showOpenDialog(null);
+			}
+		});
+	}
+	
 	private void alert(AlertType type, String title, String header, String content) {
 		Platform.runLater(new Runnable() {
 			@Override
@@ -235,6 +253,7 @@ public class WorldPresenter implements Initializable {
 			destination = waypoints.remove(waypoints.size() - 1);
 			
 			Trajectory trajectory = null;
+			// TODO: span planning thread and show busy indicator
 			if (waypoints.isEmpty()) {
 				trajectory = planner.plan(origin, destination, session.getActiveScenario().getTime());
 			} else {
@@ -555,6 +574,21 @@ public class WorldPresenter implements Initializable {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			switch (e.getActionCommand()) {
+			case WorldPresenter.ACTION_SWIM_LOAD:
+				worldModel.setMode(WorldMode.VIEW);
+				displayStatus(WorldMode.VIEW.toString());
+				load(WorldPresenter.FILE_CHOOSER_TITLE_SWIM,
+					new ExtensionFilter[] { new ExtensionFilter(
+						WorldPresenter.FILE_CHOOSER_SWIM,
+						WorldPresenter.FILE_CHOOSER_EXTENSION_SWIM)});
+				break;
+			case WorldPresenter.ACTION_SWIM_SETUP:
+				worldModel.setMode(WorldMode.VIEW);
+				displayStatus(WorldMode.VIEW.toString());
+				setup(SetupDialog.SWIM_TAB_INDEX);
+				break;
+			}
 			System.out.println("pressed...." + e.getActionCommand());
 		}
 	}
