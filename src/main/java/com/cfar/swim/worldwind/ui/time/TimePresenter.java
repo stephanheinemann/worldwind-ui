@@ -29,10 +29,14 @@ public class TimePresenter implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		picker = new LocalDateTimePicker(LocalDateTime.now(ZoneId.of("UTC")));
-		timePane.getChildren().add(picker);
-		picker.setValueValidationCallback(new PlanningTimeCallback());
-		picker.addEventFilter(KeyEvent.KEY_PRESSED, new PlanningTimeKeyHandler());
+		this.picker = new LocalDateTimePicker(LocalDateTime.now(ZoneId.of("UTC")));
+		this.timePane.getChildren().add(this.picker);
+		this.picker.setValueValidationCallback(new PlanningTimeCallback());
+		this.picker.addEventFilter(KeyEvent.KEY_PRESSED, new PlanningTimeKeyHandler());
+		AnchorPane.setTopAnchor(this.picker, 5d);
+		AnchorPane.setLeftAnchor(this.picker, 5d);
+		AnchorPane.setRightAnchor(this.picker, 5d);
+		AnchorPane.setBottomAnchor(this.picker, 5d);
 	}
 
 	private class PlanningTimeCallback implements Callback<LocalDateTime, Boolean> {

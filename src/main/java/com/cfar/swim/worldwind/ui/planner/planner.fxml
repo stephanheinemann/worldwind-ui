@@ -39,7 +39,7 @@
       <SplitPane dividerPositions="0.75" layoutY="30.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" orientation="VERTICAL" prefHeight="715.0" prefWidth="1366.0" AnchorPane.bottomAnchor="23.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="30.0">
         <items>
           <AnchorPane fx:id="worldPane" />
-            <SplitPane dividerPositions="0.15, 0.35">
+            <SplitPane dividerPositions="0.2, 0.4">
                <items>
                   <Accordion fx:id="timeAccordion" />
                   <Accordion fx:id="swimAccordion" />
