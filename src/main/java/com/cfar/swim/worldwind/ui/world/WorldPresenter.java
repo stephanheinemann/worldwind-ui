@@ -495,8 +495,8 @@ public class WorldPresenter implements Initializable {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			// TODO: environment, aircraft, obstacles
+			// TODO: possibly only redraw layers
 			initEnvironment();
-			System.out.println("new time = " + evt.getNewValue());
 		}
 	}
 	
@@ -505,7 +505,8 @@ public class WorldPresenter implements Initializable {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			// TODO: environment, aircraft, obstacles
-			System.out.println("new threshold = " + evt.getNewValue());
+			// TODO: possibly only redraw layers
+			initEnvironment();
 		}
 	}
 	
