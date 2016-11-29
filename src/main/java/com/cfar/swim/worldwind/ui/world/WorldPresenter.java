@@ -11,24 +11,31 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.FileInputStream;
 import java.net.URL;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import org.xml.sax.InputSource;
+
 import com.cfar.swim.worldwind.ai.Planner;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
+import com.cfar.swim.worldwind.iwxxm.IwxxmLoader;
 import com.cfar.swim.worldwind.planning.CostInterval;
 import com.cfar.swim.worldwind.planning.Environment;
 import com.cfar.swim.worldwind.planning.Trajectory;
 import com.cfar.swim.worldwind.planning.Waypoint;
 import com.cfar.swim.worldwind.registries.Specification;
+import com.cfar.swim.worldwind.render.Obstacle;
 import com.cfar.swim.worldwind.render.annotations.ControlAnnotation;
 import com.cfar.swim.worldwind.render.annotations.DepictionAnnotation;
 import com.cfar.swim.worldwind.session.Scenario;
@@ -111,6 +118,7 @@ public class WorldPresenter implements Initializable {
 	RenderableLayer aircraftLayer = new RenderableLayer();
 	RenderableLayer environmentLayer = new RenderableLayer();
 	RenderableLayer waypointLayer = new RenderableLayer();
+	RenderableLayer obstaclesLayer = new RenderableLayer();
 	MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
 	SectorSelector sectorSelector = new SectorSelector(wwd);
 	
@@ -121,6 +129,7 @@ public class WorldPresenter implements Initializable {
 	EnvironmentChangeListener environmentCl = new EnvironmentChangeListener();
 	WaypointsChangeListener waypointsCl = new WaypointsChangeListener();
 	TrajectoryChangeListener trajectoryCl = new TrajectoryChangeListener();
+	ObstaclesChangeListener obstaclesCl = new ObstaclesChangeListener();
 	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -137,6 +146,7 @@ public class WorldPresenter implements Initializable {
 		this.initScenario();
 		this.initAircraft();
 		this.initEnvironment();
+		this.initObstacles();
 		this.initPlan();
 	}
 	
@@ -149,6 +159,7 @@ public class WorldPresenter implements Initializable {
 			this.scenario.removePropertyChangeListener(this.environmentCl);
 			this.scenario.removePropertyChangeListener(this.waypointsCl);
 			this.scenario.removePropertyChangeListener(this.trajectoryCl);
+			this.scenario.removePropertyChangeListener(this.obstaclesCl);
 		}
 		this.scenario = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario();
 		this.scenario.addTimeChangeListener(this.timeCl);
@@ -157,6 +168,7 @@ public class WorldPresenter implements Initializable {
 		this.scenario.addEnvironmentChangeListener(this.environmentCl);
 		this.scenario.addWaypointsChangeListener(this.waypointsCl);
 		this.scenario.addTrajectoryChangeListener(this.trajectoryCl);
+		this.scenario.addObstaclesChangeListener(this.obstaclesCl);
 	}
 	
 	public void initAircraft() {
@@ -178,6 +190,17 @@ public class WorldPresenter implements Initializable {
 			public void run() {
 				environmentLayer.removeAllRenderables();
 				environmentLayer.addRenderable(scenario.getEnvironment());
+				wwd.redraw();
+			}
+		});
+	}
+	
+	public void initObstacles() {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				obstaclesLayer.removeAllRenderables();
+				obstaclesLayer.addRenderables(scenario.getObstacles());
 				wwd.redraw();
 			}
 		});
@@ -217,7 +240,19 @@ public class WorldPresenter implements Initializable {
 				FileChooser fileChooser = new FileChooser();
 				fileChooser.setTitle(title);
 				fileChooser.getExtensionFilters().addAll(extensions);
-				fileChooser.showOpenDialog(null);
+				File file = fileChooser.showOpenDialog(null);
+				if (null != file) {
+					// TODO: generic SWIM loader, different thread, progress indicator
+					try {
+						IwxxmLoader loader = new IwxxmLoader();
+						Set<Obstacle> obstacles = loader.load(new InputSource(new FileInputStream(file)));
+						for (Obstacle obstacle : obstacles) {
+							scenario.embedObstacle(obstacle);
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
 			}
 		});
 	}
@@ -307,6 +342,7 @@ public class WorldPresenter implements Initializable {
 			wwd.getModel().getLayers().add(aircraftLayer);
 			wwd.getModel().getLayers().add(environmentLayer);
 			wwd.getModel().getLayers().add(waypointLayer);
+			wwd.getModel().getLayers().add(obstaclesLayer);
 			
 			// add planner controls
 			ControlAnnotation aircraftControl = new ControlAnnotation(aircraftIcon);
@@ -539,6 +575,14 @@ public class WorldPresenter implements Initializable {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initPlan();
+		}
+	}
+	
+	private class ObstaclesChangeListener implements PropertyChangeListener {
+
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			initObstacles();
 		}
 	}
 	
