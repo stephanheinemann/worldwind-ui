@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 import javax.swing.JPanel;
@@ -131,6 +133,8 @@ public class WorldPresenter implements Initializable {
 	TrajectoryChangeListener trajectoryCl = new TrajectoryChangeListener();
 	ObstaclesChangeListener obstaclesCl = new ObstaclesChangeListener();
 	
+	Executor executor = Executors.newSingleThreadScheduledExecutor();
+	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		SwingUtilities.invokeLater(new WorldInitializer());
@@ -218,6 +222,15 @@ public class WorldPresenter implements Initializable {
 		});
 	}
 	
+	private void setMode(WorldMode mode) {
+		this.worldModel.setMode(mode);
+		this.displayStatus(mode.toString());
+	}
+	
+	private WorldMode getMode() {
+		return this.worldModel.getMode();
+	}
+	
 	private void displayStatus(String status) {
 		statusLayer.getAnnotations().iterator().next().setText(status);
 	}
@@ -241,17 +254,24 @@ public class WorldPresenter implements Initializable {
 				fileChooser.setTitle(title);
 				fileChooser.getExtensionFilters().addAll(extensions);
 				File file = fileChooser.showOpenDialog(null);
+				
 				if (null != file) {
-					// TODO: generic SWIM loader, different thread, progress indicator
-					try {
-						IwxxmLoader loader = new IwxxmLoader();
-						Set<Obstacle> obstacles = loader.load(new InputSource(new FileInputStream(file)));
-						for (Obstacle obstacle : obstacles) {
-							scenario.embedObstacle(obstacle);
+					executor.execute(new Runnable() {
+						@Override
+						public void run() {
+							try {
+								// TODO: generic SWIM loader
+								IwxxmLoader loader = new IwxxmLoader();
+								Set<Obstacle> obstacles = loader.load(new InputSource(new FileInputStream(file)));
+								for (Obstacle obstacle : obstacles) {
+									scenario.embedObstacle(obstacle);
+								}
+								setMode(WorldMode.VIEW);
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
 						}
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
+					});
 				}
 			}
 		});
@@ -271,39 +291,47 @@ public class WorldPresenter implements Initializable {
 	}
 	
 	private void plan() {
-		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-		Specification<Planner> plannerSpec = session.getSetup().getPlannerSpecification();
-		Planner planner = session.getPlannerFactory().createInstance(plannerSpec);
-		Position origin = null;
-		Position destination = null;
-		List<Position> waypoints = new ArrayList<Position>();
-		waypoints.addAll(session.getActiveScenario().getWaypoints());
-		
-		if (planner.supports(planner.getAircraft()) &&
-			planner.supports(planner.getEnvironment()) &&
-			planner.supports(waypoints) &&
-			1 < waypoints.size()) {
-			
-			origin = waypoints.remove(0);
-			destination = waypoints.remove(waypoints.size() - 1);
-			
-			Trajectory trajectory = null;
-			// TODO: span planning thread and show busy indicator
-			if (waypoints.isEmpty()) {
-				trajectory = planner.plan(origin, destination, session.getActiveScenario().getTime());
-			} else {
-				trajectory = planner.plan(origin, destination, waypoints, session.getActiveScenario().getTime());
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+				Specification<Planner> plannerSpec = session.getSetup().getPlannerSpecification();
+				Planner planner = session.getPlannerFactory().createInstance(plannerSpec);
+				Position origin = null;
+				Position destination = null;
+				List<Position> waypoints = new ArrayList<Position>();
+				waypoints.addAll(session.getActiveScenario().getWaypoints());
+				
+				if (planner.supports(planner.getAircraft()) &&
+					planner.supports(planner.getEnvironment()) &&
+					planner.supports(waypoints) &&
+					1 < waypoints.size()) {
+					
+					origin = waypoints.remove(0);
+					destination = waypoints.remove(waypoints.size() - 1);
+				
+					Trajectory trajectory = null;
+					
+					if (waypoints.isEmpty()) {
+						trajectory = planner.plan(origin, destination, session.getActiveScenario().getTime());
+					} else {
+						trajectory = planner.plan(origin, destination, waypoints, session.getActiveScenario().getTime());
+					}
+					
+					styleTrajectory(trajectory);
+					session.getActiveScenario().setTrajectory(trajectory);
+				
+				} else {
+					alert(
+						AlertType.ERROR,
+						PlannerAlert.ALERT_TITLE_PLANNER_INVALID,
+						PlannerAlert.ALERT_HEADER_PLANNER_INVALID,
+						PlannerAlert.ALERT_CONTENT_PLANNER_INVALID);
+				}
+				
+				setMode(WorldMode.VIEW);
 			}
-			
-			this.styleTrajectory(trajectory);
-			session.getActiveScenario().setTrajectory(trajectory);
-		} else {
-			this.alert(
-					AlertType.ERROR,
-					PlannerAlert.ALERT_TITLE_PLANNER_INVALID,
-					PlannerAlert.ALERT_HEADER_PLANNER_INVALID,
-					PlannerAlert.ALERT_CONTENT_PLANNER_INVALID);
-		}
+		});
 	}
 	
 	private void styleTrajectory(Trajectory trajectory) {
@@ -450,9 +478,9 @@ public class WorldPresenter implements Initializable {
 	private class WorldMouseListener extends MouseAdapter {
 		public void mouseClicked(MouseEvent e) {
 			// TODO: swing thread maybe not necessary
-			if (worldModel.getMode().equals(WorldMode.AIRCRAFT)) {
+			if (getMode().equals(WorldMode.AIRCRAFT)) {
 				SwingUtilities.invokeLater(new AircraftMouseHandler());
-			} else if (worldModel.getMode().equals(WorldMode.WAYPOINT)) {
+			} else if (getMode().equals(WorldMode.WAYPOINT)) {
 				SwingUtilities.invokeLater(new WaypointMouseHandler());
 			}
 			// TODO: pickable support ...
@@ -463,7 +491,7 @@ public class WorldPresenter implements Initializable {
 
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			if (worldModel.getMode().equals(WorldMode.ENVIRONMENT)) {
+			if (getMode().equals(WorldMode.ENVIRONMENT)) {
 				if (null == evt.getNewValue()) {
 					Sector envSector = sectorSelector.getSector();
 					if (null != envSector) {
@@ -506,8 +534,7 @@ public class WorldPresenter implements Initializable {
         				100d));
 				scenario.setAircraft(aircraft);
 				
-				worldModel.setMode(WorldMode.VIEW);
-				displayStatus(WorldMode.VIEW.toString());
+				setMode(WorldMode.VIEW);
 			}
 		}
 	}
@@ -602,12 +629,10 @@ public class WorldPresenter implements Initializable {
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_AICRAFT_SET:
-				worldModel.setMode(WorldMode.AIRCRAFT);
-				displayStatus(WorldMode.AIRCRAFT.toString());
+				setMode(WorldMode.AIRCRAFT);
 				break;
 			case WorldPresenter.ACTION_AIRCAFT_SETUP:
-				worldModel.setMode(WorldMode.VIEW);
-				displayStatus(WorldMode.VIEW.toString());
+				setMode(WorldMode.VIEW);
 				setup(SetupDialog.AIRCRAFT_TAB_INDEX);
 				break;
 			}
@@ -621,16 +646,14 @@ public class WorldPresenter implements Initializable {
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_SWIM_LOAD:
-				worldModel.setMode(WorldMode.VIEW);
-				displayStatus(WorldMode.VIEW.toString());
+				setMode(WorldMode.LOADING);
 				load(WorldPresenter.FILE_CHOOSER_TITLE_SWIM,
 					new ExtensionFilter[] { new ExtensionFilter(
 						WorldPresenter.FILE_CHOOSER_SWIM,
 						WorldPresenter.FILE_CHOOSER_EXTENSION_SWIM)});
 				break;
 			case WorldPresenter.ACTION_SWIM_SETUP:
-				worldModel.setMode(WorldMode.VIEW);
-				displayStatus(WorldMode.VIEW.toString());
+				setMode(WorldMode.VIEW);
 				setup(SetupDialog.SWIM_TAB_INDEX);
 				break;
 			}
@@ -644,13 +667,11 @@ public class WorldPresenter implements Initializable {
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_ENVIRONMENT_ENCLOSE:
-				worldModel.setMode(WorldMode.ENVIRONMENT);
-				displayStatus(WorldMode.ENVIRONMENT.toString());
+				setMode(WorldMode.ENVIRONMENT);
 				sectorSelector.enable();
 				break;
 			case WorldPresenter.ACTION_ENVIRONMENT_SETUP:
-				worldModel.setMode(WorldMode.VIEW);
-				displayStatus(WorldMode.VIEW.toString());
+				setMode(WorldMode.VIEW);
 				setup(SetupDialog.ENVIRONMENT_TAB_INDEX);
 				break;
 			}
@@ -664,13 +685,11 @@ public class WorldPresenter implements Initializable {
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_WAYPOINT_EDIT:
-				worldModel.setMode(WorldMode.WAYPOINT);
-				displayStatus(WorldMode.WAYPOINT.toString());
+				setMode(WorldMode.WAYPOINT);
 				break;
 			case WorldPresenter.ACTION_WAYPOINT_SETUP:
 				// TODO: waypoint setup (types of waypoint graphics: POI, RWP, ...)
-				worldModel.setMode(WorldMode.VIEW);
-				displayStatus(WorldMode.VIEW.toString());
+				setMode(WorldMode.VIEW);
 				break;
 			}
 			System.out.println("pressed...." + e.getActionCommand());
@@ -683,14 +702,11 @@ public class WorldPresenter implements Initializable {
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_PLANNER_PLAN:
-				worldModel.setMode(WorldMode.VIEW);
-				displayStatus(WorldMode.VIEW.toString());
+				setMode(WorldMode.PLANNING);
 				plan();
-				// TODO: possibly busy indicator and thread
 				break;
 			case WorldPresenter.ACTION_PLANNER_SETUP:
-				worldModel.setMode(WorldMode.VIEW);
-				displayStatus(WorldMode.VIEW.toString());
+				setMode(WorldMode.VIEW);
 				setup(SetupDialog.PLANNER_TAB_INDEX);
 				break;
 			}

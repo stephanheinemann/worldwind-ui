@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
 <?import java.lang.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
@@ -38,7 +39,15 @@
       </MenuBar>
       <SplitPane dividerPositions="0.75" layoutY="30.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" orientation="VERTICAL" prefHeight="715.0" prefWidth="1366.0" AnchorPane.bottomAnchor="23.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="30.0">
         <items>
-          <AnchorPane fx:id="worldPane" />
+          <AnchorPane fx:id="worldPane">
+               <children>
+                  <ProgressIndicator fx:id="progressIndicator" progress="0.0" scaleShape="false" scaleX="0.25" scaleY="0.25" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                     <opaqueInsets>
+                        <Insets />
+                     </opaqueInsets>
+                  </ProgressIndicator>
+               </children>
+            </AnchorPane>
             <SplitPane dividerPositions="0.2, 0.4">
                <items>
                   <Accordion fx:id="timeAccordion" />
@@ -48,6 +57,6 @@
             </SplitPane>
         </items>
       </SplitPane>
-      <ProgressBar layoutY="744.0" progress="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
+      <ProgressBar fx:id="progressBar" layoutY="744.0" progress="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
    </children>
 </AnchorPane>

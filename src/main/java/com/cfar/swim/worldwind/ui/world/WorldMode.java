@@ -4,5 +4,7 @@ public enum WorldMode {
 	VIEW,
 	AIRCRAFT,
 	ENVIRONMENT,
-	WAYPOINT
+	WAYPOINT,
+	PLANNING,
+	LOADING
 }
