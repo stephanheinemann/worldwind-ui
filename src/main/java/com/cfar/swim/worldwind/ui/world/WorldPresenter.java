@@ -264,7 +264,7 @@ public class WorldPresenter implements Initializable {
 								IwxxmLoader loader = new IwxxmLoader();
 								Set<Obstacle> obstacles = loader.load(new InputSource(new FileInputStream(file)));
 								for (Obstacle obstacle : obstacles) {
-									scenario.embedObstacle(obstacle);
+									scenario.addObstacle(obstacle);
 								}
 								setMode(WorldMode.VIEW);
 							} catch (Exception e) {
@@ -432,7 +432,8 @@ public class WorldPresenter implements Initializable {
 			wwd.getModel().getLayers().add(controlLayer);
 			
 			// add on-screen status
-			ScreenAnnotation statusAnnotation = new ScreenAnnotation("----------", new Point(650, 400));
+			ScreenAnnotation statusAnnotation = new ScreenAnnotation("----------",
+					new Point(wwd.getWidth() / 2, wwd.getHeight() - 75));
 			statusAnnotation.setAlwaysOnTop(true);
 			statusAnnotation.getAttributes().setAdjustWidthToText("----------");
 			statusAnnotation.getAttributes().setTextAlign(AVKey.CENTER);
@@ -560,6 +561,7 @@ public class WorldPresenter implements Initializable {
 			// TODO: environment, aircraft, obstacles
 			// TODO: possibly only redraw layers
 			initEnvironment();
+			initObstacles();
 		}
 	}
 	
@@ -570,6 +572,7 @@ public class WorldPresenter implements Initializable {
 			// TODO: environment, aircraft, obstacles
 			// TODO: possibly only redraw layers
 			initEnvironment();
+			initObstacles();
 		}
 	}
 	
@@ -619,6 +622,7 @@ public class WorldPresenter implements Initializable {
 		public void propertyChange(PropertyChangeEvent evt) {
 			initScenario();
 			initEnvironment();
+			initObstacles();
 			initPlan();
 		}
 	}
@@ -636,7 +640,6 @@ public class WorldPresenter implements Initializable {
 				setup(SetupDialog.AIRCRAFT_TAB_INDEX);
 				break;
 			}
-			System.out.println("pressed...." + e.getActionCommand());
 		}
 	}
 	
@@ -657,7 +660,6 @@ public class WorldPresenter implements Initializable {
 				setup(SetupDialog.SWIM_TAB_INDEX);
 				break;
 			}
-			System.out.println("pressed...." + e.getActionCommand());
 		}
 	}
 	
@@ -675,7 +677,6 @@ public class WorldPresenter implements Initializable {
 				setup(SetupDialog.ENVIRONMENT_TAB_INDEX);
 				break;
 			}
-			System.out.println("pressed...." + e.getActionCommand());
 		}
 	}
 	
@@ -692,7 +693,6 @@ public class WorldPresenter implements Initializable {
 				setMode(WorldMode.VIEW);
 				break;
 			}
-			System.out.println("pressed...." + e.getActionCommand());
 		}
 	}
 	
@@ -710,7 +710,6 @@ public class WorldPresenter implements Initializable {
 				setup(SetupDialog.PLANNER_TAB_INDEX);
 				break;
 			}
-			System.out.println("pressed...." + e.getActionCommand());
 		}
 	}
 	

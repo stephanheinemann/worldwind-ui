@@ -4,8 +4,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
-import com.cfar.swim.worldwind.render.Obstacle;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
@@ -49,20 +49,48 @@ public class SwimPresenter implements Initializable {
 			public void run() {
 				swimList.getItems().clear();
 				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-				for (Obstacle obstacle : session.getActiveScenario().getObstacles()) {
-					swimList.getItems().add(obstacle.getCostInterval().getId());
-				}
+				swimList.getItems().addAll(
+					session.getActiveScenario().getObstacles()
+						.stream()
+						.map(o -> o.getCostInterval().getId())
+						.distinct()
+						.collect(Collectors.toSet()));
 				swimList.refresh();
 			}
 		});
 	}
 	
+	public void addSwimItem() {
+		
+	}
+	
+	public void removeSwimItem() {
+		String swimId = swimList.getSelectionModel().getSelectedItem();
+		if (null != swimId) {
+			scenario.removeObstacles(swimId);
+			swimList.getItems().remove(swimId);
+			swimList.refresh();
+		}
+	}
+	
+	public void clearSwimItems() {
+		scenario.clearObstacles();
+		swimList.getItems().clear();
+		swimList.refresh();
+	}
+	
 	public void enableSwimItem() {
-		System.out.println("enabling...");
+		String swimId = swimList.getSelectionModel().getSelectedItem();
+		if (null != swimId) {
+			scenario.enableObstacles(swimId);
+		}
 	}
 	
 	public void disableSwimItem() {
-		System.out.println("disabling...");
+		String swimId = swimList.getSelectionModel().getSelectedItem();
+		if (null != swimId) {
+			scenario.disableObstacles(swimId);
+		}
 	}
 	
 	private class ObstaclesChangeListener implements PropertyChangeListener {

@@ -9,7 +9,6 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
-import com.cfar.swim.worldwind.geom.precision.PrecisionPosition;
 import com.cfar.swim.worldwind.planning.Waypoint;
 import com.cfar.swim.worldwind.render.annotations.DepictionAnnotation;
 import com.cfar.swim.worldwind.session.Scenario;
@@ -170,13 +169,9 @@ public class PlanPresenter implements Initializable {
 				this.scenario.clearTrajectory();
 				this.scenario.updateWaypoint(waypoint, editedWaypoint);
 				
-				if (this.scenario.hasAircraft()) {
-					PrecisionPosition aircraftReference = new PrecisionPosition(this.scenario.getAircraft().getReferencePosition());
-					PrecisionPosition waypointReference = new PrecisionPosition(waypoint);
-					if (aircraftReference.equals(waypointReference)) {
-						this.scenario.getAircraft().moveTo(editedWaypoint);
-						this.scenario.notifyAircraftChange();
-					}
+				// the first waypoint can be the aircraft which has to be moved accordingly
+				if (this.plan.getSelectionModel().isSelected(0) && this.scenario.hasAircraft()) {
+					this.scenario.moveAircraft(editedWaypoint);
 				}
 			}
 		}
@@ -189,12 +184,9 @@ public class PlanPresenter implements Initializable {
 			this.scenario.clearTrajectory();
 			this.scenario.removeWaypoint(waypoint);
 			
-			if (this.scenario.hasAircraft()) {
-				PrecisionPosition aircraftReference = new PrecisionPosition(this.scenario.getAircraft().getReferencePosition());
-				PrecisionPosition waypointReference = new PrecisionPosition(waypoint);
-				if (aircraftReference.equals(waypointReference)) {
-					this.scenario.removeAircraft();
-				}
+			// the first waypoint can be the aircraft which has to be removed accordingly
+			if (this.plan.getSelectionModel().isSelected(0) && this.scenario.hasAircraft()) {
+				this.scenario.removeAircraft();
 			}
 		}
 	}

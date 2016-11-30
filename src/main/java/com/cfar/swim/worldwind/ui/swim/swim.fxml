@@ -11,6 +11,9 @@
          <contextMenu>
             <ContextMenu>
               <items>
+                  <MenuItem mnemonicParsing="false" onAction="#addSwimItem" text="Add" />
+                  <MenuItem mnemonicParsing="false" onAction="#removeSwimItem" text="Remove" />
+                  <MenuItem mnemonicParsing="false" onAction="#clearSwimItems" text="Clear" />
                 <MenuItem mnemonicParsing="false" onAction="#enableSwimItem" text="Enable" />
                   <MenuItem mnemonicParsing="false" onAction="#disableSwimItem" text="Disable" />
               </items>
