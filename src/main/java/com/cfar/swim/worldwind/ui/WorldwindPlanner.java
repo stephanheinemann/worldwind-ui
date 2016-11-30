@@ -5,6 +5,7 @@ import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.ui.planner.PlannerView;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.application.Preloader.StateChangeNotification;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -24,6 +25,7 @@ public class WorldwindPlanner extends Application {
 			primaryStage.setTitle(WorldwindPlanner.APPLICATION_TITLE);
 			primaryStage.show();
 			this.notifyPreloader(new StateChangeNotification(null));
+			primaryStage.setOnCloseRequest(e -> { Platform.exit(); System.exit(0); });
 		} catch(Exception e) {
 			e.printStackTrace();
 		}

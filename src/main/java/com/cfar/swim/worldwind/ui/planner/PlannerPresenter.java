@@ -20,6 +20,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Accordion;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.AnchorPane;
@@ -46,7 +47,16 @@ public class PlannerPresenter implements Initializable {
 	
 	@Inject
 	private WorldModel worldModel;
-
+	
+	@Inject
+	private String aboutTitle;
+	
+	@Inject
+	private String aboutHeader;
+	
+	@Inject
+	private String aboutContent;
+	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		WorldView worldView = new WorldView();
@@ -79,6 +89,19 @@ public class PlannerPresenter implements Initializable {
 		
 		this.progressIndicator.setVisible(false);
 		this.worldModel.addModeChangeListener(new ModeChangeListener());
+	}
+	
+	public void exit() {
+		Platform.exit();
+		System.exit(0);
+	}
+	
+	public void about() {
+		PlannerAlert about = new PlannerAlert(AlertType.INFORMATION);
+		about.setTitle(this.aboutTitle);
+		about.setHeaderText(this.aboutHeader);
+		about.setContentText(this.aboutContent);
+		about.showAndWait();
 	}
 	
 	private class ModeChangeListener implements PropertyChangeListener {
