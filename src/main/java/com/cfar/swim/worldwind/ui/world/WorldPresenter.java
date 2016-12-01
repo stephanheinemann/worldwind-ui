@@ -204,6 +204,7 @@ public class WorldPresenter implements Initializable {
 			@Override
 			public void run() {
 				obstaclesLayer.removeAllRenderables();
+				// TODO: investigate CME observed here
 				obstaclesLayer.addRenderables(scenario.getObstacles());
 				wwd.redraw();
 			}
@@ -558,8 +559,8 @@ public class WorldPresenter implements Initializable {
 
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			// TODO: environment, aircraft, obstacles
 			// TODO: possibly only redraw layers
+			initAircraft();
 			initEnvironment();
 			initObstacles();
 		}
@@ -569,8 +570,8 @@ public class WorldPresenter implements Initializable {
 
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			// TODO: environment, aircraft, obstacles
 			// TODO: possibly only redraw layers
+			initAircraft();
 			initEnvironment();
 			initObstacles();
 		}

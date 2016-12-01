@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<TitledPane animated="false" prefHeight="200.0" prefWidth="800.0" text="Envrionment" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.cfar.swim.worldwind.ui.environment.EnvironmentPresenter">
+<TitledPane animated="false" prefHeight="200.0" prefWidth="800.0" text="Environment" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.cfar.swim.worldwind.ui.environment.EnvironmentPresenter">
   <content>
       <TreeView fx:id="environment">
          <contextMenu>
