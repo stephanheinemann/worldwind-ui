@@ -34,20 +34,49 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.layout.Region;
 import javafx.stage.StageStyle;
 
+/**
+ * Realizes a planning application alert dialog which can be used
+ * anywhere in the application with the appropriate alert type. 
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class PlannerAlert extends Alert {
 
+	/** the title of an invalid planner setup alert */
 	public static final String ALERT_TITLE_PLANNER_INVALID = "Planner Invalid";
+	
+	/** the header of an invalid planner setup alert */
 	public static final String ALERT_HEADER_PLANNER_INVALID = "The planner is invalid";
+	
+	/** the content of an invalid planner setup alert */
 	public static final String ALERT_CONTENT_PLANNER_INVALID =
 			"Please check if the aircraft, environment and waypoints are supported.";
 	
+	/**
+	 * Constructs a new planner alert with a specified alert type.
+	 * 
+	 * @param alertType the alert type of this planner alert
+	 * 
+	 * @see Alert#Alert(AlertType)
+	 */
 	public PlannerAlert(AlertType alertType) {
 		super(alertType);
 		this.initStyle(StageStyle.UNDECORATED);
 		this.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
 		this.getDialogPane().setMinWidth(Region.USE_PREF_SIZE);
 	}
-
+	
+	/**
+	 * Constructs a new planner alert with a specified alert type,
+	 * content and buttons.
+	 * 
+	 * @param alertType the alert type of this planner alert
+	 * @param contentText the content of this planner alert
+	 * @param buttons the buttons of this planner alert
+	 * 
+	 * @see Alert#Alert(AlertType, String, ButtonType...)
+	 */
 	public PlannerAlert(AlertType alertType, String contentText, ButtonType... buttons) {
 		super(alertType, contentText, buttons);
 		this.initStyle(StageStyle.UNDECORATED);

@@ -207,6 +207,10 @@ public class EnvironmentPresenter implements Initializable {
 
 		/**
 		 * Initializes the scenario and environment if the active scenario changes.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
 		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
@@ -225,6 +229,10 @@ public class EnvironmentPresenter implements Initializable {
 		
 		/**
 		 * Initializes the environment if the environment changes.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
 		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {

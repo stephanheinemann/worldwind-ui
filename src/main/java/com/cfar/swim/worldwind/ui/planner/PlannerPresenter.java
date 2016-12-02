@@ -54,38 +54,63 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.AnchorPane;
 
+/**
+ * Realizes a presenter for a planner view which is the main view of the
+ * planning application.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class PlannerPresenter implements Initializable {
 	
+	/** the world pane of the planner view containing the world view */
 	@FXML
 	private AnchorPane worldPane;
 	
+	/** the time accordion of the planner view */
 	@FXML
 	private Accordion timeAccordion;
 	
+	/** the SWIM accordion of the planner view */
 	@FXML
 	private Accordion swimAccordion;
 	
+	/** the planner accordion of the planner view */
 	@FXML
 	private Accordion plannerAccordion;
 	
+	/** the progress bar of the planner view */
 	@FXML
 	private ProgressBar progressBar;
 	
+	/** the progress indicator of the planner view */
 	@FXML
 	private ProgressIndicator progressIndicator;
 	
+	/** the world model of the world presenter */
 	@Inject
 	private WorldModel worldModel;
 	
+	/** the title of the about dialog (planner alert) */
 	@Inject
 	private String aboutTitle;
 	
+	/** the header of the about dialog (planner alert) */ 
 	@Inject
 	private String aboutHeader;
 	
+	/** the content of the about dialog (planner alert) */
 	@Inject
 	private String aboutContent;
 	
+	/**
+	 * Initializes this planner presenter.
+	 * 
+	 * @param location unused
+	 * @param resources unused
+	 * 
+	 * @see Initializable#initialize(URL, ResourceBundle)
+	 */
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		WorldView worldView = new WorldView();
@@ -120,11 +145,17 @@ public class PlannerPresenter implements Initializable {
 		this.worldModel.addModeChangeListener(new ModeChangeListener());
 	}
 	
+	/**
+	 * Exits the planner application.
+	 */
 	public void exit() {
 		Platform.exit();
 		System.exit(0);
 	}
 	
+	/**
+	 * Opens the about dialog of the planner application.
+	 */
 	public void about() {
 		PlannerAlert about = new PlannerAlert(AlertType.INFORMATION);
 		about.setTitle(this.aboutTitle);
@@ -133,8 +164,22 @@ public class PlannerPresenter implements Initializable {
 		about.showAndWait();
 	}
 	
+	/**
+	 * Realizes a world mode change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class ModeChangeListener implements PropertyChangeListener {
-
+		
+		/**
+		 * Enables and disables the progress bar and indicator if the world
+		 * mode changes.
+		  * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			Platform.runLater(new Runnable() {

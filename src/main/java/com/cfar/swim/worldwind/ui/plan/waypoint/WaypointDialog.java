@@ -158,6 +158,10 @@ public class WaypointDialog extends Dialog<Waypoint> {
 		
 		/**
 		 * Validates the latitude if it changes.
+		 * 
+		 * @param observable the observable
+		 * @param oldValue the old latitude value
+		 * @param newValue the new latitude value
 		 */
 		@Override
 		public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
@@ -182,6 +186,10 @@ public class WaypointDialog extends Dialog<Waypoint> {
 		
 		/**
 		 * Validates the longitude if it changes.
+		 * 
+		 * @param observable the observable
+		 * @param oldValue the old longitude value
+		 * @param newValue the new longitude value
 		 */
 		@Override
 		public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
@@ -206,6 +214,10 @@ public class WaypointDialog extends Dialog<Waypoint> {
 		
 		/**
 		 * Validates the altitude if it changes.
+		 *  
+		 * @param observable the observable
+		 * @param oldValue the old altitude value
+		 * @param newValue the new altitude value
 		 */
 		@Override
 		public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {

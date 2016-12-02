@@ -292,6 +292,10 @@ public class PlanPresenter implements Initializable {
 		
 		/**
 		 * Initializes the plan if the waypoints change.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
 		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
@@ -309,6 +313,10 @@ public class PlanPresenter implements Initializable {
 		
 		/**
 		 * Initializes the plan if the trajectory changes.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
 		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
@@ -326,6 +334,10 @@ public class PlanPresenter implements Initializable {
 		
 		/**
 		 * Initializes the scenario and plan if the active scenario changes.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
 		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
@@ -336,13 +348,22 @@ public class PlanPresenter implements Initializable {
 	
 	/**
 	 * Realizes an estimated time over cell value factory to display
-	 * waypoint in the ETO column of the plan view.
+	 * waypoints in the ETO column of the plan view.
 	 * 
 	 * @author Stephan Heinemann
 	 *
 	 */
 	private class EtoCellValueFactory implements Callback<CellDataFeatures<Waypoint, String>, ObservableValue<String>> {
-
+		
+		/**
+		 * Creates an cell value for the ETO column of the waypoint plan.
+		 * 
+		 * @param param the cell data features
+		 * 
+		 * @return the cell value for the ETO column of the waypoint plan
+		 * 
+		 * @see Callback#call(Object)
+		 */
 		@Override
 		public ObservableValue<String> call(CellDataFeatures<Waypoint, String> param) {
 			ReadOnlyStringWrapper value = null;

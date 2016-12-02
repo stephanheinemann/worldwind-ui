@@ -31,5 +31,11 @@ package com.cfar.swim.worldwind.ui.planner;
 
 import com.airhacks.afterburner.views.FXMLView;
 
+/**
+ * Realizes a planner view.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class PlannerView extends FXMLView {
 }
