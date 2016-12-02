@@ -48,14 +48,33 @@ import javafx.scene.control.TreeView;
 import javafx.scene.control.cell.TextFieldTreeCell;
 import javafx.util.StringConverter;
 
+/**
+ * Realizes a presenter for an environment view.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class EnvironmentPresenter implements Initializable {
 
+	/** the environment tree view of this environment presenter */
 	@FXML
 	private TreeView<Environment> environment;
 	
+	/** the active planning scenario (model) of this environment presenter */
 	Scenario scenario = null;
+	
+	/** the environment change listener of this environment presenter */
 	private EnvironmentChangeListener ecl = new EnvironmentChangeListener();
 	
+	
+	/**
+	 * Initializes this environment presenter.
+	 * 
+	 * @param location unused
+	 * @param resources unused
+	 * 
+	 * @see Initializable#initialize(URL, ResourceBundle)
+	 */
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		this.environment.setCellFactory(TextFieldTreeCell.forTreeView(new EnvironmentConverter()));
@@ -65,6 +84,10 @@ public class EnvironmentPresenter implements Initializable {
 		initEnvironment();
 	}
 	
+	/**
+	 * Initializes the active scenario of this environment presenter
+	 * registering an environment change listener.
+	 */
 	public void initScenario() {
 		// remove change listeners from the previous scenario if any
 		if (null != this.scenario) {
@@ -74,6 +97,10 @@ public class EnvironmentPresenter implements Initializable {
 		this.scenario.addEnvironmentChangeListener(this.ecl);
 	}
 	
+	/**
+	 * Initializes the environment of this environment presenter populating
+	 * the environment view according to the active scenario.
+	 */
 	public void initEnvironment() {
 		Platform.runLater(new Runnable() {
 			@Override
@@ -86,6 +113,12 @@ public class EnvironmentPresenter implements Initializable {
 		});
 	}
 	
+	/**
+	 * Initializes the environment of this environment presenter populating
+	 * the environment view recursively according to the active scenario.
+	 * 
+	 * @param parentItem the parent environment item to be populated
+	 */
 	public void initEnvironment(TreeItem<Environment> parentItem) {
 		Platform.runLater(new Runnable() {
 			@Override
@@ -101,6 +134,10 @@ public class EnvironmentPresenter implements Initializable {
 		});
 	}
 	
+	/**
+	 * Refines a selected environment in the environment view to a higher
+	 * resolution environment.
+	 */
 	public void refineEnvironment() {
 		Environment selectedEnv = this.environment.getSelectionModel().getSelectedItem().getValue();
 		if (!selectedEnv.isRefined()) {
@@ -110,6 +147,10 @@ public class EnvironmentPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Coarsens a selected environment in the environment view to a lower
+	 * resolution environment.
+	 */
 	public void coarsenEnvironment() {
 		Environment selectedEnv = this.environment.getSelectionModel().getSelectedItem().getValue();
 		if (selectedEnv.isRefined()) {
@@ -119,21 +160,54 @@ public class EnvironmentPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes an environment converter to populate the environment view.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class EnvironmentConverter extends StringConverter<Environment> {
-
+		
+		/**
+		 * Converts an environment to a string representation.
+		 * 
+		 * @param environment the environment
+		 * 
+		 * @return the refinement degree string representation of the environment
+		 * 
+		 * @see StringConverter#toString()
+		 */
 		@Override
 		public String toString(Environment environment) {
 			return Integer.toString(environment.getRefinements().size());
 		}
-
+		
+		/**
+		 * Converts a string representation to an environment.
+		 * 
+		 * @param environment the string represenation of the environment
+		 * 
+		 * @return null (read-only environment view)
+		 * 
+		 * @see StringConverter#fromString(String)
+		 */
 		@Override
 		public Environment fromString(String environment) {
 			return null;
 		}
 	}
 	
+	/**
+	 * Realizes an active scenario change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class ActiveScenarioChangeListener implements PropertyChangeListener {
 
+		/**
+		 * Initializes the scenario and environment if the active scenario changes.
+		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initScenario();
@@ -141,8 +215,17 @@ public class EnvironmentPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes an environment change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class EnvironmentChangeListener implements PropertyChangeListener {
-
+		
+		/**
+		 * Initializes the environment if the environment changes.
+		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initEnvironment();

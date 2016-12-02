@@ -31,17 +31,33 @@ package com.cfar.swim.worldwind.ui;
 
 import com.cfar.swim.worldwind.ui.splash.SplashView;
 
+import javafx.application.Application;
 import javafx.application.Preloader;
 import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+/**
+ * Realizes a splash screen loader.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class SplashScreenLoader extends Preloader {
 	
+	/** the splash screen stage of this splash screen loader */
 	private Stage splashScreen;
+	
+	/** the spash scene of this splash screen loader */
 	private Scene splashScene;
 	
+	/**
+	 * Initializes this splash screen loader loading the splash
+	 * view and caching the splash images.
+	 * 
+	 * @see Application#init()
+	 */
 	@Override
 	public void init() throws Exception {
 		SplashView splash = new SplashView();
@@ -49,6 +65,11 @@ public class SplashScreenLoader extends Preloader {
     	splashScene.setFill(Color.LIGHTGRAY);
 	}
 	
+	/**
+	 * Starts this splash screen loader.
+	 * 
+	 * @see Preloader#start(Stage)
+	 */
     @Override
     public void start(Stage stage) throws Exception {
     	splashScreen = stage;
@@ -57,6 +78,12 @@ public class SplashScreenLoader extends Preloader {
         splashScreen.show();
     }
     
+    /**
+     * Handles an application notification which closes this
+     * splash screen loader once the application has loaded.
+     * 
+     * @see Preloader#handleApplicationNotification(PreloaderNotification)
+     */
     @Override
     public void handleApplicationNotification(PreloaderNotification notification) {    	
     	if (notification instanceof StateChangeNotification) {

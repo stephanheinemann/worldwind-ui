@@ -33,8 +33,21 @@ import com.airhacks.afterburner.views.FXMLView;
 
 import javafx.scene.control.TitledPane;
 
+/**
+ * Realizes an environment view.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class EnvironmentView extends FXMLView {
 
+	/**
+	 * Gets the view of this environment view.
+	 * 
+	 * @return the view of this environment view
+	 * 
+	 * @see FXMLView#getView()
+	 */
 	@Override
 	public TitledPane getView() {
 		return (TitledPane) super.getView();

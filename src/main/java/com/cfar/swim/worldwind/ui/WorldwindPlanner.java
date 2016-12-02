@@ -40,10 +40,26 @@ import javafx.application.Preloader.StateChangeNotification;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+/**
+ * Realizes a planner application based on NASA Worldwind.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class WorldwindPlanner extends Application {
 
+	/** the title (and session identifier) of this application */
 	public static final String APPLICATION_TITLE = "Worldwind Planner";
-
+	
+	/**
+	 * Starts this planner application.
+	 * 
+	 * @param primaryStage the primary stage of this planner application
+	 * 
+	 * @throws Exception never (but prints stack trace)
+	 * 
+	 * @see Application#start(Stage)
+	 */
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		try {
@@ -66,6 +82,13 @@ public class WorldwindPlanner extends Application {
 		}
 	}
 	
+	/**
+	 * Stops this planner application clearing all injected properties.
+	 * 
+	 * @throws Exception if the super method throws it
+	 * 
+	 * @see Application#stop()
+	 */
 	@Override
 	public void stop() throws Exception {
         super.stop();

@@ -31,8 +31,19 @@ package com.cfar.swim.worldwind.ui;
 	
 import com.sun.javafx.application.LauncherImpl;
 
+/**
+ * Realizes the main application launcher.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class Main {
 	
+	/**
+	 * Launches the main application.
+	 * 
+	 * @param args the application arguments (not considered)
+	 */
 	public static void main(String[] args) {
 		// TODO: use external artifact with preloader manifest
 		LauncherImpl.launchApplication(WorldwindPlanner.class, SplashScreenLoader.class, args);

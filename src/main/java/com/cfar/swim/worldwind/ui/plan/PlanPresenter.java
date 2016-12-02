@@ -63,43 +63,73 @@ import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.TreeItemPropertyValueFactory;
 import javafx.util.Callback;
 
+/**
+ * Realizes a presenter for a plan view.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class PlanPresenter implements Initializable {
-
+	
+	/** the waypoint symbol of this plan presenter */
 	@Inject private String waypointSymbol;
 	
+	/** the plan tree table view of this plan presenter */
 	@FXML
 	private TreeTableView<Waypoint> plan;
 	
+	/** the designation column of this plan presenter */
 	@FXML
 	private TreeTableColumn<Waypoint, String> designationColumn;
 	
+	/** the location column of this plan presenter */
 	@FXML
 	private TreeTableColumn<Waypoint, String> locationColumn;
 	
+	/** the altitude column of this plan presenter */
 	@FXML
 	private TreeTableColumn<Waypoint, Double> altitudeColumn;
 	
+	/** the cost column of this plan presenter */
 	@FXML
 	private TreeTableColumn<Waypoint, Double> costsColumn;
 	
+	/** the distance to go column of this plan presenter */
 	@FXML
 	private TreeTableColumn<Waypoint, Double> distanceToGoColumn;
 	
+	/** the time to go column of this plan presenter */
 	@FXML
 	private TreeTableColumn<Waypoint, String> timeToGoColumn;
 	
+	/** the estimated time over column of this plan presenter */
 	@FXML
 	private TreeTableColumn<Waypoint, String> estimatedTimeOverColumn;
 	
+	/** the actual time over column of this plan presenter */
 	@FXML
 	private TreeTableColumn<Waypoint, String> actualTimeOverColumn;
 	
+	/** the active planning scenario (model) of this plan presenter */
 	Scenario scenario = null;
+	
+	/** the waypoints change listener of this plan presenter */
 	WaypointsChangeListener wcl = new WaypointsChangeListener();
+	
+	/** the trajectory change listener of this plan presenter */
 	TrajectoryChangeListener tcl = new TrajectoryChangeListener();
 	
+	/** the military symbol factory of this plan presenter */
 	MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
 	
+	/**
+	 * Initializes this plan presenter.
+	 * 
+	 * @param location unused
+	 * @param resources unused
+	 * 
+	 * @see Initializable#initialize(URL, ResourceBundle)
+	 */
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		LatLon latlon = new LatLon(Angle.ZERO, Angle.ZERO);
@@ -129,6 +159,10 @@ public class PlanPresenter implements Initializable {
 		this.initPlan();
 	}
 	
+	/**
+	 * Initializes the active scenario of this plan presenter registering
+	 * change listeners.
+	 */
 	public void initScenario() {
 		// remove change listeners from the previous scenario if any
 		if (null != this.scenario) {
@@ -140,6 +174,10 @@ public class PlanPresenter implements Initializable {
 		this.scenario.addTrajectoryChangeListener(this.tcl);
 	}
 	
+	/**
+	 * Initializes the plan of this plan presenter populating the plan view
+	 * according to the active scenario.
+	 */
 	public void initPlan() {
 		Platform.runLater(new Runnable() {
 			@Override
@@ -169,7 +207,10 @@ public class PlanPresenter implements Initializable {
 			}
 		});
 	}
-
+	
+	/**
+	 * Adds a waypoint to the active scenario.
+	 */
 	public void addWaypoint() {
 		WaypointDialog waypointDialog = new WaypointDialog(WaypointDialog.TITLE_ADD, WaypointDialog.HEADER_ADD);
 		Optional<Waypoint> optWaypoint = waypointDialog.showAndWait();
@@ -183,6 +224,10 @@ public class PlanPresenter implements Initializable {
 		// TODO: check out ControlsFX (central repository)
 	}
 	
+	/**
+	 * Updates an existing waypoint of the active scenario.
+	 * Any previously computed trajectory is removed.
+	 */
 	public void editWaypoint() {
 		TreeItem<Waypoint> waypointItem = this.plan.getSelectionModel().getSelectedItem();
 		if (null != waypointItem) {
@@ -206,6 +251,10 @@ public class PlanPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Removes a waypoint from the active scenario.
+	 * Any previously computed trajectory is removed.
+	 */
 	public void removeWaypoint() {
 		TreeItem<Waypoint> waypointItem = this.plan.getSelectionModel().getSelectedItem();
 		if (null != waypointItem) {
@@ -220,6 +269,10 @@ public class PlanPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Removes all waypoints from the active scenario.
+	 * Any previously computed trajectory is removed.
+	 */
 	public void clearWaypoints() {
 		this.scenario.clearTrajectory();
 		this.scenario.clearWaypoints();
@@ -229,24 +282,51 @@ public class PlanPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes a waypoints change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class WaypointsChangeListener implements PropertyChangeListener {
-
+		
+		/**
+		 * Initializes the plan if the waypoints change.
+		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initPlan();
 		}
 	}
 	
+	/**
+	 * Realizes a trajectory change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class TrajectoryChangeListener implements PropertyChangeListener {
-
+		
+		/**
+		 * Initializes the plan if the trajectory changes.
+		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initPlan();
 		}
 	}
 	
+	/**
+	 * Realizes an active scenario change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class ActiveScenarioChangeListener implements PropertyChangeListener {
-
+		
+		/**
+		 * Initializes the scenario and plan if the active scenario changes.
+		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initScenario();
@@ -254,6 +334,13 @@ public class PlanPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes an estimated time over cell value factory to display
+	 * waypoint in the ETO column of the plan view.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class EtoCellValueFactory implements Callback<CellDataFeatures<Waypoint, String>, ObservableValue<String>> {
 
 		@Override

@@ -33,8 +33,21 @@ import com.airhacks.afterburner.views.FXMLView;
 
 import javafx.scene.control.TitledPane;
 
+/**
+ * Realizes a plan view.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class PlanView extends FXMLView {
 	
+	/**
+	 * Gets the view of this plan view.
+	 * 
+	 * @return the view of this plan view
+	 * 
+	 * @see FXMLView#getView()
+	 */
 	@Override
 	public TitledPane getView() {
 		return (TitledPane) super.getView();
