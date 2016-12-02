@@ -1,5 +1,6 @@
 package com.cfar.swim.worldwind.ui;
 
+import com.airhacks.afterburner.injection.Injector;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.ui.planner.PlannerView;
@@ -17,6 +18,11 @@ public class WorldwindPlanner extends Application {
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		try {
+			/*
+			Map<Object, Object> customProperties = new HashMap<>();
+	        customProperties.put("date", date);
+	        Injector.setConfigurationSource(customProperties::get);
+	        */
 			SessionManager.getInstance().addSession(new Session(WorldwindPlanner.APPLICATION_TITLE));
 			PlannerView plannerView = new PlannerView();
 			Scene scene = new Scene(plannerView.getView());
@@ -30,5 +36,11 @@ public class WorldwindPlanner extends Application {
 			e.printStackTrace();
 		}
 	}
+	
+	@Override
+	public void stop() throws Exception {
+        super.stop();
+		Injector.forgetAll();
+    }
 
 }
