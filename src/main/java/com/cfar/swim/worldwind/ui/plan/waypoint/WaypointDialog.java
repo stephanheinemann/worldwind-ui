@@ -46,25 +46,59 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 
+/**
+ * Realizes a waypoint dialog to add or modify waypoints of a plan.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class WaypointDialog extends Dialog<Waypoint> {
 
+	/** the waypoint dialog title for addition */
 	public static final String TITLE_ADD = "Add Waypoint";
+	
+	/** the waypoint dialog header for addition */
 	public static final String HEADER_ADD = "Add a new waypoint";
+	
+	/** the waypoint dialog title for modification */
 	public static final String TITLE_EDIT = "Edit Waypoint";
+	
+	/** the waypoint dialog header for modification */
 	public static final String HEADER_EDIT = "Edit an existing waypoint";
 	
+	/** the waypoint latitude node identifier */
 	private static final String LATITUDE_ID = "#latitude";
+	
+	/** the waypoint longitude node identifier */
 	private static final String LONGITUDE_ID = "#longitude";
+	
+	/** the waypoint altitude node identifier */
 	private static final String ALTITUDE_ID = "#altitude";
 	
+	/** the latitude text field of this waypoint dialog */
 	private TextField latitude;
+	
+	/** the longitude text field of this waypoint dialog */
 	private TextField longitude;
+	
+	/** the altitude text field of this waypoint dialog */
 	private TextField altitude;
 	
+	/** indicates whether or not the latitude input is valid */
 	private boolean isValidLatitude = false;
+	
+	/** indicates whether or not the longitude input is valid */
 	private boolean isValidLongitude = false;
+	
+	/** indicates whether or not the altitude input is valid */
 	private boolean isValidAltitude = false;
 	
+	/**
+	 * Constructs a new waypoint dialog with a specified title and header.
+	 * 
+	 * @param title the title of this waypoint dialog
+	 * @param header the header of this waypoint dialog
+	 */
 	public WaypointDialog(String title, String header) {
 		this.setTitle(title);
 		this.setHeaderText(header);
@@ -103,14 +137,28 @@ public class WaypointDialog extends Dialog<Waypoint> {
 		});
 	}
 	
+	/**
+	 * Sets the waypoint of this waypoint dialog.
+	 * 
+	 * @param waypoint the waypoint to be set
+	 */
 	public void setWaypoint(Waypoint waypoint) {
 		latitude.setText(Double.toString(waypoint.getLatitude().getDegrees()));
 		longitude.setText(Double.toString(waypoint.getLongitude().getDegrees()));
 		altitude.setText(Double.toString(waypoint.getAltitude()));
 	}
 	
+	/**
+	 * Realizes a latitude validator.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class LatitudeValidator implements ChangeListener<String> {
-
+		
+		/**
+		 * Validates the latitude if it changes.
+		 */
 		@Override
 		public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
 			try {
@@ -124,8 +172,17 @@ public class WaypointDialog extends Dialog<Waypoint> {
 		}
 	}
 	
+	/**
+	 * Realizes a longitude validator.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class LongitudeValidator implements ChangeListener<String> {
-
+		
+		/**
+		 * Validates the longitude if it changes.
+		 */
 		@Override
 		public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
 			try {
@@ -139,8 +196,17 @@ public class WaypointDialog extends Dialog<Waypoint> {
 		}
 	}
 	
+	/**
+	 * Realizes an altitude validator.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class AltitudeValidator implements ChangeListener<String> {
-
+		
+		/**
+		 * Validates the altitude if it changes.
+		 */
 		@Override
 		public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
 			try {

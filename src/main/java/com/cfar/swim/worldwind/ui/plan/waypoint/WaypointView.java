@@ -31,5 +31,11 @@ package com.cfar.swim.worldwind.ui.plan.waypoint;
 
 import com.airhacks.afterburner.views.FXMLView;
 
+/**
+ * Realizes a waypoint view.
+ * 
+ * @author Stephan Heienmann
+ *
+ */
 public class WaypointView extends FXMLView {
 }

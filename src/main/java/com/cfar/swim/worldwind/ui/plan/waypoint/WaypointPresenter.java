@@ -36,17 +36,34 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TextField;
 
+/**
+ * Realizes a presenter for a waypoint view.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class WaypointPresenter implements Initializable {
 
+	/** the latitude text field of the waypoint view */
 	@FXML
 	private TextField latitude;
 	
+	/** the longitude text field of the waypoint view */
 	@FXML
 	private TextField longitude;
 	
+	/** the altitude text field of the waypoint view */
 	@FXML
 	private TextField altitude;
 	
+	/**
+	 * Initializes this waypoint presenter.
+	 * 
+	 * @param location unused
+	 * @param resources unused
+	 * 
+	 * @see Initializable#initialize(URL, ResourceBundle)
+	 */
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 	}
