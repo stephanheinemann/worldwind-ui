@@ -676,7 +676,22 @@ public class WorldPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes a world mouse listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class WorldMouseListener extends MouseAdapter {
+		
+		/**
+		 * Handles a world mouse event depending on the current world mode.
+		 * 
+		 * @param e the world mouse event
+		 * 
+		 * @see MouseAdapter#mouseClicked(MouseEvent)
+		 */
+		@Override
 		public void mouseClicked(MouseEvent e) {
 			// TODO: swing thread maybe not necessary
 			if (getMode().equals(WorldMode.AIRCRAFT)) {
@@ -688,8 +703,22 @@ public class WorldPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes a sector change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class SectorChangeListener implements PropertyChangeListener {
-
+		
+		/**
+		 * Obtains a selected sector and creates an environment based on the
+		 * sector if it has changed.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			if (getMode().equals(WorldMode.ENVIRONMENT)) {
@@ -709,8 +738,20 @@ public class WorldPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes an aircraft mouse handler.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class AircraftMouseHandler implements Runnable {
-
+		
+		/**
+		 * Sets an aircraft and creates an associated waypoint at the mouse
+		 * position.
+		 * 
+		 * @see Runnable#run()
+		 */
 		@Override
 		public void run() {
 			Position clickedPosition = wwd.getCurrentPosition();
@@ -740,8 +781,19 @@ public class WorldPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes a waypoint mouse handler.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class WaypointMouseHandler implements Runnable {
-
+		
+		/**
+		 * Creates a new waypoint at the mouse position.
+		 * 
+		 * @see Runnable#run()
+		 */
 		@Override
 		public void run() {
 			Position clickedPosition = wwd.getCurrentPosition();
@@ -754,8 +806,21 @@ public class WorldPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes a time change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class TimeChangeListener implements PropertyChangeListener {
-
+		
+		/**
+		 * Initializes the aircraft, environment and obstacles if the time changes.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			// TODO: possibly only redraw layers
@@ -765,8 +830,22 @@ public class WorldPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes a threshold cost change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class ThresholdChangeListener implements PropertyChangeListener {
-
+		
+		/**
+		 * Initializes the aircraft, environment and obstacles if the threshold
+		 * changes.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			// TODO: possibly only redraw layers
@@ -776,59 +855,152 @@ public class WorldPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes an aircraft change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class AircraftChangeListener implements PropertyChangeListener {
 		
+		/**
+		 * Initializes the aircraft if it changes.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initAircraft();
 		}
 	}
 	
+	/**
+	 * Realizes an environment change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class EnvironmentChangeListener implements PropertyChangeListener {
 		
+		/**
+		 * Initializes the environment if it changes.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initEnvironment();
 		}
 	}
 	
+	/**
+	 * Realizes a waypoints change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class WaypointsChangeListener implements PropertyChangeListener {
 		
+		/**
+		 * Initializes the plan if the waypoints change.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initPlan();
 		}
 	}
 	
+	/**
+	 * Realizes a trajectory change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class TrajectoryChangeListener implements PropertyChangeListener {
 		
+		/**
+		 * Initializes the plan if the trajectory changes.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initPlan();
 		}
 	}
 	
+	/**
+	 * Realizes an obstacles change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class ObstaclesChangeListener implements PropertyChangeListener {
-
+		
+		/**
+		 * Initializes the obstacles if they change.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initObstacles();
 		}
 	}
 	
+	/**
+	 * Realizes an active scenario change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class ActiveScenarioChangeListener implements PropertyChangeListener {
-
+		
+		/**
+		 * Initializes the scenario, aircraft, environment, obstacles and plan
+		 * if the active scenario changes.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initScenario();
+			initAircraft();
 			initEnvironment();
 			initObstacles();
 			initPlan();
 		}
 	}
 	
+	/**
+	 * Realizes an aircraft control listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class AircraftControlListener implements ActionListener {
-
+		
+		/**
+		 * Performs the aircraft control action.
+		 * 
+		 * @param e the action event associated with the aircraft control action
+		 * 
+		 * @see ActionListener#actionPerformed(ActionEvent)
+		 */
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
@@ -843,8 +1015,21 @@ public class WorldPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes a SWIM control listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class SwimControlListener implements ActionListener {
-
+		
+		/**
+		 * Performs the SWIM control action.
+		 * 
+		 * @param e the action event associated with the SWIM control action
+		 * 
+		 * @see ActionListener#actionPerformed(ActionEvent)
+		 */
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
@@ -863,8 +1048,21 @@ public class WorldPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes an environment control listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class EnvironmentControlListener implements ActionListener {
-
+		
+		/**
+		 * Performs the environment control action.
+		 * 
+		 * @param e the action event associated with the environment control action
+		 * 
+		 * @see ActionListener#actionPerformed(ActionEvent)
+		 */
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
@@ -880,8 +1078,21 @@ public class WorldPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes a waypoints control listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class WaypointsControlListener implements ActionListener {
-
+		
+		/**
+		 * Performs the waypoints control action.
+		 * 
+		 * @param e the action event associated with the waypoints control action
+		 * 
+		 * @see ActionListener#actionPerformed(ActionEvent)
+		 */
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
@@ -896,8 +1107,21 @@ public class WorldPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes a planner control listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class PlannerControlListener implements ActionListener {
-
+		
+		/**
+		 * Performs the planner control action.
+		 * 
+		 * @param e the action event associated with the planner control action
+		 * 
+		 * @see ActionListener#actionPerformed(ActionEvent)
+		 */
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
@@ -913,16 +1137,42 @@ public class WorldPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes a take-off control listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class TakeOffControlListener implements ActionListener {
-
+		
+		/**
+		 * Performs the take-off control action.
+		 * 
+		 * @param e the action event associated with the take-off control action
+		 * 
+		 * @see ActionListener#actionPerformed(ActionEvent)
+		 */
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			System.out.println("pressed...." + e.getActionCommand());
 		}
 	}
 	
+	/**
+	 * Realizes a land control listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class LandControlListener implements ActionListener {
-
+		
+		/**
+		 * Performs the land control action.
+		 * 
+		 * @param e the action event associated with the land control action
+		 * 
+		 * @see ActionListener#actionPerformed(ActionEvent)
+		 */
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			System.out.println("pressed...." + e.getActionCommand());
