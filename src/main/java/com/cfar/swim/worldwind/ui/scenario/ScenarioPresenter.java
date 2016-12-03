@@ -48,11 +48,26 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.util.StringConverter;
 
+/**
+ * Realizes a presenter of a scenario view.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class ScenarioPresenter implements Initializable {
-
+	
+	/** the list of scenarios of the scenario view */
 	@FXML
 	ListView<Scenario> scenarios;
-
+	
+	/**
+	 * Initializes this scenario presenter.
+	 * 
+	 * @param location unused
+	 * @param resources unused
+	 * 
+	 * @see Initializable#initialize(URL, ResourceBundle)
+	 */
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
@@ -61,7 +76,10 @@ public class ScenarioPresenter implements Initializable {
 		this.scenarios.setCellFactory(listView -> new ScenarioListCell());
 		this.scenarios.getItems().add(session.getActiveScenario());
 	}
-
+	
+	/**
+	 * Activates a selected scenario of the scenario view.
+	 */
 	public void activateScenario() {
 		if (!this.scenarios.isEditable()) {
 			Scenario scenario = this.scenarios.getSelectionModel().getSelectedItem();
@@ -71,6 +89,9 @@ public class ScenarioPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Adds a scenario to the scenario view.
+	 */
 	public void addScenario() {
 		if (!this.scenarios.isEditable()) {
 			Scenario scenario = new Scenario("New Scenario");
@@ -82,6 +103,9 @@ public class ScenarioPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Removes a scenario from the scenario view.
+	 */
 	public void removeScenario() {
 		if (!this.scenarios.isEditable()) {
 			Scenario scenario = this.scenarios.getSelectionModel().getSelectedItem();
@@ -91,14 +115,32 @@ public class ScenarioPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Removes all scenarios from the scenario view.
+	 */
 	public void clearScenarios() {
 		if (!this.scenarios.isEditable()) {
 			SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).clearScenarios();
 		}
 	}
 	
+	/**
+	 * Realizes a scenario converter to populate the scenario view.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class ScenarioConverter extends StringConverter<Scenario> {
-
+		
+		/**
+		 * Converts a scenario to a string representation.
+		 * 
+		 * @param scenario the scenario
+		 * 
+		 * @return the scenario identifier
+		 * 
+		 * @see StringConverter#toString()
+		 */
 		@Override
 		public String toString(Scenario scenario) {
 			String scenarioId = null;
@@ -107,7 +149,16 @@ public class ScenarioPresenter implements Initializable {
 			}
 			return scenarioId;
 		}
-
+		
+		/**
+		 * Converts a string representation to a scenario.
+		 * 
+		 * @param scenarioId the scenario identifier
+		 * 
+		 * @return a new scenario with the scenario identifier
+		 * 
+		 * @see StringConverter#fromString(String)
+		 */
 		@Override
 		public Scenario fromString(String scenarioId) {
 			Scenario scenario = null;
@@ -118,18 +169,35 @@ public class ScenarioPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes a scenario text field list cell.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class ScenarioListCell extends TextFieldListCell<Scenario> {
 		
+		/**
+		 * Creates a new scenario list cell.
+		 */
 		public ScenarioListCell() {
 			super();
 			this.setConverter(new ScenarioConverter());
 		}
 		
+		/**
+		 * Updates a scenario list cell item and highlights the active scenario.
+		 * 
+		 * @param scenario the scenario
+		 * @param empty indicates an empty update
+		 * 
+		 * @see TextFieldListCell#updateItem(Object, boolean)
+		 */
 		@Override
 		public void updateItem(Scenario scenario, boolean empty) {
 			super.updateItem(scenario, empty);
 			
-			if (null != scenario) {
+			if (!empty && (null != scenario)) {
 				String family = this.getFont().getFamily();
 				double size = this.getFont().getSize();
 				if (scenario.isEnabled()) {
@@ -140,6 +208,13 @@ public class ScenarioPresenter implements Initializable {
 			}
 		}
 		
+		/**
+		 * Commits a modified scenario if valid.
+		 * 
+		 * @param scenario the scenario to be committed
+		 * 
+		 * @see TextFieldListCell#commitEdit(Object)
+		 */
 		@Override
 		public void commitEdit(Scenario scenario) {
 			if (!scenarios.getItems().contains(scenario) && !scenario.getId().trim().isEmpty()) {
@@ -149,6 +224,11 @@ public class ScenarioPresenter implements Initializable {
 			}
 		}
 		
+		/**
+		 * Cancels the modification of a scenario.
+		 * 
+		 * @see TextFieldListCell#cancelEdit()
+		 */
 		@Override
 		public void cancelEdit() {
 			super.cancelEdit();
@@ -158,8 +238,21 @@ public class ScenarioPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes a scenarios change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class ScenariosChangeListener implements PropertyChangeListener {
 		
+		/**
+		 * Updates the scenario view if the scenarios change.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			Platform.runLater(new Runnable() {
@@ -180,8 +273,21 @@ public class ScenarioPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes an active scenario change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class ActiveScenarioChangeListener implements PropertyChangeListener {
-
+		
+		/**
+		 * Updates the scenario view if the active scenario changes.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			Platform.runLater(new Runnable() {

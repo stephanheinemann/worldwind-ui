@@ -33,8 +33,21 @@ import com.airhacks.afterburner.views.FXMLView;
 
 import javafx.scene.control.TitledPane;
 
+/**
+ * Realizes a scenario view.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class ScenarioView extends FXMLView {
 
+	/**
+	 * Gets the view of the scenario view.
+	 * 
+	 * @return the view of the scenario view
+	 * 
+	 * @see FXMLView#getView()
+	 */
 	@Override
 	public TitledPane getView() {
 		return (TitledPane) super.getView();
