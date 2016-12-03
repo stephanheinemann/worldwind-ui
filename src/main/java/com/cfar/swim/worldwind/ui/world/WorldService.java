@@ -29,10 +29,27 @@
  */
 package com.cfar.swim.worldwind.ui.world;
 
+/**
+ * Realizes a world service.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class WorldService {
 
+	/**
+	 * Creates a new world service.
+	 */
 	public WorldService() {
-		// TODO Auto-generated constructor stub
+		// TODO: This class is currently not used, the idea
+		// would be to access the session and scenario via
+		// common service methods instead of referencing them
+		// directly from the presenter. The planner package
+		// could also offer a service to be used from all
+		// parts of the application.
+		// Similarly, the world model could be a planner model
+		// sharing the application state in a architecturally
+		// more sound approach.
 	}
 
 }

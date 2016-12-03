@@ -53,29 +53,50 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ScrollPane;
 
+/**
+ * Realizes a presenter of a setup view.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class SetupPresenter implements Initializable {
 	
+	/** the aircraft properties pane of the setup view */
 	@FXML
 	private ScrollPane aircraftPropertiesPane;
 	
+	/** the environment properties pane of the setup view */
 	@FXML
 	private ScrollPane envPropertiesPane;
 	
+	/** the planner properties pane of the setup view */
 	@FXML
 	private ScrollPane plannerPropertiesPane;
 	
+	/** the aircraft selector of the setup view */
 	@FXML
 	private ComboBox<String> aircraft;
 	
+	/** the environment selector of the setup view */
 	@FXML
 	private ComboBox<String> environment;
 	
+	/** the planner selector of the setup view */
 	@FXML
 	private ComboBox<String> planner;
 	
+	/** the setup model to be modified in the setup view */
 	@Inject
 	private SetupModel setupModel;
-
+	
+	/**
+	 * Initializes this setup presenter.
+	 * 
+	 * @param location unused
+	 * @param resources unused
+	 * 
+	 * @see Initializable#initialize(URL, ResourceBundle)
+	 */
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		this.initAircraft();
@@ -83,6 +104,9 @@ public class SetupPresenter implements Initializable {
 		this.initPlanner();
 	}
 	
+	/**
+	 * Initializes the aircraft setup of the setup view.
+	 */
 	public void initAircraft() {
 		Platform.runLater(new Runnable() {
 			@Override
@@ -103,6 +127,9 @@ public class SetupPresenter implements Initializable {
 		});
 	}
 	
+	/**
+	 * Initializes the environment setup of the setup view.
+	 */
 	public void initEnvironment() {
 		Platform.runLater(new Runnable() {
 			@Override
@@ -123,6 +150,9 @@ public class SetupPresenter implements Initializable {
 		});
 	}
 	
+	/**
+	 * Initializes the planner of the setup view.
+	 */
 	public void initPlanner() {
 		Platform.runLater(new Runnable() {
 			@Override
@@ -143,8 +173,23 @@ public class SetupPresenter implements Initializable {
 		});
 	}
 	
+	/**
+	 * Realizes an aircraft change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class AircraftChangeListener implements ChangeListener<String> {
-
+		
+		/**
+		 * Updates the aircraft setup if the aircraft changes.
+		 * 
+		 * @param observable the observable associate with the aircraft change
+		 * @param oldAircraftId the old aircraft identifier
+		 * @param newAircraftId the new aircraft identifier
+		 * 
+		 * @see ChangeListener#changed(ObservableValue, Object, Object)
+		 */
 		@Override
 		public void changed(ObservableValue<? extends String> observable, String oldAircraftId, String newAircraftId) {
 			Platform.runLater(new Runnable() {
@@ -161,8 +206,23 @@ public class SetupPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes an environment change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class EnvironmentChangeListener implements ChangeListener<String> {
-
+		
+		/**
+		 * Updates the environment setup if the environment changes.
+		 * 
+		 * @param observable the observable associate with the environment change
+		 * @param oldEnvId the old environment identifier
+		 * @param newEnvId the new environment identifier
+		 * 
+		 * @see ChangeListener#changed(ObservableValue, Object, Object)
+		 */
 		@Override
 		public void changed(ObservableValue<? extends String> observable, String oldEnvId, String newEnvId) {
 			Platform.runLater(new Runnable() {
@@ -179,8 +239,23 @@ public class SetupPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes a planner change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class PlannerChangeListener implements ChangeListener<String> {
-
+		
+		/**
+		 * Updates the planner setup if the planner changes.
+		 * 
+		 * @param observable the observable associate with the planner change
+		 * @param oldPlannerId the old planner identifier
+		 * @param newPlannerId the new planner identifier
+		 * 
+		 * @see ChangeListener#changed(ObservableValue, Object, Object)
+		 */
 		@Override
 		public void changed(ObservableValue<? extends String> observable, String oldPlannerId, String newPlannerId) {
 			Platform.runLater(new Runnable() {

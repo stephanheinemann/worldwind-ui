@@ -33,8 +33,21 @@ import com.airhacks.afterburner.views.FXMLView;
 
 import javafx.scene.control.TitledPane;
 
+/**
+ * Realizes a threshold view.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class ThresholdView extends FXMLView {
 	
+	/**
+	 * Gets the view of this threshold view.
+	 * 
+	 * @return the view of this threshold view
+	 * 
+	 * @see FXMLView#getView()
+	 */
 	@Override
 	public TitledPane getView() {
 		return (TitledPane) super.getView();

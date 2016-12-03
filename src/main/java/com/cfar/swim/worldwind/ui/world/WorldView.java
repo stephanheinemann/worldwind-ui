@@ -33,8 +33,22 @@ import com.airhacks.afterburner.views.FXMLView;
 
 import javafx.scene.layout.AnchorPane;
 
+/**
+ * Realizes a world view.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class WorldView extends FXMLView {
 	
+	/**
+	 * Gets the view of this world view.
+	 * 
+	 * @return the view of this world view
+	 * 
+	 * @see FXMLView#getView()
+	 */
+	@Override
 	public AnchorPane getView() {
 		return (AnchorPane) super.getView();
 	}

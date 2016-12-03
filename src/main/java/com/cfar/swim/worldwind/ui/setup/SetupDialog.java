@@ -42,18 +42,48 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.image.ImageView;
 
+/**
+ * Realizes a setup dialog to setup a planning session with
+ * an aircraft, an environment, SWIM data and a planner.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class SetupDialog extends Dialog<Setup> {
-
+	
+	/** the title of a setup dialog */
 	public static final String TITLE_SETUP = "Setup Planner Session";
+	
+	/** the header of a setup dialog */
 	public static final String HEADER_SETUP = "Setup the Planning Session";
 	
+	/** the aircraft tab index of a setup dialog */
 	public static final int AIRCRAFT_TAB_INDEX = 0;
+	
+	/** the environment tab index of a setup dialog */
 	public static final int ENVIRONMENT_TAB_INDEX = 1;
+	
+	/** the swim tab index of a setup dialog */
 	public static final int SWIM_TAB_INDEX = 2;
+	
+	/** the planner tab index of a setup dialog */
 	public static final int PLANNER_TAB_INDEX = 3;
 	
+	/** the setup view populated in this setup dialog */
 	private SetupView setupView = null;
 	
+	/**
+	 * Constructs a new setup dialog with a specified title, header, icon and
+	 * setup model. The setup model represents a modifiable copy of the actual
+	 * setup which can be committed or disregarded in the dialog.
+	 * 
+	 * @param title the title of this setup dialog
+	 * @param header the header of this setup dialog
+	 * @param icon the icon of this setup dialog
+	 * @param setupModel the setup model of this setup dialog
+	 * 
+	 * @see SetupModel
+	 */
 	public SetupDialog(String title, String header, String icon, SetupModel setupModel) {
 		this.setTitle(title);
 		this.setHeaderText(header);
@@ -89,7 +119,7 @@ public class SetupDialog extends Dialog<Setup> {
 				plannerSpec.setProperties(setupModel.getPlannerProperties());
 				setup.setPlannerSpecification(plannerSpec);
 				
-				// TODO: fill setup
+				// TODO: complete SWIM setup
 			}
 			
 			return setup;
@@ -97,6 +127,11 @@ public class SetupDialog extends Dialog<Setup> {
 	
 	}
 	
+	/**
+	 * Selects a tab of this setup dialog.
+	 * 
+	 * @param index the index of the tab to be selected
+	 */
 	public void selectTab(int index) {	
 		this.setupView.getView().getSelectionModel().select(index);
 	}

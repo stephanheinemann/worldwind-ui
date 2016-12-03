@@ -33,8 +33,21 @@ import com.airhacks.afterburner.views.FXMLView;
 
 import javafx.scene.control.TitledPane;
 
+/**
+ * Realizes a time view.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class TimeView extends FXMLView {
 	
+	/**
+	 * Gets the view of this time view.
+	 * 
+	 * @return the view of this time view
+	 * 
+	 * @see FXMLView#getView()
+	 */
 	@Override
 	public TitledPane getView() {
 		return (TitledPane) super.getView();

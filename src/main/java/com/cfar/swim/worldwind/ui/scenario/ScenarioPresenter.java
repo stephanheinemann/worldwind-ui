@@ -58,7 +58,7 @@ public class ScenarioPresenter implements Initializable {
 	
 	/** the list of scenarios of the scenario view */
 	@FXML
-	ListView<Scenario> scenarios;
+	private ListView<Scenario> scenarios;
 	
 	/**
 	 * Initializes this scenario presenter.

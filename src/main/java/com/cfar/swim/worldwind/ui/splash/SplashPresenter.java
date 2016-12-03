@@ -39,17 +39,37 @@ import javafx.fxml.Initializable;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
+/**
+ * Realizes a presenter for a splash view. The splash view is only shown when
+ * the application starts.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class SplashPresenter implements Initializable {
-
+	
+	/** the UVic logo of the splash view */
 	@Inject private String uvicLogo;
+	
+	/** the CfAR logo of the splash view */
 	@Inject private String cfarLogo;
 	
+	/** the UVic image view of the splash view */
 	@FXML
-	ImageView uvic;
+	private ImageView uvic;
 	
+	/** the CfAR image view of the splash view */
 	@FXML
-	ImageView cfar;
+	private ImageView cfar;
 	
+	/**
+	 * Initializes this splash presenter.
+	 * 
+	 * @param location unused
+	 * @param resources unused
+	 * 
+	 * @see Initializable#initialize(URL, ResourceBundle)
+	 */
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		ClassLoader classLoader = this.getClass().getClassLoader();

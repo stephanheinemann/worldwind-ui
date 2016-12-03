@@ -33,8 +33,22 @@ import com.airhacks.afterburner.views.FXMLView;
 
 import javafx.scene.layout.VBox;
 
+/**
+ * Realizes a splash view.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class SplashView extends FXMLView {
-
+	
+	/**
+	 * Gets the view of this splash view.
+	 * 
+	 * @return the view of this splash view
+	 * 
+	 * @see FXMLView#getView()
+	 */
+	@Override
 	public VBox getView() {
 		return (VBox) super.getView();
 	}

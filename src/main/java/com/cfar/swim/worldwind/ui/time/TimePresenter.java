@@ -49,13 +49,29 @@ import javafx.scene.layout.AnchorPane;
 import javafx.util.Callback;
 import jfxtras.scene.control.LocalDateTimePicker;
 
+/**
+ * Realizes a presenter of a time view.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class TimePresenter implements Initializable {
 	
+	/** the time pane of the time view */
 	@FXML
 	private AnchorPane timePane;
 	
+	/** the date and time picker of this time presenter */
 	private LocalDateTimePicker picker;
-
+	
+	/**
+	 * Initializes this time presenter.
+	 * 
+	 * @param location unused
+	 * @param resources unused
+	 * 
+	 * @see Initializable#initialize(URL, ResourceBundle)
+	 */
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		this.picker = new LocalDateTimePicker(LocalDateTime.now(ZoneId.of("UTC")));
@@ -67,9 +83,22 @@ public class TimePresenter implements Initializable {
 		AnchorPane.setRightAnchor(this.picker, 5d);
 		AnchorPane.setBottomAnchor(this.picker, 5d);
 	}
-
+	
+	/**
+	 * Realizes a planning time callback.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class PlanningTimeCallback implements Callback<LocalDateTime, Boolean> {
 		
+		/**
+		 * Sets the time of the active scenario.
+		 * 
+		 * @param localDateTime the date and time to be set
+		 * 
+		 * @see Callback#call(Object)
+		 */
 		@Override
 		public Boolean call(LocalDateTime localDateTime) {
 			if (null != localDateTime) {
@@ -80,6 +109,12 @@ public class TimePresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes a planning time key handler.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class PlanningTimeKeyHandler implements EventHandler<KeyEvent> {
 
 		/** the maximum planning time step duration */
@@ -91,25 +126,33 @@ public class TimePresenter implements Initializable {
 		/**
 		 * Handles the key events to change the current planning time and
 		 * planning time step duration.
+		 * 
+		 * @param event the key event associated with the date and time picker
+		 * 
+		 * @see EventHandler#handle(javafx.event.Event)
 		 */
 		@Override
 		public void handle(KeyEvent event) {
 			if (KeyCode.RIGHT.equals(event.getCode())) {
 				if (event.isControlDown()) {
+					// increase time step
 					if (0 > this.duration.compareTo(DURATION_MAX)) {
 						this.duration = this.duration.plusMinutes(1);
 					}
 				} else {
+					// obtain increased time
 					picker.setLocalDateTime(picker.getLocalDateTime().plus(this.duration));
 					picker.getValueValidationCallback().call(picker.getLocalDateTime());
 				}
 				event.consume();
 			} else if (KeyCode.LEFT.equals(event.getCode())) {
 				if (event.isControlDown()) {
+					// decrease time step
 					if (0 < this.duration.compareTo(Duration.ZERO)) {
 						this.duration = this.duration.minusMinutes(1);
 					}
 				} else {
+					// obtain decreased time
 					picker.setLocalDateTime(picker.getLocalDateTime().minus(this.duration));
 					picker.getValueValidationCallback().call(picker.getLocalDateTime());
 				}

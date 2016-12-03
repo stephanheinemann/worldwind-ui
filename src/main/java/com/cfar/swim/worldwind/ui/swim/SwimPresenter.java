@@ -45,16 +45,32 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
 
+/**
+ * Realizes a presenter of a swim view.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class SwimPresenter implements Initializable {
-
+	
+	/** the swim list of the swim view */
 	@FXML
 	private ListView<String> swimList;
-
+	
+	/** the active scenario of this swim presenter */
 	private Scenario scenario = null;
 	
+	/** the obstacle change listener of this swim presenter */
 	private ObstaclesChangeListener ocl = new ObstaclesChangeListener();
 	
-	
+	/**
+	 * Initializes this swim presenter.
+	 * 
+	 * @param location unused
+	 * @param resources unused
+	 * 
+	 * @see Initializable#initialize(URL, ResourceBundle)
+	 */
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
@@ -62,7 +78,10 @@ public class SwimPresenter implements Initializable {
 		this.initScenario();
 		this.initObstacles();
 	}
-
+	
+	/**
+	 * Initializes the scenario of this swim presenter.
+	 */
 	private void initScenario() {
 		if (null != this.scenario) {
 			this.scenario.removePropertyChangeListener(this.ocl);
@@ -72,6 +91,9 @@ public class SwimPresenter implements Initializable {
 		this.scenario.addObstaclesChangeListener(this.ocl);
 	}
 	
+	/**
+	 * Initializes the obstacles of this swim presenter.
+	 */
 	private void initObstacles() {
 		Platform.runLater(new Runnable() {
 			@Override
@@ -89,10 +111,16 @@ public class SwimPresenter implements Initializable {
 		});
 	}
 	
+	/**
+	 * Adds a swim item to the swim view.
+	 */
 	public void addSwimItem() {
-		
+		// TODO: load
 	}
 	
+	/**
+	 * Removes a swim item from the swim view.
+	 */
 	public void removeSwimItem() {
 		String swimId = swimList.getSelectionModel().getSelectedItem();
 		if (null != swimId) {
@@ -102,12 +130,18 @@ public class SwimPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Removes all swim items from the swim view.
+	 */
 	public void clearSwimItems() {
 		scenario.clearObstacles();
 		swimList.getItems().clear();
 		swimList.refresh();
 	}
 	
+	/**
+	 * Enables a selected swim item of the swim view.
+	 */
 	public void enableSwimItem() {
 		String swimId = swimList.getSelectionModel().getSelectedItem();
 		if (null != swimId) {
@@ -115,6 +149,9 @@ public class SwimPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Disables a selected swim item of the swim view.
+	 */
 	public void disableSwimItem() {
 		String swimId = swimList.getSelectionModel().getSelectedItem();
 		if (null != swimId) {
@@ -122,16 +159,42 @@ public class SwimPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes an obstacle change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class ObstaclesChangeListener implements PropertyChangeListener {
-
+		
+		/**
+		 * Initializes the obstacles if they have changed.
+		 * 
+		 * @param evt the property change event associated with the obstacle change
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initObstacles();
 		}
 	}
 	
+	/**
+	 * Realizes an active scenario change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class ActiveScenarioChangeListener implements PropertyChangeListener {
-
+		
+		/**
+		 * Initializes the scenario and obstacles if the active scenario has changed.
+		 * 
+		 * @param evt the property change event associate with the active scenario change
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initScenario();

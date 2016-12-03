@@ -34,32 +34,76 @@ import com.cfar.swim.worldwind.aircraft.Aircraft;
 import com.cfar.swim.worldwind.planning.Environment;
 import com.cfar.swim.worldwind.registries.Properties;
 
+/**
+ * Realizes a setup model representing a copy of the actual setup.
+ * It can be modified and committed, or otherwise disregarded in
+ * a setup dialog.
+ * 
+ * @author Stephan Heinemann
+ *
+ * @see SetupDialog
+ */
 public class SetupModel {
-
-	Properties<Aircraft> aircraftProperties;
-	Properties<Environment> environmentProperties;
-	Properties<Planner> plannerProperties;
 	
+	/** the aircraft properties of this setup model */
+	private Properties<Aircraft> aircraftProperties;
+	
+	/** the environment properties of this setup model */
+	private Properties<Environment> environmentProperties;
+	
+	/** the planner properties of this setup model */
+	private Properties<Planner> plannerProperties;
+	
+	/**
+	 * Gets the aircraft properties of this setup model.
+	 * 
+	 * @return the aircraft properties of this setup model
+	 */
 	public Properties<Aircraft> getAircraftProperties() {
 		return this.aircraftProperties;
 	}
-
+	
+	/**
+	 * Sets the aircraft properties of this setup model.
+	 * 
+	 * @param aircraftProperties the aircraft properties to be set
+	 */
 	public void setAircraftProperties(Properties<Aircraft> aircraftProperties) {
 		this.aircraftProperties = aircraftProperties;
 	}
-
+	
+	/**
+	 * Gets the environment properties of this setup model.
+	 * 
+	 * @return the environment properties of this setup model
+	 */
 	public Properties<Environment> getEnvironmentProperties() {
 		return this.environmentProperties;
 	}
 	
+	/**
+	 * Sets the environment properties of this setup model.
+	 * 
+	 * @param environmentProperties the environment properties of this setup model
+	 */
 	public void setEnvironmentProperties(Properties<Environment> environmentProperties) {
 		this.environmentProperties = environmentProperties;
 	}
 	
+	/**
+	 * Gets the planner properties of this setup model.
+	 * 
+	 * @return the planner properties of this setup model
+	 */
 	public Properties<Planner> getPlannerProperties() {
 		return this.plannerProperties;
 	}
 	
+	/**
+	 * Sets the planner properties of this setup model.
+	 * 
+	 * @param plannerProperties the planner properties of this setup model
+	 */
 	public void setPlannerProperties(Properties<Planner> plannerProperties) {
 		this.plannerProperties = plannerProperties;
 	}

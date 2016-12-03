@@ -33,8 +33,22 @@ import com.airhacks.afterburner.views.FXMLView;
 
 import javafx.scene.control.TitledPane;
 
+/**
+ * Realizes a swim view.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class SwimView extends FXMLView {
-
+	
+	/**
+	 * Gets the view of this swim view.
+	 * 
+	 * @return the view of this swim view
+	 * 
+	 * @see FXMLView#getView()
+	 */
+	@Override
 	public TitledPane getView() {
 		return (TitledPane) super.getView();
 	}

@@ -111,16 +111,16 @@ public class PlanPresenter implements Initializable {
 	private TreeTableColumn<Waypoint, String> actualTimeOverColumn;
 	
 	/** the active planning scenario (model) of this plan presenter */
-	Scenario scenario = null;
+	private Scenario scenario = null;
 	
 	/** the waypoints change listener of this plan presenter */
-	WaypointsChangeListener wcl = new WaypointsChangeListener();
+	private final WaypointsChangeListener wcl = new WaypointsChangeListener();
 	
 	/** the trajectory change listener of this plan presenter */
-	TrajectoryChangeListener tcl = new TrajectoryChangeListener();
+	private final TrajectoryChangeListener tcl = new TrajectoryChangeListener();
 	
 	/** the military symbol factory of this plan presenter */
-	MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
+	private final MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
 	
 	/**
 	 * Initializes this plan presenter.

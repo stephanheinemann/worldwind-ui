@@ -29,6 +29,12 @@
  */
 package com.cfar.swim.worldwind.ui.world;
 
+/**
+ * Enumerates the world modes.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public enum WorldMode {
 	VIEW,
 	AIRCRAFT,

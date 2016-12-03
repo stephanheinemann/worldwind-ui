@@ -32,26 +32,51 @@ package com.cfar.swim.worldwind.ui.world;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
+/**
+ * Realizes a world model which shares application state.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class WorldModel {
-
+	
+	/** the world mode of the world model */
 	private WorldMode mode;
 
 	/** the property change support of this world model */
 	private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 	
+	/**
+	 * Constructs a new world model in view mode.
+	 */
 	public WorldModel() {
 		this.mode = WorldMode.VIEW;
 	}
 	
+	/**
+	 * Sets the mode of this world model.
+	 * 
+	 * @param mode the mode to be set
+	 */
 	public void setMode(WorldMode mode) {
 		this.mode = mode;
 		this.pcs.firePropertyChange("mode", null, this.mode);
 	}
 	
+	/**
+	 * Gets the mode of this world model.
+	 * 
+	 * @return the mode of this world model
+	 */
 	public WorldMode getMode() {
 		return this.mode;
 	}
 	
+	/**
+	 * Adds a mode change listener to this world model.
+	 * 
+	 * @param listener the property change listener to be added
+	 */
 	public void addModeChangeListener(PropertyChangeListener listener) {
 		this.pcs.addPropertyChangeListener("mode", listener);
 	}

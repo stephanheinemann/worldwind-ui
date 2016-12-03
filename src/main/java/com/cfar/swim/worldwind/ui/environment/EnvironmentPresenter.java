@@ -64,7 +64,7 @@ public class EnvironmentPresenter implements Initializable {
 	Scenario scenario = null;
 	
 	/** the environment change listener of this environment presenter */
-	private EnvironmentChangeListener ecl = new EnvironmentChangeListener();
+	private final EnvironmentChangeListener ecl = new EnvironmentChangeListener();
 	
 	
 	/**

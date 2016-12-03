@@ -42,19 +42,48 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Slider;
 import javafx.scene.input.InputEvent;
 
+/**
+ * Realizes a presenter of a threshold view.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class ThresholdPresenter implements Initializable {
-
+	
+	/** the threshold cost slider of the threshold view */
 	@FXML
-	Slider thresholdSlider;
-
+	private Slider thresholdSlider;
+	
+	/**
+	 * Initializes this threshold presenter.
+	 * 
+	 * @param location unused
+	 * @param resources unused
+	 * 
+	 * @see Initializable#initialize(URL, ResourceBundle)
+	 */
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		thresholdSlider.setOnMouseReleased(new ThresholdCostInputHandler());
 		thresholdSlider.setOnKeyPressed(new ThresholdCostInputHandler());
 	}
 	
+	/**
+	 * Realizes a threshold cost input handler.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class ThresholdCostInputHandler implements EventHandler<InputEvent> {
 		
+		/**
+		 * Handles a threshold cost input updating the threshold cost
+		 * of the active scenario.
+		 * 
+		 * @param event the input event associated with the threshold cost input
+		 * 
+		 * @see EventHandler#handle(javafx.event.Event)
+		 */
 		@Override
 		public void handle(InputEvent event) {
 			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);

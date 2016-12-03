@@ -102,68 +102,166 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 
+/**
+ * Realizes a presenter of a world view.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class WorldPresenter implements Initializable {
 	
+	/** the aircraft icon of the world view */
 	@Inject private String aircraftIcon;
+	
+	/** the swim icon of the world view */
 	@Inject private String swimIcon;
+	
+	/** the environment icon of the world view */
 	@Inject private String environmentIcon;
+	
+	/** the point of interest icon of the world view */
 	@Inject private String poiIcon;
+	
+	/** the planner icon of the world view */
 	@Inject private String plannerIcon;
+	
+	/** the take-off icon of the world view */
 	@Inject private String takeoffIcon;
+	
+	/** the land icon of the world view */
 	@Inject private String landIcon;
+	
+	/** the setup icon of the world view */
 	@Inject private String setupIcon;
 	
+	/** the no action command */
 	public static final String ACTION_NONE = "WorldPresenter.ActionCommand.None";
+	
+	/** the set aircraft action command */
 	public static final String ACTION_AICRAFT_SET = "WorldPresenter.ActionCommand.AircraftSet";
+	
+	/** the setup aircraft action command */
 	public static final String ACTION_AIRCAFT_SETUP = "WorldPresenter.ActionCommand.AircraftSetup";
+	
+	/** the load swim action command */
 	public static final String ACTION_SWIM_LOAD = "WorldPresenter.ActionCommand.SwimLoad";
+	
+	/** the setup swim action command */
 	public static final String ACTION_SWIM_SETUP = "WorldPresenter.ActionCommand.SwimSetup";
+	
+	/** the enclose environment action command */
 	public static final String ACTION_ENVIRONMENT_ENCLOSE = "WorldPresenter.ActionCommand.EnvironmentEnclose";
+	
+	/** the setup environment action command */
 	public static final String ACTION_ENVIRONMENT_SETUP = "WorldPresenter.ActionCommand.EnvironmentSetup";
+	
+	/** the edit waypoint action command */
 	public static final String ACTION_WAYPOINT_EDIT = "WorldPresenter.ActionCommand.WaypointEdit";
+	
+	/** the setup waypoint action command */
 	public static final String ACTION_WAYPOINT_SETUP = "WorldPresenter.ActionCommand.WaypointSetup";
+	
+	/** the plan action command */
 	public static final String ACTION_PLANNER_PLAN = "WorldPresenter.ActionCommand.PlannerPlan";
+	
+	/** the setup planner action command */
 	public static final String ACTION_PLANNER_SETUP = "WorldPresenter.ActionCommand.PlannerSetup";
+	
+	/** the take-off action command */
 	public static final String ACTION_TAKEOFF = "WorldPresenter.ActionCommand.TakeOff";
+	
+	/** the land action command */
 	public static final String ACTION_LAND = "WorldPresenter.ActionCommand.Land";
 	
+	// TODO: consider to move all visible UI text into properties files
+	
+	/** the file chooser open swim file title */
 	public static final String FILE_CHOOSER_TITLE_SWIM = "Open SWIM File";
+	
+	/** the file chooser swim file description */
 	public static final String FILE_CHOOSER_SWIM = "SWIM Files";
+	
+	/** the file chooser swim file extension */
 	public static final String FILE_CHOOSER_EXTENSION_SWIM = "*.xml";
 	
+	/** the world pane of the world view */
 	@FXML
 	private AnchorPane worldNodePane;
 	
+	/** the world node of the world view (swing inside fx) */
 	@FXML
 	private SwingNode worldNode;
 	
+	/** the world model of this world presenter */
 	@Inject
-	WorldModel worldModel;
+	private WorldModel worldModel;
 	
+	/** the setup model of this world presenter */
 	@Inject
-	SetupModel setupModel;
+	private SetupModel setupModel;
 	
-	WorldWindowGLJPanel wwd = new WorldWindowGLJPanel();
-	AnnotationLayer controlLayer = new AnnotationLayer();
-	AnnotationLayer statusLayer = new AnnotationLayer();
-	RenderableLayer aircraftLayer = new RenderableLayer();
-	RenderableLayer environmentLayer = new RenderableLayer();
-	RenderableLayer waypointLayer = new RenderableLayer();
-	RenderableLayer obstaclesLayer = new RenderableLayer();
-	MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
-	SectorSelector sectorSelector = new SectorSelector(wwd);
+	/** the world window of this world presenter */
+	private final WorldWindowGLJPanel wwd = new WorldWindowGLJPanel();
 	
-	Scenario scenario = null;
-	TimeChangeListener timeCl = new TimeChangeListener();
-	ThresholdChangeListener thresholdCl = new ThresholdChangeListener();
-	AircraftChangeListener aircraftCl = new AircraftChangeListener();
-	EnvironmentChangeListener environmentCl = new EnvironmentChangeListener();
-	WaypointsChangeListener waypointsCl = new WaypointsChangeListener();
-	TrajectoryChangeListener trajectoryCl = new TrajectoryChangeListener();
-	ObstaclesChangeListener obstaclesCl = new ObstaclesChangeListener();
+	/** the control layer of this world presenter */
+	private final AnnotationLayer controlLayer = new AnnotationLayer();
 	
-	Executor executor = Executors.newSingleThreadScheduledExecutor();
+	/** the status layer of this world presenter */
+	private final AnnotationLayer statusLayer = new AnnotationLayer();
 	
+	/** the aircraft layer of this world presenter */
+	private final RenderableLayer aircraftLayer = new RenderableLayer();
+	
+	/** the environment layer of this world presenter */
+	private final RenderableLayer environmentLayer = new RenderableLayer();
+	
+	/** the waypoint layer of this world presenter */
+	private final RenderableLayer waypointLayer = new RenderableLayer();
+	
+	/** the obstacles layer of this world presenter */
+	private final RenderableLayer obstaclesLayer = new RenderableLayer();
+	
+	/** the symbol factory of this world presenter */
+	private final MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
+	
+	/** the sector selector of this world presenter */
+	private final SectorSelector sectorSelector = new SectorSelector(wwd);
+	
+	/** the active scenario of this world presenter */
+	private Scenario scenario = null;
+	
+	/** the time change listener of this world presenter */
+	private final TimeChangeListener timeCl = new TimeChangeListener();
+	
+	/** the threshold cost change listener of this world presenter */
+	private final ThresholdChangeListener thresholdCl = new ThresholdChangeListener();
+	
+	/** the aircraft change listener of this world presenter */
+	private final AircraftChangeListener aircraftCl = new AircraftChangeListener();
+	
+	/** the environment change listener of this world presenter */
+	private final EnvironmentChangeListener environmentCl = new EnvironmentChangeListener();
+	
+	/** the waypoints change listener of this world presenter */
+	private final WaypointsChangeListener waypointsCl = new WaypointsChangeListener();
+	
+	/** the trajectory change listener of this world presenter */
+	private final TrajectoryChangeListener trajectoryCl = new TrajectoryChangeListener();
+	
+	/** the obstacles change listener of this world presenter */
+	private final ObstaclesChangeListener obstaclesCl = new ObstaclesChangeListener();
+	
+	/** the executor of this world presenter */
+	private final Executor executor = Executors.newSingleThreadScheduledExecutor();
+	
+	/**
+	 * Initializes this world presenter.
+	 * 
+	 * @param location unused
+	 * @param resources unused
+	 * 
+	 * @see Initializable#initialize(URL, ResourceBundle)
+	 */
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		SwingUtilities.invokeLater(new WorldInitializer());
@@ -183,6 +281,9 @@ public class WorldPresenter implements Initializable {
 		this.initPlan();
 	}
 	
+	/**
+	 * Initializes the scenario of this world presenter.
+	 */
 	public void initScenario() {
 		// remove change listeners from the previous scenario if any
 		if (null != this.scenario) {
@@ -204,6 +305,9 @@ public class WorldPresenter implements Initializable {
 		this.scenario.addObstaclesChangeListener(this.obstaclesCl);
 	}
 	
+	/**
+	 * Initializes the aircraft of this world presenter.
+	 */
 	public void initAircraft() {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
@@ -217,6 +321,9 @@ public class WorldPresenter implements Initializable {
 		});
 	}
 	
+	/**
+	 * Initializes the environment of this world presenter.
+	 */
 	public void initEnvironment() {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
@@ -228,6 +335,9 @@ public class WorldPresenter implements Initializable {
 		});
 	}
 	
+	/**
+	 * Initializes the obstacles of this world presenter.
+	 */
 	public void initObstacles() {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
@@ -240,6 +350,9 @@ public class WorldPresenter implements Initializable {
 		});
 	}
 	
+	/**
+	 * Initializes the plan of this world presenter.
+	 */
 	public void initPlan() {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
@@ -252,19 +365,39 @@ public class WorldPresenter implements Initializable {
 		});
 	}
 	
+	/**
+	 * Sets the world mode of this world presenter.
+	 * 
+	 * @param mode the world mode to be set
+	 */
 	private void setMode(WorldMode mode) {
 		this.worldModel.setMode(mode);
 		this.displayStatus(mode.toString());
 	}
 	
+	/**
+	 * Gets the world mode of this world presenter.
+	 * 
+	 * @return the world mode of this world presenter
+	 */
 	private WorldMode getMode() {
 		return this.worldModel.getMode();
 	}
 	
+	/**
+	 * Displays a status in the status layer of this world presenter.
+	 * 
+	 * @param status the status to be displayed
+	 */
 	private void displayStatus(String status) {
 		statusLayer.getAnnotations().iterator().next().setText(status);
 	}
 	
+	/**
+	 * Opens the setup dialog with a specified tab.
+	 * 
+	 * @param tabIndex the tab index of the tab to be opened
+	 */
 	private void setup(int tabIndex) {
 		Platform.runLater(new Runnable() {
 			@Override
@@ -276,6 +409,12 @@ public class WorldPresenter implements Initializable {
 		});
 	}
 	
+	/**
+	 * Opens a file dialog and loads a SWIM file asynchronously.
+	 * 
+	 * @param title the title of the file dialog
+	 * @param extensions the extension filter of the file dialog
+	 */
 	private void load(String title, ExtensionFilter[] extensions) {
 		Platform.runLater(new Runnable() {
 			@Override
@@ -307,6 +446,17 @@ public class WorldPresenter implements Initializable {
 		});
 	}
 	
+	/**
+	 * Opens a planner alert with a specified alert type, title, header and
+	 * content.
+	 * 
+	 * @param type the type of the planner alert
+	 * @param title the title of the planner alert
+	 * @param header the header of the planner alert
+	 * @param content the content of the planner alert
+	 * 
+	 * @see PlannerAlert
+	 */
 	private void alert(AlertType type, String title, String header, String content) {
 		Platform.runLater(new Runnable() {
 			@Override
@@ -320,6 +470,10 @@ public class WorldPresenter implements Initializable {
 		});
 	}
 	
+	/**
+	 * Plans a trajectory along the waypoints of the active scenario
+	 * asynchronously.
+	 */
 	private void plan() {
 		executor.execute(new Runnable() {
 			@Override
@@ -364,6 +518,11 @@ public class WorldPresenter implements Initializable {
 		});
 	}
 	
+	/**
+	 * Styles a computed trajectory for display.
+	 * 
+	 * @param trajectory the trajectory to be styled
+	 */
 	private void styleTrajectory(Trajectory trajectory) {
 		trajectory.setVisible(true);
 		trajectory.setShowPositions(true);
@@ -380,8 +539,19 @@ public class WorldPresenter implements Initializable {
 		}
 	}
 	
+	/**
+	 * Realizes a world window initializer.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
 	private class WorldInitializer implements Runnable {
-
+		
+		/**
+		 * Initializes the world window.
+		 * 
+		 * @see Runnable#run()
+		 */
 		@Override
 		public void run() {
 			JPanel worldPanel = new JPanel(new BorderLayout());
