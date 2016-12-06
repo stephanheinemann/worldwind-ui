@@ -31,7 +31,7 @@ package com.cfar.swim.worldwind.ui.setup;
 
 import com.cfar.swim.worldwind.ai.Planner;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
-import com.cfar.swim.worldwind.connections.AircraftConnection;
+import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.planning.Environment;
 import com.cfar.swim.worldwind.registries.Properties;
 
@@ -56,7 +56,7 @@ public class SetupModel {
 	private Properties<Planner> plannerProperties;
 	
 	/** the datalink properties of this setup model */
-	private Properties<AircraftConnection> datalinkProperties;
+	private Properties<Datalink> datalinkProperties;
 	
 	/**
 	 * Gets the aircraft properties of this setup model.
@@ -117,7 +117,7 @@ public class SetupModel {
 	 * 
 	 * @return the datalink properties of this setup model
 	 */
-	public Properties<AircraftConnection> getDatalinkProperties() {
+	public Properties<Datalink> getDatalinkProperties() {
 		return this.datalinkProperties;
 	}
 	
@@ -126,7 +126,7 @@ public class SetupModel {
 	 * 
 	 * @param datalinkProperties the datalink properties of this setup model
 	 */
-	public void setDatalinkProperties(Properties<AircraftConnection> datalinkProperties) {
+	public void setDatalinkProperties(Properties<Datalink> datalinkProperties) {
 		this.datalinkProperties = datalinkProperties;
 	}
 	

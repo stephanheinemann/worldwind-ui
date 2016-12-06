@@ -39,7 +39,7 @@ import org.controlsfx.property.BeanPropertyUtils;
 
 import com.cfar.swim.worldwind.ai.Planner;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
-import com.cfar.swim.worldwind.connections.AircraftConnection;
+import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.planning.Environment;
 import com.cfar.swim.worldwind.registries.Specification;
 import com.cfar.swim.worldwind.session.Session;
@@ -191,13 +191,13 @@ public class SetupPresenter implements Initializable {
 			@Override
 			public void run() {
 				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-				for (Specification<AircraftConnection> aircraftConnectionSpec : session.getAircraftConnectionSpecifications()) {
-					datalink.getItems().add(aircraftConnectionSpec.getId());
+				for (Specification<Datalink> datalinkSpec : session.getDatalinkSpecifications()) {
+					datalink.getItems().add(datalinkSpec.getId());
 				}
 				
-				Specification<AircraftConnection> aircraftConnectionSpec = session.getSetup().getAircraftConnectionSpecification();
-				datalink.getSelectionModel().select(aircraftConnectionSpec.getId());
-				setupModel.setDatalinkProperties(aircraftConnectionSpec.getProperties().clone());
+				Specification<Datalink> datalinkSpec = session.getSetup().getDatalinkSpecification();
+				datalink.getSelectionModel().select(datalinkSpec.getId());
+				setupModel.setDatalinkProperties(datalinkSpec.getProperties().clone());
 				PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getDatalinkProperties()));
 				datalinkPropertiesPane.setContent(propertySheet);
 				datalink.valueProperty().addListener(new DatalinkChangeListener());
@@ -328,8 +328,8 @@ public class SetupPresenter implements Initializable {
 				@Override
 				public void run() {
 					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-					Specification<AircraftConnection> aircraftConnectionSpec = session.getAircraftConnectionSpecification(newDatalinkId);
-					setupModel.setDatalinkProperties(aircraftConnectionSpec.getProperties().clone());
+					Specification<Datalink> datalinkSpec = session.getDatalinkSpecification(newDatalinkId);
+					setupModel.setDatalinkProperties(datalinkSpec.getProperties().clone());
 					PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getDatalinkProperties()));
 					datalinkPropertiesPane.setContent(propertySheet);
 					datalinkPropertiesPane.layout();
