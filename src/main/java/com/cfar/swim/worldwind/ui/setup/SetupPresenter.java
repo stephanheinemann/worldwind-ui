@@ -39,6 +39,7 @@ import org.controlsfx.property.BeanPropertyUtils;
 
 import com.cfar.swim.worldwind.ai.Planner;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
+import com.cfar.swim.worldwind.connections.AircraftConnection;
 import com.cfar.swim.worldwind.planning.Environment;
 import com.cfar.swim.worldwind.registries.Specification;
 import com.cfar.swim.worldwind.session.Session;
@@ -73,6 +74,10 @@ public class SetupPresenter implements Initializable {
 	@FXML
 	private ScrollPane plannerPropertiesPane;
 	
+	/** the datalink properties pane of the setup view */
+	@FXML
+	private ScrollPane datalinkPropertiesPane;
+	
 	/** the aircraft selector of the setup view */
 	@FXML
 	private ComboBox<String> aircraft;
@@ -84,6 +89,10 @@ public class SetupPresenter implements Initializable {
 	/** the planner selector of the setup view */
 	@FXML
 	private ComboBox<String> planner;
+	
+	/** the datalink selector of the setup view */
+	@FXML
+	private ComboBox<String> datalink;
 	
 	/** the setup model to be modified in the setup view */
 	@Inject
@@ -102,6 +111,7 @@ public class SetupPresenter implements Initializable {
 		this.initAircraft();
 		this.initEnvironment();
 		this.initPlanner();
+		this.initDatalink();
 	}
 	
 	/**
@@ -169,6 +179,29 @@ public class SetupPresenter implements Initializable {
 				plannerPropertiesPane.setContent(propertySheet);
 				planner.valueProperty().addListener(new PlannerChangeListener());
 				planner.layout();
+			}
+		});
+	}
+	
+	/**
+	 * Initializes the datalink of the setup view.
+	 */
+	public void initDatalink() {
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+				for (Specification<AircraftConnection> aircraftConnectionSpec : session.getAircraftConnectionSpecifications()) {
+					datalink.getItems().add(aircraftConnectionSpec.getId());
+				}
+				
+				Specification<AircraftConnection> aircraftConnectionSpec = session.getSetup().getAircraftConnectionSpecification();
+				datalink.getSelectionModel().select(aircraftConnectionSpec.getId());
+				setupModel.setDatalinkProperties(aircraftConnectionSpec.getProperties().clone());
+				PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getDatalinkProperties()));
+				datalinkPropertiesPane.setContent(propertySheet);
+				datalink.valueProperty().addListener(new DatalinkChangeListener());
+				datalink.layout();
 			}
 		});
 	}
@@ -267,6 +300,39 @@ public class SetupPresenter implements Initializable {
 					PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getPlannerProperties()));
 					plannerPropertiesPane.setContent(propertySheet);
 					plannerPropertiesPane.layout();
+				}
+			});
+		}
+	}
+	
+	/**
+	 * Realizes a datalink change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
+	private class DatalinkChangeListener implements ChangeListener<String> {
+		
+		/**
+		 * Updates the datalink setup if the planner changes.
+		 * 
+		 * @param observable the observable associate with the datalink change
+		 * @param oldDatalinkId the old datalink identifier
+		 * @param newDatalinkId the new datalink identifier
+		 * 
+		 * @see ChangeListener#changed(ObservableValue, Object, Object)
+		 */
+		@Override
+		public void changed(ObservableValue<? extends String> observable, String oldDatalinkId, String newDatalinkId) {
+			Platform.runLater(new Runnable() {
+				@Override
+				public void run() {
+					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+					Specification<AircraftConnection> aircraftConnectionSpec = session.getAircraftConnectionSpecification(newDatalinkId);
+					setupModel.setDatalinkProperties(aircraftConnectionSpec.getProperties().clone());
+					PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getDatalinkProperties()));
+					datalinkPropertiesPane.setContent(propertySheet);
+					datalinkPropertiesPane.layout();
 				}
 			});
 		}

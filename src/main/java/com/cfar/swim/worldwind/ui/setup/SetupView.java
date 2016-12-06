@@ -56,4 +56,9 @@ public class SetupView extends FXMLView {
 		return (ComboBox<String>) this.getView().lookup("#planner");
 	}
 	
+	@SuppressWarnings("unchecked")
+	public ComboBox<String> getDatalink() {
+		return (ComboBox<String>) this.getView().lookup("#datalink");
+	}
+	
 }

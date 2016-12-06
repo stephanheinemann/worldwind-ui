@@ -31,6 +31,7 @@ package com.cfar.swim.worldwind.ui.setup;
 
 import com.cfar.swim.worldwind.ai.Planner;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
+import com.cfar.swim.worldwind.connections.AircraftConnection;
 import com.cfar.swim.worldwind.planning.Environment;
 import com.cfar.swim.worldwind.registries.Specification;
 import com.cfar.swim.worldwind.session.Session;
@@ -121,6 +122,11 @@ public class SetupDialog extends Dialog<Setup> {
 				Specification<Planner> plannerSpec = session.getPlannerSpecification(plannerId);
 				plannerSpec.setProperties(setupModel.getPlannerProperties());
 				setup.setPlannerSpecification(plannerSpec);
+				
+				String datalinkId = this.setupView.getDatalink().getValue();
+				Specification<AircraftConnection> datalinkSpec = session.getAircraftConnectionSpecification(datalinkId);
+				datalinkSpec.setProperties(setupModel.getDatalinkProperties());
+				setup.setAircraftConnectionSpecification(datalinkSpec);
 				
 				// TODO: complete SWIM setup
 			}
