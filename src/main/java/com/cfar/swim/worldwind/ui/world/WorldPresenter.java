@@ -125,6 +125,9 @@ public class WorldPresenter implements Initializable {
 	/** the planner icon of the world view */
 	@Inject private String plannerIcon;
 	
+	/** the datalink icon of the world view */
+	@Inject private String datalinkIcon;
+	
 	/** the take-off icon of the world view */
 	@Inject private String takeoffIcon;
 	
@@ -166,6 +169,12 @@ public class WorldPresenter implements Initializable {
 	
 	/** the setup planner action command */
 	public static final String ACTION_PLANNER_SETUP = "WorldPresenter.ActionCommand.PlannerSetup";
+	
+	/** the upload action command */
+	public static final String ACTION_DATALINK_UPLOAD = "WorldPresenter.ActionCommand.DatalinkUpload";
+	
+	/** the setup datalink action command */
+	public static final String ACTION_DATALINK_SETUP = "WorldPresenter.ActionCommand.DatalinkSetup";
 	
 	/** the take-off action command */
 	public static final String ACTION_TAKEOFF = "WorldPresenter.ActionCommand.TakeOff";
@@ -603,14 +612,20 @@ public class WorldPresenter implements Initializable {
 			plannerControl.setSecondaryActionCommand(WorldPresenter.ACTION_PLANNER_SETUP);
 			plannerControl.addActionListener(new PlannerControlListener());
 			
+			ControlAnnotation datalinkControl = new ControlAnnotation(datalinkIcon);
+			datalinkControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 175, 25));
+			datalinkControl.setPrimaryActionCommand(WorldPresenter.ACTION_DATALINK_UPLOAD);
+			datalinkControl.setSecondaryActionCommand(WorldPresenter.ACTION_DATALINK_SETUP);
+			datalinkControl.addActionListener(new DatalinkControlListener());
+			
 			ControlAnnotation takeoffControl = new ControlAnnotation(takeoffIcon);
-			takeoffControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 175, 25));
+			takeoffControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 250, 25));
 			takeoffControl.setPrimaryActionCommand(WorldPresenter.ACTION_TAKEOFF);
 			takeoffControl.setSecondaryActionCommand(WorldPresenter.ACTION_NONE);
 			takeoffControl.addActionListener(new TakeOffControlListener());
 			
 			ControlAnnotation landControl = new ControlAnnotation(landIcon);
-			landControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 250, 25));
+			landControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 325, 25));
 			landControl.setPrimaryActionCommand(WorldPresenter.ACTION_LAND);
 			landControl.setSecondaryActionCommand(WorldPresenter.ACTION_NONE);
 			landControl.addActionListener(new LandControlListener());
@@ -625,6 +640,8 @@ public class WorldPresenter implements Initializable {
 			wwd.addSelectListener(poiControl);
 			controlLayer.addAnnotation(plannerControl);
 			wwd.addSelectListener(plannerControl);
+			controlLayer.addAnnotation(datalinkControl);
+			wwd.addSelectListener(datalinkControl);
 			controlLayer.addAnnotation(takeoffControl);
 			wwd.addSelectListener(takeoffControl);
 			controlLayer.addAnnotation(landControl);
@@ -654,8 +671,9 @@ public class WorldPresenter implements Initializable {
 					environmentControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 50, 25));
 					poiControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 25, 25));
 					plannerControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 100, 25));
-					takeoffControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 175, 25));
-					landControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 250, 25));
+					datalinkControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 175, 25));
+					takeoffControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 250, 25));
+					landControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 325, 25));
 					statusAnnotation.setScreenPoint(new Point(wwd.getWidth() / 2, wwd.getHeight() - 75));
 				}
 			});
@@ -1132,6 +1150,36 @@ public class WorldPresenter implements Initializable {
 			case WorldPresenter.ACTION_PLANNER_SETUP:
 				setMode(WorldMode.VIEW);
 				setup(SetupDialog.PLANNER_TAB_INDEX);
+				break;
+			}
+		}
+	}
+	
+	/**
+	 * Realizes an datalink control listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
+	private class DatalinkControlListener implements ActionListener {
+		
+		/**
+		 * Performs the datalink control action.
+		 * 
+		 * @param e the action event associated with the datalink control action
+		 * 
+		 * @see ActionListener#actionPerformed(ActionEvent)
+		 */
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			switch (e.getActionCommand()) {
+			case WorldPresenter.ACTION_DATALINK_UPLOAD:
+				setMode(WorldMode.UPLOADING);
+				//upload();
+				break;
+			case WorldPresenter.ACTION_DATALINK_SETUP:
+				setMode(WorldMode.VIEW);
+				//setup(SetupDialog.DATALINK_TAB_INDEX);
 				break;
 			}
 		}

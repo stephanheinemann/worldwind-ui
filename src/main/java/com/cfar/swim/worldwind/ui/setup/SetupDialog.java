@@ -69,6 +69,9 @@ public class SetupDialog extends Dialog<Setup> {
 	/** the planner tab index of a setup dialog */
 	public static final int PLANNER_TAB_INDEX = 3;
 	
+	/** the datalink tab index of a setup dialog */
+	public static final int DATALINK_TAB_INDEX = 4;
+	
 	/** the setup view populated in this setup dialog */
 	private SetupView setupView = null;
 	

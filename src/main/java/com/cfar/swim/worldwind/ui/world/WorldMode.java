@@ -41,5 +41,6 @@ public enum WorldMode {
 	ENVIRONMENT,
 	WAYPOINT,
 	PLANNING,
-	LOADING
+	LOADING,
+	UPLOADING
 }

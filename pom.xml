@@ -36,7 +36,7 @@
 	<version>1.0.0-alpha2-SNAPSHOT</version>
 	<packaging>bundle</packaging>
 	<name>SWIM Worldwind UI</name>
-	<description>NASA Worldwind User Interface for SWIM-based planning, decision-making and support.</description>
+	<description>NASA Worldwind User Interface for SWIM-based Planning, Decision-Making and Support</description>
 
 	<inceptionYear>2016</inceptionYear>
 	<licenses>
@@ -143,8 +143,8 @@
 				<directory>src/main/resources</directory>
 				<includes>
 					<include>icons/**/*</include>
-                    <include>logos/**/*</include>
-                    <include>symbols/**/*</include>
+					<include>logos/**/*</include>
+					<include>symbols/**/*</include>
 				</includes>
 			</resource>
 		</resources>
