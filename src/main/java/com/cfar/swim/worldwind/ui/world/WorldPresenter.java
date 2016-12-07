@@ -87,12 +87,17 @@ import gov.nasa.worldwind.awt.WorldWindowGLJPanel;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Sector;
 import gov.nasa.worldwind.layers.AnnotationLayer;
+import gov.nasa.worldwind.layers.MarkerLayer;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import gov.nasa.worldwind.layers.ViewControlsLayer;
 import gov.nasa.worldwind.layers.ViewControlsSelectListener;
 import gov.nasa.worldwind.render.BasicShapeAttributes;
 import gov.nasa.worldwind.render.Material;
 import gov.nasa.worldwind.render.ScreenAnnotation;
+import gov.nasa.worldwind.render.markers.BasicMarker;
+import gov.nasa.worldwind.render.markers.BasicMarkerAttributes;
+import gov.nasa.worldwind.render.markers.BasicMarkerShape;
+import gov.nasa.worldwind.render.markers.Marker;
 import gov.nasa.worldwind.symbology.milstd2525.MilStd2525GraphicFactory;
 import gov.nasa.worldwind.util.StatusBar;
 import gov.nasa.worldwindx.examples.util.SectorSelector;
@@ -240,6 +245,9 @@ public class WorldPresenter implements Initializable {
 	/** the obstacles layer of this world presenter */
 	private final RenderableLayer obstaclesLayer = new RenderableLayer();
 	
+	/** the track layer of this world presenter */
+	private final MarkerLayer trackLayer = new MarkerLayer();
+	
 	/** the symbol factory of this world presenter */
 	private final MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
 	
@@ -270,6 +278,9 @@ public class WorldPresenter implements Initializable {
 	/** the obstacles change listener of this world presenter */
 	private final ObstaclesChangeListener obstaclesCl = new ObstaclesChangeListener();
 	
+	/** the track change listener of this world presenter */
+	private final TrackChangeListener trackCl = new TrackChangeListener();
+	
 	/** the executor of this world presenter */
 	private final Executor executor = Executors.newSingleThreadScheduledExecutor();
 	
@@ -298,6 +309,7 @@ public class WorldPresenter implements Initializable {
 		this.initEnvironment();
 		this.initObstacles();
 		this.initPlan();
+		this.initTrack();
 	}
 	
 	/**
@@ -313,6 +325,7 @@ public class WorldPresenter implements Initializable {
 			this.scenario.removePropertyChangeListener(this.waypointsCl);
 			this.scenario.removePropertyChangeListener(this.trajectoryCl);
 			this.scenario.removePropertyChangeListener(this.obstaclesCl);
+			this.scenario.getDatalink().removePropertyChangeListener(this.trackCl);
 		}
 		this.scenario = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario();
 		this.scenario.addTimeChangeListener(this.timeCl);
@@ -322,6 +335,7 @@ public class WorldPresenter implements Initializable {
 		this.scenario.addWaypointsChangeListener(this.waypointsCl);
 		this.scenario.addTrajectoryChangeListener(this.trajectoryCl);
 		this.scenario.addObstaclesChangeListener(this.obstaclesCl);
+		this.scenario.getDatalink().addTrackChangeListener(this.trackCl);
 	}
 	
 	/**
@@ -379,6 +393,25 @@ public class WorldPresenter implements Initializable {
 				waypointLayer.removeAllRenderables();
 				waypointLayer.addRenderables(scenario.getWaypoints());
 				waypointLayer.addRenderable(scenario.getTrajectory());
+				wwd.redraw();
+			}
+		});
+	}
+	
+	/**
+	 * Initializes the track of this world presenter.
+	 */
+	public void initTrack() {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				ArrayList<Marker> markers = new ArrayList<>();
+				BasicMarkerAttributes attributes =
+	                    new BasicMarkerAttributes(Material.GREEN, BasicMarkerShape.SPHERE, 1d);
+				for (Position position : scenario.getDatalink().getTrack()) {
+					markers.add(new BasicMarker(position, attributes));
+				}
+				trackLayer.setMarkers(markers);
 				wwd.redraw();
 			}
 		});
@@ -620,6 +653,7 @@ public class WorldPresenter implements Initializable {
 					if (datalink.isConnected() && session.getActiveScenario().hasTrajectory()) {
 						//datalink.disableAircraftSafety();
 						//datalink.armAircraft();
+						datalink.startMonitoring(1000); // TODO: flight (envelope) setup
 						datalink.takeOff();
 					} else {
 						alert(
@@ -669,6 +703,7 @@ public class WorldPresenter implements Initializable {
 						} else {
 							datalink.land();
 						}
+						datalink.stopMonitoring(); // TODO: only stop after landing
 					} else {
 						alert(
 							AlertType.ERROR,
@@ -737,6 +772,7 @@ public class WorldPresenter implements Initializable {
 			wwd.getModel().getLayers().add(environmentLayer);
 			wwd.getModel().getLayers().add(waypointLayer);
 			wwd.getModel().getLayers().add(obstaclesLayer);
+			wwd.getModel().getLayers().add(trackLayer);
 			
 			// add planner controls
 			ControlAnnotation aircraftControl = new ControlAnnotation(aircraftIcon);
@@ -1136,6 +1172,27 @@ public class WorldPresenter implements Initializable {
 	}
 	
 	/**
+	 * Realizes a track change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
+	private class TrackChangeListener implements PropertyChangeListener {
+		
+		/**
+		 * Initializes the track if it changes.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+		 */
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			initTrack();
+		}
+	}
+	
+	/**
 	 * Realizes an active scenario change listener.
 	 * 
 	 * @author Stephan Heinemann
@@ -1158,6 +1215,7 @@ public class WorldPresenter implements Initializable {
 			initEnvironment();
 			initObstacles();
 			initPlan();
+			initTrack();
 		}
 	}
 	
