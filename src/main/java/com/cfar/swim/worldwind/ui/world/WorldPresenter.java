@@ -578,7 +578,7 @@ public class WorldPresenter implements Initializable {
 				
 				if (datalink.isConnected() && session.getActiveScenario().hasTrajectory()) {
 					Trajectory trajectory = session.getActiveScenario().getTrajectory();
-					datalink.uploadPath(trajectory);
+					datalink.uploadFlightPath(trajectory);
 				} else {
 					alert(
 						AlertType.ERROR,
