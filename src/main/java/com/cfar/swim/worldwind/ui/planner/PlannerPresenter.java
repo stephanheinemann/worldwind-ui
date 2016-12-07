@@ -188,6 +188,9 @@ public class PlannerPresenter implements Initializable {
 					switch (worldModel.getMode()) {
 					case PLANNING:
 					case LOADING:
+					case UPLOADING:
+					case LAUNCHING:
+					case LANDING:
 						progressBar.setProgress(-1d);
 						progressIndicator.toFront();
 						progressIndicator.setVisible(true);

@@ -27,71 +27,49 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.cfar.swim.worldwind.ui.setup;
-
-import com.airhacks.afterburner.views.FXMLView;
-
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TabPane;
+package com.cfar.swim.worldwind.ui.planner;
 
 /**
- * Realizes a setup view.
+ * Realizes a planner alert result which can be used to synchronize
+ * with an alert from another thread.
  * 
  * @author Stephan Heinemann
  *
  */
-public class SetupView extends FXMLView {
+public class PlannerAlertResult {
+
+	/** indicates whether or not the OK button was pressed */
+	private boolean ok = false;
+	
+	/** indicates whether or not the result is ready */ 
+	private boolean ready = false;
 	
 	/**
-	 * Gets the view of this setup view.
+	 * Indicates whether or not the OK button was pressed.
 	 * 
-	 * @return the view of this setup view
-	 * 
-	 * @see FXMLView#getView()
+	 * @return true if the OK button was pressed, false otherwise
 	 */
-	@Override
-	public TabPane getView() {
-		return (TabPane) super.getView();
+	public synchronized boolean isOk() {
+		while (!this.ready) {
+			try {
+				this.wait();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return this.ok;
 	}
 	
 	/**
-	 * Gets the aircraft selector of this setup view.
+	 * Set the result of the OK button.
 	 * 
-	 * @return the aircraft selector of this setup view
+	 * @param ok the result of the OK button to be set
 	 */
-	@SuppressWarnings("unchecked")
-	public ComboBox<String> getAircraft() {
-		return (ComboBox<String>) this.getView().lookup("#aircraft");
+	public synchronized void setOk(boolean ok) {
+		this.ok = ok;
+		this.ready = true;
+		this.notifyAll();
 	}
-	
-	/**
-	 * Gets the environment selector of this setup view.
-	 * 
-	 * @return the environment selector of this setup view
-	 */
-	@SuppressWarnings("unchecked")
-	public ComboBox<String> getEnvironment() {
-		return (ComboBox<String>) this.getView().lookup("#environment");
-	}
-	
-	/**
-	 * Gets the planner selector of this setup view.
-	 * 
-	 * @return the planner selector of this setup view
-	 */
-	@SuppressWarnings("unchecked")
-	public ComboBox<String> getPlanner() {
-		return (ComboBox<String>) this.getView().lookup("#planner");
-	}
-	
-	/**
-	 * Gets the datalink selector of this setup view.
-	 * 
-	 * @return the datalink selector of this setup view
-	 */
-	@SuppressWarnings("unchecked")
-	public ComboBox<String> getDatalink() {
-		return (ComboBox<String>) this.getView().lookup("#datalink");
-	}
-	
+
 }

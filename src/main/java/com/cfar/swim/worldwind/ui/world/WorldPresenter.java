@@ -47,6 +47,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.Executor;
@@ -60,6 +61,7 @@ import org.xml.sax.InputSource;
 
 import com.cfar.swim.worldwind.ai.Planner;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
+import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.iwxxm.IwxxmLoader;
 import com.cfar.swim.worldwind.planning.CostInterval;
 import com.cfar.swim.worldwind.planning.Environment;
@@ -74,6 +76,7 @@ import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.ui.WorldwindPlanner;
 import com.cfar.swim.worldwind.ui.planner.PlannerAlert;
+import com.cfar.swim.worldwind.ui.planner.PlannerAlertResult;
 import com.cfar.swim.worldwind.ui.setup.SetupDialog;
 import com.cfar.swim.worldwind.ui.setup.SetupModel;
 import com.cfar.swim.worldwind.util.Depiction;
@@ -98,6 +101,7 @@ import javafx.embed.swing.SwingNode;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -177,10 +181,16 @@ public class WorldPresenter implements Initializable {
 	public static final String ACTION_DATALINK_SETUP = "WorldPresenter.ActionCommand.DatalinkSetup";
 	
 	/** the take-off action command */
-	public static final String ACTION_TAKEOFF = "WorldPresenter.ActionCommand.TakeOff";
+	public static final String ACTION_FLIGHT_TAKEOFF = "WorldPresenter.ActionCommand.FlightTakeOff";
+	
+	/** the setup flight action command */
+	public static final String ACTION_FLIGHT_SETUP = "WorldPresenter.ActionCommand.FlightSetup";
 	
 	/** the land action command */
-	public static final String ACTION_LAND = "WorldPresenter.ActionCommand.Land";
+	public static final String ACTION_FLIGHT_LAND = "WorldPresenter.ActionCommand.Land";
+	
+	/** the return action command */
+	public static final String ACTION_FLIGHT_RETURN = "WorldPresenter.ActionCommand.Return";
 	
 	// TODO: consider to move all visible UI text into properties files
 	
@@ -414,6 +424,16 @@ public class WorldPresenter implements Initializable {
 				SetupDialog setupDialog = new SetupDialog(SetupDialog.TITLE_SETUP, SetupDialog.HEADER_SETUP, setupIcon, setupModel);
 				setupDialog.selectTab(tabIndex);
 				setupDialog.showAndWait();
+				
+				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+				
+				// store the selected planner to the active scenario
+				Specification<Planner> plannerSpec = session.getSetup().getPlannerSpecification();
+				session.getActiveScenario().setPlanner(session.getPlannerFactory().createInstance(plannerSpec));
+				
+				// store the selected datalink to the active scenario
+				Specification<Datalink> datalinkSpec = session.getSetup().getDatalinkSpecification();
+				session.getActiveScenario().setDatalink(session.getDatalinkFactory().createInstance(datalinkSpec));
 			}			
 		});
 	}
@@ -457,16 +477,20 @@ public class WorldPresenter implements Initializable {
 	
 	/**
 	 * Opens a planner alert with a specified alert type, title, header and
-	 * content.
+	 * content. A result can be passed for synchronization.
 	 * 
 	 * @param type the type of the planner alert
 	 * @param title the title of the planner alert
 	 * @param header the header of the planner alert
 	 * @param content the content of the planner alert
+	 * @param result the result to be notified for synchronization
 	 * 
 	 * @see PlannerAlert
 	 */
-	private void alert(AlertType type, String title, String header, String content) {
+	private void alert(
+			AlertType type,
+			String title, String header, String content,
+			PlannerAlertResult result) {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
@@ -474,7 +498,14 @@ public class WorldPresenter implements Initializable {
 				alert.setTitle(title);
 				alert.setHeaderText(header);
 				alert.setContentText(content);
-				alert.showAndWait();
+				Optional<ButtonType> optButtonType = alert.showAndWait();
+				if (null != result) {
+					if (optButtonType.isPresent()) {
+						result.setOk(optButtonType.get().equals(ButtonType.OK));
+					} else {
+						result.setOk(false);
+					}
+				}
 			}
 		});
 	}
@@ -489,7 +520,9 @@ public class WorldPresenter implements Initializable {
 			public void run() {
 				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 				Specification<Planner> plannerSpec = session.getSetup().getPlannerSpecification();
-				Planner planner = session.getPlannerFactory().createInstance(plannerSpec);
+				// TODO: reconsider always creating a new planner versus updating environment and aircraft
+				session.getActiveScenario().setPlanner(session.getPlannerFactory().createInstance(plannerSpec));
+				Planner planner = session.getActiveScenario().getPlanner();
 				Position origin = null;
 				Position destination = null;
 				List<Position> waypoints = new ArrayList<Position>();
@@ -519,7 +552,131 @@ public class WorldPresenter implements Initializable {
 						AlertType.ERROR,
 						PlannerAlert.ALERT_TITLE_PLANNER_INVALID,
 						PlannerAlert.ALERT_HEADER_PLANNER_INVALID,
-						PlannerAlert.ALERT_CONTENT_PLANNER_INVALID);
+						PlannerAlert.ALERT_CONTENT_PLANNER_INVALID,
+						null);
+				}
+				
+				setMode(WorldMode.VIEW);
+			}
+		});
+	}
+	
+	/**
+	 * Uploads a trajectory via the datalink of the active scenario
+	 * asynchronously.
+	 */
+	private void upload() {
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+				Datalink datalink = session.getActiveScenario().getDatalink();
+				
+				if (!datalink.isConnected()) {
+					datalink.connect();
+				}
+				
+				if (datalink.isConnected() && session.getActiveScenario().hasTrajectory()) {
+					Trajectory trajectory = session.getActiveScenario().getTrajectory();
+					datalink.uploadPath(trajectory);
+				} else {
+					alert(
+						AlertType.ERROR,
+						PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
+						PlannerAlert.ALERT_HEADER_DATALINK_INVALID,
+						PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
+						null);
+				}
+				
+				setMode(WorldMode.VIEW);
+			}
+		});
+	}
+	
+	/**
+	 * Issues a take-off command via the datalink of the active scenario
+	 * asynchronously.
+	 */
+	private void takeoff() {
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				PlannerAlertResult clearance = new PlannerAlertResult();
+				alert(
+					AlertType.CONFIRMATION,
+					PlannerAlert.ALERT_TITLE_TAKEOFF_CONFIRM,
+					PlannerAlert.ALERT_HEADER_TAKEOFF_CONFIRM,
+					PlannerAlert.ALERT_CONTENT_TAKEOFF_CONFIRM,
+					clearance);
+				
+				if (clearance.isOk()) {
+					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+					Datalink datalink = session.getActiveScenario().getDatalink();
+					
+					if (!datalink.isConnected()) {
+						datalink.connect();
+					}
+					
+					if (datalink.isConnected() && session.getActiveScenario().hasTrajectory()) {
+						//datalink.disableAircraftSafety();
+						//datalink.armAircraft();
+						datalink.takeOff();
+					} else {
+						alert(
+							AlertType.ERROR,
+							PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
+							PlannerAlert.ALERT_HEADER_DATALINK_INVALID,
+							PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
+							null);
+					}
+				}
+				
+				setMode(WorldMode.VIEW);
+			}
+		});
+	}
+	
+	/**
+	 * Issues a land command via the datalink of the active scenario
+	 * asynchronously.
+	 * 
+	 * @param returnToLaunch indicates whether or not the landing shall be
+	 *                       performed at the launch position
+	 */
+	private void land(boolean returnToLaunch) {
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				PlannerAlertResult clearance = new PlannerAlertResult();
+				alert(
+					AlertType.CONFIRMATION,
+					PlannerAlert.ALERT_TITLE_LAND_CONFIRM,
+					PlannerAlert.ALERT_HEADER_LAND_CONFIRM,
+					PlannerAlert.ALERT_CONTENT_LAND_CONFIRM,
+					clearance);
+				
+				if (clearance.isOk()) {
+					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+					Datalink datalink = session.getActiveScenario().getDatalink();
+					
+					if (!datalink.isConnected()) {
+						datalink.connect();
+					}
+					
+					if (datalink.isConnected()) {
+						if (returnToLaunch) {
+							datalink.returnToLaunch();
+						} else {
+							datalink.land();
+						}
+					} else {
+						alert(
+							AlertType.ERROR,
+							PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
+							PlannerAlert.ALERT_HEADER_DATALINK_INVALID,
+							PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
+							null);
+					}
 				}
 				
 				setMode(WorldMode.VIEW);
@@ -620,13 +777,13 @@ public class WorldPresenter implements Initializable {
 			
 			ControlAnnotation takeoffControl = new ControlAnnotation(takeoffIcon);
 			takeoffControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 200, 25));
-			takeoffControl.setPrimaryActionCommand(WorldPresenter.ACTION_TAKEOFF);
+			takeoffControl.setPrimaryActionCommand(WorldPresenter.ACTION_FLIGHT_TAKEOFF);
 			takeoffControl.setSecondaryActionCommand(WorldPresenter.ACTION_NONE);
 			takeoffControl.addActionListener(new TakeOffControlListener());
 			
 			ControlAnnotation landControl = new ControlAnnotation(landIcon);
 			landControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 275, 25));
-			landControl.setPrimaryActionCommand(WorldPresenter.ACTION_LAND);
+			landControl.setPrimaryActionCommand(WorldPresenter.ACTION_FLIGHT_LAND);
 			landControl.setSecondaryActionCommand(WorldPresenter.ACTION_NONE);
 			landControl.addActionListener(new LandControlListener());
 			
@@ -1175,7 +1332,7 @@ public class WorldPresenter implements Initializable {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_DATALINK_UPLOAD:
 				setMode(WorldMode.UPLOADING);
-				//upload();
+				upload();
 				break;
 			case WorldPresenter.ACTION_DATALINK_SETUP:
 				setMode(WorldMode.VIEW);
@@ -1202,7 +1359,16 @@ public class WorldPresenter implements Initializable {
 		 */
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			System.out.println("pressed...." + e.getActionCommand());
+			switch (e.getActionCommand()) {
+			case WorldPresenter.ACTION_FLIGHT_TAKEOFF:
+				setMode(WorldMode.LAUNCHING);
+				takeoff();
+				break;
+			case WorldPresenter.ACTION_FLIGHT_SETUP:
+				setMode(WorldMode.VIEW);
+				//TODO: setup(SetupDialog.FLIGHT_TAB_INDEX);
+				break;
+			}
 		}
 	}
 	
@@ -1223,7 +1389,16 @@ public class WorldPresenter implements Initializable {
 		 */
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			System.out.println("pressed...." + e.getActionCommand());
+			switch (e.getActionCommand()) {
+			case WorldPresenter.ACTION_FLIGHT_LAND:
+				setMode(WorldMode.LANDING);
+				land(false);
+				break;
+			case WorldPresenter.ACTION_FLIGHT_RETURN:
+				setMode(WorldMode.LANDING);
+				land(true);
+				break;
+			}
 		}
 	}
 	
