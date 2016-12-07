@@ -778,13 +778,13 @@ public class WorldPresenter implements Initializable {
 			ControlAnnotation takeoffControl = new ControlAnnotation(takeoffIcon);
 			takeoffControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 200, 25));
 			takeoffControl.setPrimaryActionCommand(WorldPresenter.ACTION_FLIGHT_TAKEOFF);
-			takeoffControl.setSecondaryActionCommand(WorldPresenter.ACTION_NONE);
+			takeoffControl.setSecondaryActionCommand(WorldPresenter.ACTION_FLIGHT_SETUP);
 			takeoffControl.addActionListener(new TakeOffControlListener());
 			
 			ControlAnnotation landControl = new ControlAnnotation(landIcon);
 			landControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 275, 25));
 			landControl.setPrimaryActionCommand(WorldPresenter.ACTION_FLIGHT_LAND);
-			landControl.setSecondaryActionCommand(WorldPresenter.ACTION_NONE);
+			landControl.setSecondaryActionCommand(WorldPresenter.ACTION_FLIGHT_RETURN);
 			landControl.addActionListener(new LandControlListener());
 			
 			controlLayer.addAnnotation(aircraftControl);
