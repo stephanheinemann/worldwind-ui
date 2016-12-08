@@ -407,9 +407,12 @@ public class WorldPresenter implements Initializable {
 			public void run() {
 				ArrayList<Marker> markers = new ArrayList<>();
 				BasicMarkerAttributes attributes =
-	                    new BasicMarkerAttributes(Material.GREEN, BasicMarkerShape.SPHERE, 1d);
-				for (Position position : scenario.getDatalink().getTrack()) {
-					markers.add(new BasicMarker(position, attributes));
+	                    new BasicMarkerAttributes(Material.GREEN, BasicMarkerShape.ORIENTED_SPHERE, 1d);
+				attributes.setHeadingMaterial(Material.GREEN);
+				for (Position position : scenario.getDatalink().getAircraftTrack()) {
+					Marker marker = new BasicMarker(position, attributes);
+					marker.setHeading(scenario.getDatalink().getAircraftHeading());
+					markers.add(marker);
 				}
 				trackLayer.setMarkers(markers);
 				wwd.redraw();
