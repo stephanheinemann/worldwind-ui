@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <!--
 
     Copyright (c) 2016, Stephan Heinemann (UVic Center for Aerospace Research)
@@ -31,6 +32,7 @@
 
 -->
 
+<?import javafx.scene.shape.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.embed.swing.*?>
 <?import java.lang.*?>
@@ -40,5 +42,6 @@
 <AnchorPane fx:id="worldNodePane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.cfar.swim.worldwind.ui.world.WorldPresenter">
    <children>
       <SwingNode fx:id="worldNode" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+      <Circle fx:id="monitorCircle" fill="RED" radius="10.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" visible="false" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="20.0" />
    </children>
 </AnchorPane>
