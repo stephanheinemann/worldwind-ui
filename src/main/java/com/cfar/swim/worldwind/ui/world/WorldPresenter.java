@@ -445,7 +445,8 @@ public class WorldPresenter implements Initializable {
 	 * @param status the status to be displayed
 	 */
 	private void displayStatus(String status) {
-		statusLayer.getAnnotations().iterator().next().setText(status);
+		this.statusLayer.getAnnotations().iterator().next().setText(status);
+		this.wwd.redraw();
 	}
 	
 	/**
@@ -762,8 +763,10 @@ public class WorldPresenter implements Initializable {
 			
 			// initialize world window
 			wwd.setModel(new BasicModel());
+			wwd.getModel().getLayers().getLayerByName("Bing Imagery").setEnabled(true);
 			// TODO: load higher quality bing maps
 			// possibly configurable (street or bing) and per session
+			// TODO: higher DTED levels
 			
 			// add view controls
 			ViewControlsLayer viewControlsLayer = new ViewControlsLayer();
