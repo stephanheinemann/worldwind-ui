@@ -508,14 +508,28 @@ public class WorldPresenter implements Initializable {
 				
 				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 				
+				// TODO: only store actual changes (comparable properties)
+				
 				// store the selected planner to the active scenario
 				Specification<Planner> plannerSpec = session.getSetup().getPlannerSpecification();
 				session.getActiveScenario().setPlanner(session.getPlannerFactory().createInstance(plannerSpec));
 				
 				// store the selected datalink to the active scenario
-				Specification<Datalink> datalinkSpec = session.getSetup().getDatalinkSpecification();
-				session.getActiveScenario().setDatalink(session.getDatalinkFactory().createInstance(datalinkSpec));
-			}			
+				if (session.getActiveScenario().getDatalink().isMonitoring()) {
+					// stop monitoring
+					session.getActiveScenario().getDatalink().stopMonitoring();
+					session.getActiveScenario().getDatalink().removePropertyChangeListener(trackCl);
+					// setup datalink
+					Specification<Datalink> datalinkSpec = session.getSetup().getDatalinkSpecification();
+					session.getActiveScenario().setDatalink(session.getDatalinkFactory().createInstance(datalinkSpec));
+					// start monitoring
+					session.getActiveScenario().getDatalink().addTrackChangeListener(trackCl);
+					session.getActiveScenario().getDatalink().startMonitoring();
+				} else {
+					Specification<Datalink> datalinkSpec = session.getSetup().getDatalinkSpecification();
+					session.getActiveScenario().setDatalink(session.getDatalinkFactory().createInstance(datalinkSpec));
+				}
+			}
 		});
 	}
 	
@@ -660,8 +674,8 @@ public class WorldPresenter implements Initializable {
 						datalink.stopMonitoring();
 						datalink.removePropertyChangeListener(trackCl);
 					} else {
-						datalink.startMonitoring(1000);
 						datalink.addTrackChangeListener(trackCl);
+						datalink.startMonitoring();
 					}
 					displayMonitor(datalink.isMonitoring());
 				} else {
