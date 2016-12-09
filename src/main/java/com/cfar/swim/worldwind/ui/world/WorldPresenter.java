@@ -207,11 +207,11 @@ public class WorldPresenter implements Initializable {
 	/** the return action command */
 	public static final String ACTION_FLIGHT_RETURN = "WorldPresenter.ActionCommand.Return";
 	
-	/** the cycle plan view action command */
-	public static final String ACTION_VIEW_PLAN_CYCLE = "WorldPresenter.ActionCommand.ViewPlanCycle";
+	/** the cycle planned view action command */
+	public static final String ACTION_VIEW_PLANNED_CYCLE = "WorldPresenter.ActionCommand.ViewPlannedCycle";
 	
-	/** the cycle real view action command */
-	public static final String ACTION_VIEW_REAL_CYCLE = "WorldPresenter.ActionCommand.ViewRealCycle";
+	/** the cycle actual view action command */
+	public static final String ACTION_VIEW_ACTUAL_CYCLE = "WorldPresenter.ActionCommand.ViewActualCycle";
 	
 	// TODO: consider to move all visible UI text into properties files
 	
@@ -912,8 +912,8 @@ public class WorldPresenter implements Initializable {
 			
 			ControlAnnotation viewControl = new ControlAnnotation(viewIcon);
 			viewControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 350, 25));
-			viewControl.setPrimaryActionCommand(WorldPresenter.ACTION_VIEW_PLAN_CYCLE);
-			viewControl.setSecondaryActionCommand(WorldPresenter.ACTION_VIEW_REAL_CYCLE);
+			viewControl.setPrimaryActionCommand(WorldPresenter.ACTION_VIEW_PLANNED_CYCLE);
+			viewControl.setSecondaryActionCommand(WorldPresenter.ACTION_VIEW_ACTUAL_CYCLE);
 			viewControl.addActionListener(new ViewControlListener());
 			
 			controlLayer.addAnnotation(aircraftControl);
@@ -1594,12 +1594,12 @@ public class WorldPresenter implements Initializable {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
-			case WorldPresenter.ACTION_VIEW_PLAN_CYCLE:
-				System.out.println("cycling plan view...");
+			case WorldPresenter.ACTION_VIEW_PLANNED_CYCLE:
+				System.out.println("cycling planned view...");
 				//cycleView();
 				break;
-			case WorldPresenter.ACTION_VIEW_REAL_CYCLE:
-				System.out.println("cycling real view...");
+			case WorldPresenter.ACTION_VIEW_ACTUAL_CYCLE:
+				System.out.println("cycling actual view...");
 				//cycleView();
 				break;
 			}
