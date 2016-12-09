@@ -142,7 +142,7 @@ public class PlannerPresenter implements Initializable {
 		this.plannerAccordion.setExpandedPane(planView.getView());
 		
 		this.progressIndicator.setVisible(false);
-		this.worldModel.addModeChangeListener(new ModeChangeListener());
+		this.worldModel.addWorldModeChangeListener(new ModeChangeListener());
 	}
 	
 	/**
@@ -185,7 +185,7 @@ public class PlannerPresenter implements Initializable {
 			Platform.runLater(new Runnable() {
 				@Override
 				public void run() {
-					switch (worldModel.getMode()) {
+					switch (worldModel.getWorldMode()) {
 					case PLANNING:
 					case LOADING:
 					case UPLOADING:

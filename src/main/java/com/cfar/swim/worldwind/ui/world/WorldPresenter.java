@@ -207,6 +207,12 @@ public class WorldPresenter implements Initializable {
 	/** the return action command */
 	public static final String ACTION_FLIGHT_RETURN = "WorldPresenter.ActionCommand.Return";
 	
+	/** the cycle plan view action command */
+	public static final String ACTION_VIEW_PLAN_CYCLE = "WorldPresenter.ActionCommand.ViewPlanCycle";
+	
+	/** the cycle real view action command */
+	public static final String ACTION_VIEW_REAL_CYCLE = "WorldPresenter.ActionCommand.ViewRealCycle";
+	
 	// TODO: consider to move all visible UI text into properties files
 	
 	/** the file chooser open swim file title */
@@ -435,11 +441,11 @@ public class WorldPresenter implements Initializable {
 	/**
 	 * Sets the world mode of this world presenter.
 	 * 
-	 * @param mode the world mode to be set
+	 * @param worldMode the world mode to be set
 	 */
-	private void setMode(WorldMode mode) {
-		this.worldModel.setMode(mode);
-		this.displayStatus(mode.toString());
+	private void setWorldMode(WorldMode worldMode) {
+		this.worldModel.setWorldMode(worldMode);
+		this.displayStatus(worldMode.toString());
 	}
 	
 	/**
@@ -447,8 +453,8 @@ public class WorldPresenter implements Initializable {
 	 * 
 	 * @return the world mode of this world presenter
 	 */
-	private WorldMode getMode() {
-		return this.worldModel.getMode();
+	private WorldMode getWorldMode() {
+		return this.worldModel.getWorldMode();
 	}
 	
 	/**
@@ -495,6 +501,7 @@ public class WorldPresenter implements Initializable {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
+				setWorldMode(WorldMode.VIEW);
 				SetupDialog setupDialog = new SetupDialog(SetupDialog.TITLE_SETUP, SetupDialog.HEADER_SETUP, setupIcon, setupModel);
 				setupDialog.selectTab(tabIndex);
 				setupDialog.showAndWait();
@@ -532,13 +539,14 @@ public class WorldPresenter implements Initializable {
 						@Override
 						public void run() {
 							try {
+								setWorldMode(WorldMode.LOADING);
 								// TODO: generic SWIM loader
 								IwxxmLoader loader = new IwxxmLoader();
 								Set<Obstacle> obstacles = loader.load(new InputSource(new FileInputStream(file)));
 								for (Obstacle obstacle : obstacles) {
 									scenario.addObstacle(obstacle);
 								}
-								setMode(WorldMode.VIEW);
+								setWorldMode(WorldMode.VIEW);
 							} catch (Exception e) {
 								e.printStackTrace();
 							}
@@ -607,9 +615,9 @@ public class WorldPresenter implements Initializable {
 					planner.supports(waypoints) &&
 					1 < waypoints.size()) {
 					
+					setWorldMode(WorldMode.PLANNING);
 					origin = waypoints.remove(0);
 					destination = waypoints.remove(waypoints.size() - 1);
-				
 					Trajectory trajectory = null;
 					
 					if (waypoints.isEmpty()) {
@@ -620,7 +628,7 @@ public class WorldPresenter implements Initializable {
 					
 					styleTrajectory(trajectory);
 					session.getActiveScenario().setTrajectory(trajectory);
-				
+					setWorldMode(WorldMode.VIEW);
 				} else {
 					alert(
 						AlertType.ERROR,
@@ -629,8 +637,6 @@ public class WorldPresenter implements Initializable {
 						PlannerAlert.ALERT_CONTENT_PLANNER_INVALID,
 						null);
 				}
-				
-				setMode(WorldMode.VIEW);
 			}
 		});
 	}
@@ -686,8 +692,10 @@ public class WorldPresenter implements Initializable {
 				}
 				
 				if (datalink.isConnected() && session.getActiveScenario().hasTrajectory()) {
+					setWorldMode(WorldMode.UPLOADING);
 					Trajectory trajectory = session.getActiveScenario().getTrajectory();
 					datalink.uploadFlightPath(trajectory);
+					setWorldMode(WorldMode.VIEW);
 				} else {
 					alert(
 						AlertType.ERROR,
@@ -696,8 +704,6 @@ public class WorldPresenter implements Initializable {
 						PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
 						null);
 				}
-				
-				setMode(WorldMode.VIEW);
 			}
 		});
 	}
@@ -719,6 +725,7 @@ public class WorldPresenter implements Initializable {
 					clearance);
 				
 				if (clearance.isOk()) {
+					setWorldMode(WorldMode.LAUNCHING);
 					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 					Datalink datalink = session.getActiveScenario().getDatalink();
 					
@@ -738,9 +745,8 @@ public class WorldPresenter implements Initializable {
 							PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
 							null);
 					}
+					setWorldMode(WorldMode.VIEW);
 				}
-				
-				setMode(WorldMode.VIEW);
 			}
 		});
 	}
@@ -765,6 +771,7 @@ public class WorldPresenter implements Initializable {
 					clearance);
 				
 				if (clearance.isOk()) {
+					setWorldMode(WorldMode.LANDING);
 					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 					Datalink datalink = session.getActiveScenario().getDatalink();
 					
@@ -786,9 +793,8 @@ public class WorldPresenter implements Initializable {
 							PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
 							null);
 					}
+					setWorldMode(WorldMode.VIEW);
 				}
-				
-				setMode(WorldMode.VIEW);
 			}
 		});
 	}
@@ -906,9 +912,9 @@ public class WorldPresenter implements Initializable {
 			
 			ControlAnnotation viewControl = new ControlAnnotation(viewIcon);
 			viewControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 350, 25));
-			viewControl.setPrimaryActionCommand(WorldPresenter.ACTION_NONE);
-			viewControl.setSecondaryActionCommand(WorldPresenter.ACTION_NONE);
-			//viewControl.addActionListener(new ViewControlListener());
+			viewControl.setPrimaryActionCommand(WorldPresenter.ACTION_VIEW_PLAN_CYCLE);
+			viewControl.setSecondaryActionCommand(WorldPresenter.ACTION_VIEW_REAL_CYCLE);
+			viewControl.addActionListener(new ViewControlListener());
 			
 			controlLayer.addAnnotation(aircraftControl);
 			wwd.addSelectListener(aircraftControl);
@@ -998,9 +1004,9 @@ public class WorldPresenter implements Initializable {
 		@Override
 		public void mouseClicked(MouseEvent e) {
 			// TODO: swing thread maybe not necessary
-			if (getMode().equals(WorldMode.AIRCRAFT)) {
+			if (getWorldMode().equals(WorldMode.AIRCRAFT)) {
 				SwingUtilities.invokeLater(new AircraftMouseHandler());
-			} else if (getMode().equals(WorldMode.WAYPOINT)) {
+			} else if (getWorldMode().equals(WorldMode.WAYPOINT)) {
 				SwingUtilities.invokeLater(new WaypointMouseHandler());
 			}
 			// TODO: pickable support ...
@@ -1025,7 +1031,7 @@ public class WorldPresenter implements Initializable {
 		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			if (getMode().equals(WorldMode.ENVIRONMENT)) {
+			if (getWorldMode().equals(WorldMode.ENVIRONMENT)) {
 				if (null == evt.getNewValue()) {
 					Sector envSector = sectorSelector.getSector();
 					if (null != envSector) {
@@ -1037,6 +1043,7 @@ public class WorldPresenter implements Initializable {
 						initEnvironment();
 					}
 					sectorSelector.disable();
+					setWorldMode(WorldMode.VIEW);
 				}
 			}
 		}
@@ -1080,7 +1087,7 @@ public class WorldPresenter implements Initializable {
         				100d));
 				scenario.setAircraft(aircraft);
 				
-				setMode(WorldMode.VIEW);
+				setWorldMode(WorldMode.VIEW);
 			}
 		}
 	}
@@ -1331,10 +1338,9 @@ public class WorldPresenter implements Initializable {
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_AICRAFT_SET:
-				setMode(WorldMode.AIRCRAFT);
+				setWorldMode(WorldMode.AIRCRAFT);
 				break;
 			case WorldPresenter.ACTION_AIRCAFT_SETUP:
-				setMode(WorldMode.VIEW);
 				setup(SetupDialog.AIRCRAFT_TAB_INDEX);
 				break;
 			}
@@ -1360,14 +1366,12 @@ public class WorldPresenter implements Initializable {
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_SWIM_LOAD:
-				setMode(WorldMode.LOADING);
 				load(WorldPresenter.FILE_CHOOSER_TITLE_SWIM,
 					new ExtensionFilter[] { new ExtensionFilter(
 						WorldPresenter.FILE_CHOOSER_SWIM,
 						WorldPresenter.FILE_CHOOSER_EXTENSION_SWIM)});
 				break;
 			case WorldPresenter.ACTION_SWIM_SETUP:
-				setMode(WorldMode.VIEW);
 				setup(SetupDialog.SWIM_TAB_INDEX);
 				break;
 			}
@@ -1393,11 +1397,10 @@ public class WorldPresenter implements Initializable {
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_ENVIRONMENT_ENCLOSE:
-				setMode(WorldMode.ENVIRONMENT);
+				setWorldMode(WorldMode.ENVIRONMENT);
 				sectorSelector.enable();
 				break;
 			case WorldPresenter.ACTION_ENVIRONMENT_SETUP:
-				setMode(WorldMode.VIEW);
 				setup(SetupDialog.ENVIRONMENT_TAB_INDEX);
 				break;
 			}
@@ -1423,11 +1426,11 @@ public class WorldPresenter implements Initializable {
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_WAYPOINT_EDIT:
-				setMode(WorldMode.WAYPOINT);
+				setWorldMode(WorldMode.WAYPOINT);
 				break;
 			case WorldPresenter.ACTION_WAYPOINT_SETUP:
 				// TODO: waypoint setup (types of waypoint graphics: POI, RWP, ...)
-				setMode(WorldMode.VIEW);
+				setWorldMode(WorldMode.VIEW);
 				break;
 			}
 		}
@@ -1452,11 +1455,9 @@ public class WorldPresenter implements Initializable {
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_PLANNER_PLAN:
-				setMode(WorldMode.PLANNING);
 				plan();
 				break;
 			case WorldPresenter.ACTION_PLANNER_SETUP:
-				setMode(WorldMode.VIEW);
 				setup(SetupDialog.PLANNER_TAB_INDEX);
 				break;
 			}
@@ -1482,11 +1483,9 @@ public class WorldPresenter implements Initializable {
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_DATALINK_MONITOR:
-				setMode(WorldMode.VIEW);
 				monitor();
 				break;
 			case WorldPresenter.ACTION_DATALINK_SETUP:
-				setMode(WorldMode.VIEW);
 				setup(SetupDialog.DATALINK_TAB_INDEX);
 				break;
 			}
@@ -1512,11 +1511,10 @@ public class WorldPresenter implements Initializable {
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_TRANSFER_UPLOAD:
-				setMode(WorldMode.UPLOADING);
 				upload();
 				break;
 			case WorldPresenter.ACTION_NONE:
-				setMode(WorldMode.VIEW);
+				// TODO: possibly download flight-log, TransferControlListener
 				break;
 			}
 		}
@@ -1541,11 +1539,9 @@ public class WorldPresenter implements Initializable {
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_FLIGHT_TAKEOFF:
-				setMode(WorldMode.LAUNCHING);
 				takeoff();
 				break;
 			case WorldPresenter.ACTION_FLIGHT_SETUP:
-				setMode(WorldMode.VIEW);
 				//TODO: setup(SetupDialog.FLIGHT_TAB_INDEX);
 				break;
 			}
@@ -1571,12 +1567,40 @@ public class WorldPresenter implements Initializable {
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_FLIGHT_LAND:
-				setMode(WorldMode.LANDING);
 				land(false);
 				break;
 			case WorldPresenter.ACTION_FLIGHT_RETURN:
-				setMode(WorldMode.LANDING);
 				land(true);
+				break;
+			}
+		}
+	}
+	
+	/**
+	 * Realizes a view control listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
+	private class ViewControlListener implements ActionListener {
+		
+		/**
+		 * Performs the view control action.
+		 * 
+		 * @param e the action event associated with the view control action
+		 * 
+		 * @see ActionListener#actionPerformed(ActionEvent)
+		 */
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			switch (e.getActionCommand()) {
+			case WorldPresenter.ACTION_VIEW_PLAN_CYCLE:
+				System.out.println("cycling plan view...");
+				//cycleView();
+				break;
+			case WorldPresenter.ACTION_VIEW_REAL_CYCLE:
+				System.out.println("cycling real view...");
+				//cycleView();
 				break;
 			}
 		}
