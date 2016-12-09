@@ -65,6 +65,7 @@ import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.iwxxm.IwxxmLoader;
 import com.cfar.swim.worldwind.planning.CostInterval;
 import com.cfar.swim.worldwind.planning.Environment;
+import com.cfar.swim.worldwind.planning.TrackPoint;
 import com.cfar.swim.worldwind.planning.Trajectory;
 import com.cfar.swim.worldwind.planning.Waypoint;
 import com.cfar.swim.worldwind.registries.Specification;
@@ -94,9 +95,6 @@ import gov.nasa.worldwind.layers.ViewControlsSelectListener;
 import gov.nasa.worldwind.render.BasicShapeAttributes;
 import gov.nasa.worldwind.render.Material;
 import gov.nasa.worldwind.render.ScreenAnnotation;
-import gov.nasa.worldwind.render.markers.BasicMarker;
-import gov.nasa.worldwind.render.markers.BasicMarkerAttributes;
-import gov.nasa.worldwind.render.markers.BasicMarkerShape;
 import gov.nasa.worldwind.render.markers.Marker;
 import gov.nasa.worldwind.symbology.milstd2525.MilStd2525GraphicFactory;
 import gov.nasa.worldwind.util.StatusBar;
@@ -424,13 +422,8 @@ public class WorldPresenter implements Initializable {
 			@Override
 			public void run() {
 				ArrayList<Marker> markers = new ArrayList<>();
-				BasicMarkerAttributes attributes =
-	                    new BasicMarkerAttributes(Material.GREEN, BasicMarkerShape.ORIENTED_SPHERE, 1d);
-				attributes.setHeadingMaterial(Material.GREEN);
-				for (Position position : scenario.getDatalink().getAircraftTrack()) {
-					Marker marker = new BasicMarker(position, attributes);
-					marker.setHeading(scenario.getDatalink().getAircraftHeading());
-					markers.add(marker);
+				for (TrackPoint trackPoint : scenario.getDatalink().getAircraftTrack()) {
+					markers.add(trackPoint);
 				}
 				trackLayer.setMarkers(markers);
 				wwd.redraw();
