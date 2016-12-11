@@ -54,7 +54,7 @@ public class TimerPresenter implements Initializable {
 
 	/** the time label of the timer view */
 	@FXML
-	private Label time;
+	private Label timeLabel;
 	
 	/** the time change listener of this timer presenter */
 	private final TimeChangeListener tcl = new TimeChangeListener();
@@ -96,8 +96,8 @@ public class TimerPresenter implements Initializable {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				time.setText(scenario.getTime().toString());
-				time.layout();
+				timeLabel.setText(scenario.getTime().toString());
+				timeLabel.layout();
 			}
 		});
 	}
