@@ -42,6 +42,7 @@ import com.cfar.swim.worldwind.ui.scenario.ScenarioView;
 import com.cfar.swim.worldwind.ui.swim.SwimView;
 import com.cfar.swim.worldwind.ui.threshold.ThresholdView;
 import com.cfar.swim.worldwind.ui.time.TimeView;
+import com.cfar.swim.worldwind.ui.timer.TimerView;
 import com.cfar.swim.worldwind.ui.world.WorldModel;
 import com.cfar.swim.worldwind.ui.world.WorldView;
 
@@ -123,6 +124,9 @@ public class PlannerPresenter implements Initializable {
 		TimeView timeView = new TimeView();
 		this.timeAccordion.getPanes().add(timeView.getView());
 		this.timeAccordion.setExpandedPane(timeView.getView());
+		
+		TimerView timerView = new TimerView();
+		this.timeAccordion.getPanes().add(timerView.getView());
 		
 		ThresholdView thresholdView = new ThresholdView();
 		this.swimAccordion.getPanes().add(thresholdView.getView());
