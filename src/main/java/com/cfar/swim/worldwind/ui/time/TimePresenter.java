@@ -140,9 +140,8 @@ public class TimePresenter implements Initializable {
 		 */
 		@Override
 		public Boolean call(LocalDateTime localDateTime) {
-			if (null != localDateTime) {
-				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-				session.getActiveScenario().setTime(ZonedDateTime.of(localDateTime, ZoneId.of("UTC")));
+			if ((null != localDateTime) && !scenario.isTimed()) {
+				scenario.setTime(ZonedDateTime.of(localDateTime, ZoneId.of("UTC")));
 			}
 			return true;
 		}
