@@ -83,8 +83,10 @@ import com.cfar.swim.worldwind.ui.setup.SetupModel;
 import com.cfar.swim.worldwind.util.Depiction;
 
 import gov.nasa.worldwind.BasicModel;
+import gov.nasa.worldwind.View;
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.awt.WorldWindowGLJPanel;
+import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Sector;
 import gov.nasa.worldwind.layers.AnnotationLayer;
@@ -98,6 +100,8 @@ import gov.nasa.worldwind.render.ScreenAnnotation;
 import gov.nasa.worldwind.render.markers.Marker;
 import gov.nasa.worldwind.symbology.milstd2525.MilStd2525GraphicFactory;
 import gov.nasa.worldwind.util.StatusBar;
+import gov.nasa.worldwind.view.firstperson.BasicFlyView;
+import gov.nasa.worldwind.view.orbit.BasicOrbitView;
 import gov.nasa.worldwindx.examples.util.SectorSelector;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingNode;
@@ -205,11 +209,11 @@ public class WorldPresenter implements Initializable {
 	/** the return action command */
 	public static final String ACTION_FLIGHT_RETURN = "WorldPresenter.ActionCommand.Return";
 	
-	/** the cycle planned view action command */
-	public static final String ACTION_VIEW_PLANNED_CYCLE = "WorldPresenter.ActionCommand.ViewPlannedCycle";
+	/** the cycle view action command */
+	public static final String ACTION_VIEW_CYCLE = "WorldPresenter.ActionCommand.ViewCycle";
 	
-	/** the cycle actual view action command */
-	public static final String ACTION_VIEW_ACTUAL_CYCLE = "WorldPresenter.ActionCommand.ViewActualCycle";
+	/** the reset view action command */
+	public static final String ACTION_VIEW_RESET = "WorldPresenter.ActionCommand.ViewReset";
 	
 	// TODO: consider to move all visible UI text into properties files
 	
@@ -328,6 +332,7 @@ public class WorldPresenter implements Initializable {
 		this.initObstacles();
 		this.initPlan();
 		this.initTrack();
+		this.initView();
 	}
 	
 	/**
@@ -432,6 +437,86 @@ public class WorldPresenter implements Initializable {
 	}
 	
 	/**
+	 * Initializes the view of this world presenter.
+	 */
+	public void initView() {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				ViewMode viewMode = getViewMode();
+				if (!viewMode.equals(ViewMode.FIX)) {
+					View view = wwd.getView();
+					
+					if (view instanceof BasicOrbitView) {
+						BasicOrbitView basicOrbitView = (BasicOrbitView) view;
+						if (viewMode.equals(ViewMode.PLANNED_ABOVE)) {
+							if (scenario.hasAircraft()) {
+								basicOrbitView.setCenterPosition(
+										scenario.getAircraft().getReferencePosition());
+							} else {
+								view(false);
+							}
+						} else if (viewMode.equals(ViewMode.ACTUAL_ABOVE)) {
+							TrackPoint last = scenario.getDatalink().getLastTrackPoint();
+							if (null != last) {
+								basicOrbitView.setCenterPosition(last.getPosition());
+								basicOrbitView.setHeading(last.getHeading());
+							} else {
+								view(false);
+							}
+						}
+					} else if (view instanceof BasicFlyView) {
+						BasicFlyView basicFlyView = (BasicFlyView) view;
+						if (viewMode.equals(ViewMode.PLANNED_CHASE)) {
+							if (scenario.hasAircraft()) {
+								// TODO: plan does not contain attitude
+							} else {
+								view(false);
+							}
+						} else if (viewMode.equals(ViewMode.PLANNED_FPV)) {
+							if (scenario.hasAircraft()) {
+								// TODO: plan does not contain attitude
+							} else {
+								view(false);
+							}
+						} else if (viewMode.equals(ViewMode.ACTUAL_CHASE)) {
+							//TrackPoint previous = scenario.getDatalink().getPreviousTrackPoint(5);
+							TrackPoint previous = scenario.getDatalink().getFirstTrackPoint();
+							if (null != previous) {
+								basicFlyView.setEyePosition(previous.getPosition());
+								basicFlyView.setHeading(previous.getHeading());
+								basicFlyView.setPitch(previous.getPitch().add(Angle.POS90));
+								basicFlyView.setRoll(previous.getRoll());
+							} else {
+								view(false);
+							}
+						} else if (viewMode.equals(ViewMode.ACTUAL_FPV)) {
+							TrackPoint last = scenario.getDatalink().getLastTrackPoint();
+							if (null != last) {
+								basicFlyView.setEyePosition(last.getPosition());
+								basicFlyView.setHeading(last.getHeading());
+								basicFlyView.setPitch(last.getPitch().add(Angle.POS90));
+								basicFlyView.setRoll(last.getRoll());
+							} else {
+								view(false);
+							}
+						}
+					}
+				}
+			}
+		});
+	}
+	
+	/**
+	 * Gets the world mode of this world presenter.
+	 * 
+	 * @return the world mode of this world presenter
+	 */
+	private WorldMode getWorldMode() {
+		return this.worldModel.getWorldMode();
+	}
+	
+	/**
 	 * Sets the world mode of this world presenter.
 	 * 
 	 * @param worldMode the world mode to be set
@@ -442,12 +527,21 @@ public class WorldPresenter implements Initializable {
 	}
 	
 	/**
-	 * Gets the world mode of this world presenter.
+	 * Gets the view mode of this world presenter.
 	 * 
-	 * @return the world mode of this world presenter
+	 * @return the view mode of this world presenter
 	 */
-	private WorldMode getWorldMode() {
-		return this.worldModel.getWorldMode();
+	private ViewMode getViewMode() {
+		return this.worldModel.getViewMode();
+	}
+	
+	/**
+	 * Sets the view mode of this world presenter.
+	 * 
+	 * @param viewMode the view mode to be set
+	 */
+	private void setViewMode(ViewMode viewMode) {
+		this.worldModel.setViewMode(viewMode);
 	}
 	
 	/**
@@ -807,6 +901,62 @@ public class WorldPresenter implements Initializable {
 	}
 	
 	/**
+	 * Cycles or resets the view mode of the world view.
+	 * 
+	 * @param cycle indicates whether to cycle or otherwise
+	 *              reset the world view
+	 */
+	private void view(boolean cycle) {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				BasicOrbitView basicOrbitView;
+				
+				if (cycle) {
+					switch (getViewMode()) {
+					case FIX:
+						basicOrbitView = new BasicOrbitView();
+						basicOrbitView.setZoom(10000);
+						wwd.setView(basicOrbitView);
+						setViewMode(ViewMode.PLANNED_ABOVE);
+						break;
+					case PLANNED_ABOVE:
+					case PLANNED_CHASE:
+					case PLANNED_FPV:
+						basicOrbitView = new BasicOrbitView();
+						basicOrbitView.setZoom(10000);
+						wwd.setView(basicOrbitView);
+						setViewMode(ViewMode.ACTUAL_ABOVE);
+						break;
+					case ACTUAL_ABOVE:
+						wwd.setView(new BasicFlyView());
+						setViewMode(ViewMode.ACTUAL_CHASE);
+						break;
+					case ACTUAL_CHASE:
+						wwd.setView(new BasicFlyView());
+						setViewMode(ViewMode.ACTUAL_FPV);
+						break;
+					case ACTUAL_FPV:
+					default:
+						basicOrbitView = new BasicOrbitView();
+						basicOrbitView.setCenterPosition(wwd.getView().getCurrentEyePosition());
+						basicOrbitView.setZoom(10000);
+						wwd.setView(basicOrbitView);
+						setViewMode(ViewMode.FIX);
+						break;
+					}
+				} else {
+					basicOrbitView = new BasicOrbitView();
+					basicOrbitView.setCenterPosition(wwd.getView().getCurrentEyePosition());
+					basicOrbitView.setZoom(10000);
+					wwd.setView(basicOrbitView);
+					setViewMode(ViewMode.FIX);
+				}
+			}
+		});
+	}
+	
+	/**
 	 * Styles a computed trajectory for display.
 	 * 
 	 * @param trajectory the trajectory to be styled
@@ -919,8 +1069,8 @@ public class WorldPresenter implements Initializable {
 			
 			ControlAnnotation viewControl = new ControlAnnotation(viewIcon);
 			viewControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 350, 25));
-			viewControl.setPrimaryActionCommand(WorldPresenter.ACTION_VIEW_PLANNED_CYCLE);
-			viewControl.setSecondaryActionCommand(WorldPresenter.ACTION_VIEW_ACTUAL_CYCLE);
+			viewControl.setPrimaryActionCommand(WorldPresenter.ACTION_VIEW_CYCLE);
+			viewControl.setSecondaryActionCommand(WorldPresenter.ACTION_VIEW_RESET);
 			viewControl.addActionListener(new ViewControlListener());
 			
 			controlLayer.addAnnotation(aircraftControl);
@@ -1191,6 +1341,7 @@ public class WorldPresenter implements Initializable {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initAircraft();
+			initView();
 		}
 	}
 	
@@ -1296,6 +1447,7 @@ public class WorldPresenter implements Initializable {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initTrack();
+			initView();
 		}
 	}
 	
@@ -1323,6 +1475,7 @@ public class WorldPresenter implements Initializable {
 			initObstacles();
 			initPlan();
 			initTrack();
+			initView();
 		}
 	}
 	
@@ -1601,13 +1754,11 @@ public class WorldPresenter implements Initializable {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
-			case WorldPresenter.ACTION_VIEW_PLANNED_CYCLE:
-				System.out.println("cycling planned view...");
-				//cycleView();
+			case WorldPresenter.ACTION_VIEW_CYCLE:
+				view(true);
 				break;
-			case WorldPresenter.ACTION_VIEW_ACTUAL_CYCLE:
-				System.out.println("cycling actual view...");
-				//cycleView();
+			case WorldPresenter.ACTION_VIEW_RESET:
+				view(false);
 				break;
 			}
 		}
