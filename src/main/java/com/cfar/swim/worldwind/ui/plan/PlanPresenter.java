@@ -52,6 +52,7 @@ import gov.nasa.worldwind.geom.LatLon;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.symbology.milstd2525.MilStd2525GraphicFactory;
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
@@ -62,6 +63,7 @@ import javafx.scene.control.TreeTableColumn.CellDataFeatures;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.TreeItemPropertyValueFactory;
 import javafx.util.Callback;
+import javafx.util.Duration;
 
 /**
  * Realizes a presenter for a plan view.
@@ -92,11 +94,11 @@ public class PlanPresenter implements Initializable {
 	
 	/** the cost column of this plan presenter */
 	@FXML
-	private TreeTableColumn<Waypoint, Double> costsColumn;
+	private TreeTableColumn<Waypoint, Number> costsColumn;
 	
 	/** the distance to go column of this plan presenter */
 	@FXML
-	private TreeTableColumn<Waypoint, Double> distanceToGoColumn;
+	private TreeTableColumn<Waypoint, Number> distanceToGoColumn;
 	
 	/** the time to go column of this plan presenter */
 	@FXML
@@ -148,10 +150,11 @@ public class PlanPresenter implements Initializable {
 		this.altitudeColumn.setCellValueFactory(
 			new TreeItemPropertyValueFactory<Waypoint, Double>("altitude"));
 		
-		this.costsColumn.setCellValueFactory(
-			new TreeItemPropertyValueFactory<Waypoint, Double>("g"));
-		
+		this.costsColumn.setCellValueFactory(new CostsCellValueFactory());
+		this.distanceToGoColumn.setCellValueFactory(new DtgCellValueFactory());
+		this.timeToGoColumn.setCellValueFactory(new TtgCellValueFactory());
 		this.estimatedTimeOverColumn.setCellValueFactory(new EtoCellValueFactory());
+		this.actualTimeOverColumn.setCellValueFactory(new AtoCellValueFactory());
 		
 		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 		session.addActiveScenarioChangeListener(new ActiveScenarioChangeListener());
@@ -347,6 +350,99 @@ public class PlanPresenter implements Initializable {
 	}
 	
 	/**
+	 * Realizes a costs cell value factory to display
+	 * waypoints in the costs column of the plan view.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
+	private class CostsCellValueFactory implements Callback<CellDataFeatures<Waypoint, Number>, ObservableValue<Number>> {
+		
+		/**
+		 * Creates a cell value for the costs column of the waypoint plan.
+		 * 
+		 * @param param the cell data features
+		 * 
+		 * @return the cell value for the costs column of the waypoint plan
+		 * 
+		 * @see Callback#call(Object)
+		 */
+		@Override
+		public ObservableValue<Number> call(CellDataFeatures<Waypoint, Number> param) {
+			ReadOnlyDoubleWrapper value = null;
+			Waypoint waypoint = param.getValue().getValue();
+			
+			if (Double.POSITIVE_INFINITY != waypoint.getG()) {
+				value = new ReadOnlyDoubleWrapper(waypoint.getG());
+			}
+			
+			return value;
+		}
+	}
+	
+	/**
+	 * Realizes a distance to go cell value factory to display
+	 * waypoints in the DTG column of the plan view.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
+	private class DtgCellValueFactory implements Callback<CellDataFeatures<Waypoint, Number>, ObservableValue<Number>> {
+		
+		/**
+		 * Creates a cell value for the DTG column of the waypoint plan.
+		 * 
+		 * @param param the cell data features
+		 * 
+		 * @return the cell value for the DTG column of the waypoint plan
+		 * 
+		 * @see Callback#call(Object)
+		 */
+		@Override
+		public ObservableValue<Number> call(CellDataFeatures<Waypoint, Number> param) {
+			ReadOnlyDoubleWrapper value = null;
+			Waypoint waypoint = param.getValue().getValue();
+			
+			if (Double.POSITIVE_INFINITY != waypoint.getDtg()) {
+				value = new ReadOnlyDoubleWrapper(waypoint.getDtg());
+			}
+			
+			return value;
+		}
+	}
+	
+	/**
+	 * Realizes a time to go cell value factory to display
+	 * waypoints in the TTG column of the plan view.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
+	private class TtgCellValueFactory implements Callback<CellDataFeatures<Waypoint, String>, ObservableValue<String>> {
+		
+		/**
+		 * Creates a cell value for the TTG column of the waypoint plan.
+		 * 
+		 * @param param the cell data features
+		 * 
+		 * @return the cell value for the TTG column of the waypoint plan
+		 * 
+		 * @see Callback#call(Object)
+		 */
+		@Override
+		public ObservableValue<String> call(CellDataFeatures<Waypoint, String> param) {
+			ReadOnlyStringWrapper value = null;
+			Waypoint waypoint = param.getValue().getValue();
+			
+			if (null != waypoint.getTtg()) {
+				value = new ReadOnlyStringWrapper(waypoint.getTtg().toString());
+			}
+			
+			return value;
+		}
+	}
+	
+	/**
 	 * Realizes an estimated time over cell value factory to display
 	 * waypoints in the ETO column of the plan view.
 	 * 
@@ -356,7 +452,7 @@ public class PlanPresenter implements Initializable {
 	private class EtoCellValueFactory implements Callback<CellDataFeatures<Waypoint, String>, ObservableValue<String>> {
 		
 		/**
-		 * Creates an cell value for the ETO column of the waypoint plan.
+		 * Creates a cell value for the ETO column of the waypoint plan.
 		 * 
 		 * @param param the cell data features
 		 * 
@@ -371,6 +467,37 @@ public class PlanPresenter implements Initializable {
 			
 			if (null != waypoint.getEto()) {
 				value = new ReadOnlyStringWrapper(waypoint.getEto().toString());
+			}
+			
+			return value;
+		}
+	}
+	
+	/**
+	 * Realizes an actual time over cell value factory to display
+	 * waypoints in the ATO column of the plan view.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
+	private class AtoCellValueFactory implements Callback<CellDataFeatures<Waypoint, String>, ObservableValue<String>> {
+		
+		/**
+		 * Creates a cell value for the ATO column of the waypoint plan.
+		 * 
+		 * @param param the cell data features
+		 * 
+		 * @return the cell value for the ATO column of the waypoint plan
+		 * 
+		 * @see Callback#call(Object)
+		 */
+		@Override
+		public ObservableValue<String> call(CellDataFeatures<Waypoint, String> param) {
+			ReadOnlyStringWrapper value = null;
+			Waypoint waypoint = param.getValue().getValue();
+			
+			if (null != waypoint.getAto()) {
+				value = new ReadOnlyStringWrapper(waypoint.getAto().toString());
 			}
 			
 			return value;

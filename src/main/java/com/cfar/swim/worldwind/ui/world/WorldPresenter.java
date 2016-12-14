@@ -453,6 +453,7 @@ public class WorldPresenter implements Initializable {
 							if (scenario.hasAircraft()) {
 								basicOrbitView.setCenterPosition(
 										scenario.getAircraft().getReferencePosition());
+								// TODO: plan does not contain attitude (airdata, heading)
 							} else {
 								view(false);
 							}
@@ -469,13 +470,13 @@ public class WorldPresenter implements Initializable {
 						BasicFlyView basicFlyView = (BasicFlyView) view;
 						if (viewMode.equals(ViewMode.PLANNED_CHASE)) {
 							if (scenario.hasAircraft()) {
-								// TODO: plan does not contain attitude
+								// TODO: plan does not contain attitude (airdata, heading)
 							} else {
 								view(false);
 							}
 						} else if (viewMode.equals(ViewMode.PLANNED_FPV)) {
 							if (scenario.hasAircraft()) {
-								// TODO: plan does not contain attitude
+								// TODO: plan does not contain attitude (airdata, heading)
 							} else {
 								view(false);
 							}
