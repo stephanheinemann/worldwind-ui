@@ -59,6 +59,7 @@ import javax.swing.SwingUtilities;
 
 import org.xml.sax.InputSource;
 
+import com.cfar.swim.worldwind.ai.PlanRevisionListener;
 import com.cfar.swim.worldwind.ai.Planner;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
 import com.cfar.swim.worldwind.connections.Datalink;
@@ -720,16 +721,26 @@ public class WorldPresenter implements Initializable {
 					setWorldMode(WorldMode.PLANNING);
 					origin = waypoints.remove(0);
 					destination = waypoints.remove(waypoints.size() - 1);
-					Trajectory trajectory = null;
+					
+					// listen for plan revisions
+					planner.addPlanRevisionListener(new PlanRevisionListener() {
+						@Override
+						public void revisePlan(Trajectory trajectory) {
+							if (!trajectory.isEmpty()) {
+								styleTrajectory(trajectory);
+								session.getActiveScenario().setTrajectory(trajectory);
+								System.out.println("revising plan...");
+								Thread.yield();
+							}
+						}
+					});
 					
 					if (waypoints.isEmpty()) {
-						trajectory = planner.plan(origin, destination, session.getActiveScenario().getTime());
+						planner.plan(origin, destination, session.getActiveScenario().getTime());
 					} else {
-						trajectory = planner.plan(origin, destination, waypoints, session.getActiveScenario().getTime());
+						planner.plan(origin, destination, waypoints, session.getActiveScenario().getTime());
 					}
 					
-					styleTrajectory(trajectory);
-					session.getActiveScenario().setTrajectory(trajectory);
 					setWorldMode(WorldMode.VIEW);
 				} else {
 					alert(

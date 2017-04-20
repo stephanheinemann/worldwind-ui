@@ -63,7 +63,6 @@ import javafx.scene.control.TreeTableColumn.CellDataFeatures;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.TreeItemPropertyValueFactory;
 import javafx.util.Callback;
-import javafx.util.Duration;
 
 /**
  * Realizes a presenter for a plan view.
@@ -372,8 +371,8 @@ public class PlanPresenter implements Initializable {
 			ReadOnlyDoubleWrapper value = null;
 			Waypoint waypoint = param.getValue().getValue();
 			
-			if (Double.POSITIVE_INFINITY != waypoint.getG()) {
-				value = new ReadOnlyDoubleWrapper(waypoint.getG());
+			if (Double.POSITIVE_INFINITY != waypoint.getCost()) {
+				value = new ReadOnlyDoubleWrapper(waypoint.getCost());
 			}
 			
 			return value;
