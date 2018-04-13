@@ -35,7 +35,9 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import com.cfar.swim.worldwind.planning.Environment;
+import com.cfar.swim.worldwind.planning.PlanningContinuum;
 import com.cfar.swim.worldwind.planning.PlanningGrid;
+import com.cfar.swim.worldwind.planning.PlanningRoadmap;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
@@ -194,8 +196,17 @@ public class EnvironmentPresenter implements Initializable {
 				PlanningGrid planningGrid = (PlanningGrid) environment;
 				return Integer.toString(planningGrid.getRefinements().size());
 			}
-			else
+			else if(environment instanceof PlanningContinuum) {
+				PlanningContinuum planningContinuum = (PlanningContinuum) environment;
+				return "Diagonal: " + Double.toString(planningContinuum.getDiameter());
+			}
+			else if(environment instanceof PlanningRoadmap) {
+				PlanningRoadmap planningRoadmap = (PlanningRoadmap) environment;
+				return "Diagonal: " + Double.toString(planningRoadmap.getDiameter());
+			}
+			else {
 				return "TODO";
+			}
 		}
 		
 		/**
