@@ -31,6 +31,7 @@ package com.cfar.swim.worldwind.ui;
 	
 import com.sun.javafx.application.LauncherImpl;
 
+
 /**
  * Realizes the main application launcher.
  * 

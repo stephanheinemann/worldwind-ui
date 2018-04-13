@@ -35,6 +35,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import com.cfar.swim.worldwind.planning.Environment;
+import com.cfar.swim.worldwind.planning.PlanningGrid;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
@@ -123,11 +124,14 @@ public class EnvironmentPresenter implements Initializable {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				if (parentItem.getValue().isRefined()) {
-					for (Environment child : parentItem.getValue().getRefinements()) {
-						TreeItem<Environment> childItem = new TreeItem<>(child);
-						parentItem.getChildren().add(childItem);
-						initEnvironment(childItem);
+				if(parentItem.getValue() instanceof PlanningGrid) {
+					PlanningGrid planningGrid = (PlanningGrid) parentItem.getValue();
+					if (planningGrid.isRefined()) {
+						for (Environment child : planningGrid.getRefinements()) {
+							TreeItem<Environment> childItem = new TreeItem<>(child);
+							parentItem.getChildren().add(childItem);
+							initEnvironment(childItem);
+						}
 					}
 				}
 			}
@@ -140,10 +144,13 @@ public class EnvironmentPresenter implements Initializable {
 	 */
 	public void refineEnvironment() {
 		Environment selectedEnv = this.environment.getSelectionModel().getSelectedItem().getValue();
-		if (!selectedEnv.isRefined()) {
-			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-			selectedEnv.refine(2);
-			session.getActiveScenario().notifyEnvironmentChange();
+		if(selectedEnv instanceof PlanningGrid) {
+			PlanningGrid planningGrid = (PlanningGrid) selectedEnv;
+			if (!planningGrid.isRefined()) {
+				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+				planningGrid.refine(2);
+				session.getActiveScenario().notifyEnvironmentChange();
+			}
 		}
 	}
 	
@@ -153,10 +160,13 @@ public class EnvironmentPresenter implements Initializable {
 	 */
 	public void coarsenEnvironment() {
 		Environment selectedEnv = this.environment.getSelectionModel().getSelectedItem().getValue();
-		if (selectedEnv.isRefined()) {
-			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-			selectedEnv.coarsen();
-			session.getActiveScenario().notifyEnvironmentChange();
+		if(selectedEnv instanceof PlanningGrid) {
+			PlanningGrid planningGrid = (PlanningGrid) selectedEnv;
+			if (planningGrid.isRefined()) {
+				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+				planningGrid.coarsen();
+				session.getActiveScenario().notifyEnvironmentChange();
+			}
 		}
 	}
 	
@@ -179,7 +189,13 @@ public class EnvironmentPresenter implements Initializable {
 		 */
 		@Override
 		public String toString(Environment environment) {
-			return Integer.toString(environment.getRefinements().size());
+			//TODO: Review for planningContinuum
+			if(environment instanceof PlanningGrid) {
+				PlanningGrid planningGrid = (PlanningGrid) environment;
+				return Integer.toString(planningGrid.getRefinements().size());
+			}
+			else
+				return "TODO";
 		}
 		
 		/**
