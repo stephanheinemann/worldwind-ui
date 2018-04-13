@@ -34,6 +34,8 @@ import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.ui.planner.PlannerView;
 
+import gov.nasa.worldwind.Configuration;
+import gov.nasa.worldwind.avlist.AVKey;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.application.Preloader.StateChangeNotification;
@@ -68,6 +70,12 @@ public class WorldwindPlanner extends Application {
 	        customProperties.put("date", date);
 	        Injector.setConfigurationSource(customProperties::get);
 	        */
+			
+			// Define initial position for worldwind
+			Configuration.setValue(AVKey.INITIAL_LATITUDE, 48.461342);
+			Configuration.setValue(AVKey.INITIAL_LONGITUDE, -123.309877);
+			Configuration.setValue(AVKey.INITIAL_ALTITUDE, 10000);
+			
 			SessionManager.getInstance().addSession(new Session(WorldwindPlanner.APPLICATION_TITLE));
 			PlannerView plannerView = new PlannerView();
 			Scene scene = new Scene(plannerView.getView());
