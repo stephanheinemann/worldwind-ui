@@ -726,13 +726,9 @@ public class WorldPresenter implements Initializable {
 					planner.addPlanRevisionListener(new PlanRevisionListener() {
 						@Override
 						public void revisePlan(Trajectory trajectory) {
-									System.out.println("Inside revise plan eith trajectory="+trajectory.getLength());
 							if (!trajectory.isEmpty()) {
-								System.out.println("I am tired of planning...");
 								styleTrajectory(trajectory);
-								System.out.println("I am tired of planning...");
 								session.getActiveScenario().setTrajectory(trajectory);
-								System.out.println("revising plan...");
 								Thread.yield();
 							}
 						}
