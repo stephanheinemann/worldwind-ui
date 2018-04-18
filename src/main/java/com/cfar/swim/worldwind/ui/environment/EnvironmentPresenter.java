@@ -62,14 +62,13 @@ public class EnvironmentPresenter implements Initializable {
 	/** the environment tree view of this environment presenter */
 	@FXML
 	private TreeView<Environment> environment;
-	
+
 	/** the active planning scenario (model) of this environment presenter */
 	Scenario scenario = null;
-	
+
 	/** the environment change listener of this environment presenter */
 	private final EnvironmentChangeListener ecl = new EnvironmentChangeListener();
-	
-	
+
 	/**
 	 * Initializes this environment presenter.
 	 * 
@@ -86,10 +85,10 @@ public class EnvironmentPresenter implements Initializable {
 		initScenario();
 		initEnvironment();
 	}
-	
+
 	/**
-	 * Initializes the active scenario of this environment presenter
-	 * registering an environment change listener.
+	 * Initializes the active scenario of this environment presenter registering an
+	 * environment change listener.
 	 */
 	public void initScenario() {
 		// remove change listeners from the previous scenario if any
@@ -99,26 +98,27 @@ public class EnvironmentPresenter implements Initializable {
 		this.scenario = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario();
 		this.scenario.addEnvironmentChangeListener(this.ecl);
 	}
-	
+
 	/**
-	 * Initializes the environment of this environment presenter populating
-	 * the environment view according to the active scenario.
+	 * Initializes the environment of this environment presenter populating the
+	 * environment view according to the active scenario.
 	 */
 	public void initEnvironment() {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				Environment activeEnvironment = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario().getEnvironment();
+				Environment activeEnvironment = SessionManager.getInstance()
+						.getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario().getEnvironment();
 				environment.setRoot(new TreeItem<Environment>(activeEnvironment));
 				environment.getRoot().setExpanded(false);
 				initEnvironment(environment.getRoot());
 			}
 		});
 	}
-	
+
 	/**
-	 * Initializes the environment of this environment presenter populating
-	 * the environment view recursively according to the active scenario.
+	 * Initializes the environment of this environment presenter populating the
+	 * environment view recursively according to the active scenario.
 	 * 
 	 * @param parentItem the parent environment item to be populated
 	 */
@@ -126,7 +126,7 @@ public class EnvironmentPresenter implements Initializable {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				if(parentItem.getValue() instanceof PlanningGrid) {
+				if (parentItem.getValue() instanceof PlanningGrid) {
 					PlanningGrid planningGrid = (PlanningGrid) parentItem.getValue();
 					if (planningGrid.isRefined()) {
 						for (Environment child : planningGrid.getRefinements()) {
@@ -139,39 +139,52 @@ public class EnvironmentPresenter implements Initializable {
 			}
 		});
 	}
-	
+
 	/**
-	 * Refines a selected environment in the environment view to a higher
-	 * resolution environment.
+	 * Refines a selected environment in the environment view to a higher resolution
+	 * environment.
 	 */
 	public void refineEnvironment() {
 		Environment selectedEnv = this.environment.getSelectionModel().getSelectedItem().getValue();
-		if(selectedEnv instanceof PlanningGrid) {
+		if (selectedEnv instanceof PlanningGrid) {
 			PlanningGrid planningGrid = (PlanningGrid) selectedEnv;
 			if (!planningGrid.isRefined()) {
 				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 				planningGrid.refine(2);
 				session.getActiveScenario().notifyEnvironmentChange();
 			}
+		} else if (selectedEnv instanceof PlanningContinuum) {
+			PlanningContinuum planningContinuum = (PlanningContinuum) selectedEnv;
+			if(!planningContinuum.isRefined()) {
+				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+				planningContinuum.refine(50);
+				session.getActiveScenario().notifyEnvironmentChange();
+			}
 		}
 	}
-	
+
 	/**
-	 * Coarsens a selected environment in the environment view to a lower
-	 * resolution environment.
+	 * Coarsens a selected environment in the environment view to a lower resolution
+	 * environment.
 	 */
 	public void coarsenEnvironment() {
 		Environment selectedEnv = this.environment.getSelectionModel().getSelectedItem().getValue();
-		if(selectedEnv instanceof PlanningGrid) {
+		if (selectedEnv instanceof PlanningGrid) {
 			PlanningGrid planningGrid = (PlanningGrid) selectedEnv;
 			if (planningGrid.isRefined()) {
 				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 				planningGrid.coarsen();
 				session.getActiveScenario().notifyEnvironmentChange();
 			}
+		} else if (selectedEnv instanceof PlanningContinuum) {
+			PlanningContinuum planningContinuum = (PlanningContinuum) selectedEnv;
+			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+			planningContinuum.coarsen();
+			session.getActiveScenario().notifyEnvironmentChange();
 		}
+		
 	}
-	
+
 	/**
 	 * Realizes an environment converter to populate the environment view.
 	 * 
@@ -179,7 +192,7 @@ public class EnvironmentPresenter implements Initializable {
 	 *
 	 */
 	private class EnvironmentConverter extends StringConverter<Environment> {
-		
+
 		/**
 		 * Converts an environment to a string representation.
 		 * 
@@ -191,24 +204,23 @@ public class EnvironmentPresenter implements Initializable {
 		 */
 		@Override
 		public String toString(Environment environment) {
-			//TODO: Review for planningContinuum
-			if(environment instanceof PlanningGrid) {
+			// TODO: Review for planningContinuum
+			if (environment instanceof PlanningGrid) {
 				PlanningGrid planningGrid = (PlanningGrid) environment;
 				return Integer.toString(planningGrid.getRefinements().size());
-			}
-			else if(environment instanceof PlanningContinuum) {
+			} else if (environment instanceof PlanningContinuum) {
 				PlanningContinuum planningContinuum = (PlanningContinuum) environment;
-				return "Diagonal: " + Double.toString(planningContinuum.getDiameter());
-			}
-			else if(environment instanceof PlanningRoadmap) {
+				String str = String.format("Diagonal: %.2f\nResolution: %.2f", planningContinuum.getDiameter(),
+						planningContinuum.getResolution());
+				return str;
+			} else if (environment instanceof PlanningRoadmap) {
 				PlanningRoadmap planningRoadmap = (PlanningRoadmap) environment;
 				return "Diagonal: " + Double.toString(planningRoadmap.getDiameter());
-			}
-			else {
+			} else {
 				return "TODO";
 			}
 		}
-		
+
 		/**
 		 * Converts a string representation to an environment.
 		 * 
@@ -223,7 +235,7 @@ public class EnvironmentPresenter implements Initializable {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Realizes an active scenario change listener.
 	 * 
@@ -245,7 +257,7 @@ public class EnvironmentPresenter implements Initializable {
 			initEnvironment();
 		}
 	}
-	
+
 	/**
 	 * Realizes an environment change listener.
 	 * 
@@ -253,7 +265,7 @@ public class EnvironmentPresenter implements Initializable {
 	 *
 	 */
 	private class EnvironmentChangeListener implements PropertyChangeListener {
-		
+
 		/**
 		 * Initializes the environment if the environment changes.
 		 * 
