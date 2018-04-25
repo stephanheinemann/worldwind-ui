@@ -142,9 +142,11 @@ public class PlanPresenter implements Initializable {
 			(TreeTableColumn.CellDataFeatures<Waypoint, String> param) ->
 			new ReadOnlyStringWrapper(param.getValue().getValue().getDesignator()));
 		
+		//Manuel: Changed to display only LatLon
 		this.locationColumn.setCellValueFactory(
 			(TreeTableColumn.CellDataFeatures<Waypoint, String> param) ->
-			new ReadOnlyStringWrapper(param.getValue().getValue().toString()));
+			new ReadOnlyStringWrapper(param.getValue().getValue().getPrecisionPosition().getLatitude().toString()+", "+
+					param.getValue().getValue().getPrecisionPosition().getLongitude().toString()));
 		
 		this.altitudeColumn.setCellValueFactory(
 			new TreeItemPropertyValueFactory<Waypoint, Double>("altitude"));
@@ -502,5 +504,5 @@ public class PlanPresenter implements Initializable {
 			return value;
 		}
 	}
-	
+
 }
