@@ -196,6 +196,11 @@ public class EnvironmentPresenter implements Initializable {
 			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 			planningContinuum.coarsen();
 			session.getActiveScenario().notifyEnvironmentChange();
+		} else if (selectedEnv instanceof PlanningRoadmap) {
+			PlanningRoadmap planningRoadmap = (PlanningRoadmap) selectedEnv;
+			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+			planningRoadmap.coarsen();
+			session.getActiveScenario().notifyEnvironmentChange();
 		}
 		
 	}
