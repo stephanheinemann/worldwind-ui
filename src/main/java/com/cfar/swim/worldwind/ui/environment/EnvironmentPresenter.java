@@ -38,6 +38,7 @@ import com.cfar.swim.worldwind.planning.Environment;
 import com.cfar.swim.worldwind.planning.PlanningContinuum;
 import com.cfar.swim.worldwind.planning.PlanningGrid;
 import com.cfar.swim.worldwind.planning.PlanningRoadmap;
+import com.cfar.swim.worldwind.planning.SamplingEnvironment;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
@@ -135,6 +136,15 @@ public class EnvironmentPresenter implements Initializable {
 							initEnvironment(childItem);
 						}
 					}
+				} else if (parentItem.getValue() instanceof SamplingEnvironment) {
+					SamplingEnvironment samplingEnvironment = (SamplingEnvironment) parentItem.getValue();
+					if (samplingEnvironment.isRefined()) {
+						for (Environment child : samplingEnvironment.getRefinements()) {
+							TreeItem<Environment> childItem = new TreeItem<>(child);
+							parentItem.getChildren().add(childItem);
+							initEnvironment(childItem);
+						}
+					}
 				}
 			}
 		});
@@ -160,6 +170,11 @@ public class EnvironmentPresenter implements Initializable {
 				planningContinuum.refine(50);
 				session.getActiveScenario().notifyEnvironmentChange();
 			}
+		} else if (selectedEnv instanceof PlanningRoadmap) {
+			PlanningRoadmap planningRoadmap = (PlanningRoadmap) selectedEnv;
+			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+			planningRoadmap.refine(50);
+			session.getActiveScenario().notifyEnvironmentChange();
 		}
 	}
 
@@ -215,10 +230,14 @@ public class EnvironmentPresenter implements Initializable {
 				return str;
 			} else if (environment instanceof PlanningRoadmap) {
 				PlanningRoadmap planningRoadmap = (PlanningRoadmap) environment;
-				return "Diagonal: " + Double.toString(planningRoadmap.getDiameter());
+				return Integer.toString(planningRoadmap.getRefinements().size());
+			} else if (environment instanceof SamplingEnvironment) {
+				SamplingEnvironment samplingEnvironment = (SamplingEnvironment) environment;
+				return Integer.toString(samplingEnvironment.getRefinements().size());
 			} else {
 				return "TODO";
 			}
+			
 		}
 
 		/**
