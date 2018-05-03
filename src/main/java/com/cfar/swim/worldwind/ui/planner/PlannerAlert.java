@@ -53,6 +53,16 @@ public class PlannerAlert extends Alert {
 	public static final String ALERT_CONTENT_PLANNER_INVALID =
 			"Please check if the aircraft, environment and waypoints are supported.";
 	
+	/** the title of an invalid planner setup alert */
+	public static final String ALERT_TITLE_TRAJECTORY_INVALID = "Trajectory not found";
+	
+	/** the header of an invalid planner setup alert */
+	public static final String ALERT_HEADER_TRAJECTORY_INVALID = "No trajectory found.";
+	
+	/** the content of an invalid planner setup alert */
+	public static final String ALERT_CONTENT_TRAJECTORY_INVALID =
+			"No feasible trajectory was found.";
+	
 	/** the title of an invalid datalink setup alert */
 	public static final String ALERT_TITLE_DATALINK_INVALID = "Datalink Invalid";
 	

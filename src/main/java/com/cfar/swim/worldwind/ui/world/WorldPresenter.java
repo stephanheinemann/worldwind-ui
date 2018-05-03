@@ -731,6 +731,14 @@ public class WorldPresenter implements Initializable {
 								session.getActiveScenario().setTrajectory(trajectory);
 								Thread.yield();
 							}
+							else {
+								alert(
+										AlertType.WARNING,
+										PlannerAlert.ALERT_TITLE_TRAJECTORY_INVALID,
+										PlannerAlert.ALERT_HEADER_TRAJECTORY_INVALID,
+										PlannerAlert.ALERT_CONTENT_TRAJECTORY_INVALID,
+										null);
+							}
 						}
 					});
 					
