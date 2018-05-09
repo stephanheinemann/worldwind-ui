@@ -170,11 +170,6 @@ public class EnvironmentPresenter implements Initializable {
 				planningContinuum.refine(50);
 				session.getActiveScenario().notifyEnvironmentChange();
 			}
-		} else if (selectedEnv instanceof PlanningRoadmap) {
-			PlanningRoadmap planningRoadmap = (PlanningRoadmap) selectedEnv;
-			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-			planningRoadmap.refine(50);
-			session.getActiveScenario().notifyEnvironmentChange();
 		}
 	}
 
@@ -195,11 +190,6 @@ public class EnvironmentPresenter implements Initializable {
 			PlanningContinuum planningContinuum = (PlanningContinuum) selectedEnv;
 			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 			planningContinuum.coarsen();
-			session.getActiveScenario().notifyEnvironmentChange();
-		} else if (selectedEnv instanceof PlanningRoadmap) {
-			PlanningRoadmap planningRoadmap = (PlanningRoadmap) selectedEnv;
-			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-			planningRoadmap.coarsen();
 			session.getActiveScenario().notifyEnvironmentChange();
 		}
 		
@@ -233,9 +223,6 @@ public class EnvironmentPresenter implements Initializable {
 				String str = String.format("Diagonal: %.2f\nResolution: %.2f", planningContinuum.getDiameter(),
 						planningContinuum.getResolution());
 				return str;
-			} else if (environment instanceof PlanningRoadmap) {
-				PlanningRoadmap planningRoadmap = (PlanningRoadmap) environment;
-				return Integer.toString(planningRoadmap.getRefinements().size());
 			} else if (environment instanceof SamplingEnvironment) {
 				SamplingEnvironment samplingEnvironment = (SamplingEnvironment) environment;
 				return Integer.toString(samplingEnvironment.getRefinements().size());
