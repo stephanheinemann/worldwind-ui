@@ -35,9 +35,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import com.cfar.swim.worldwind.planning.Environment;
-import com.cfar.swim.worldwind.planning.PlanningContinuum;
 import com.cfar.swim.worldwind.planning.PlanningGrid;
-import com.cfar.swim.worldwind.planning.PlanningRoadmap;
 import com.cfar.swim.worldwind.planning.SamplingEnvironment;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
@@ -136,15 +134,6 @@ public class EnvironmentPresenter implements Initializable {
 							initEnvironment(childItem);
 						}
 					}
-				} else if (parentItem.getValue() instanceof SamplingEnvironment) {
-					SamplingEnvironment samplingEnvironment = (SamplingEnvironment) parentItem.getValue();
-					if (samplingEnvironment.isRefined()) {
-						for (Environment child : samplingEnvironment.getRefinements()) {
-							TreeItem<Environment> childItem = new TreeItem<>(child);
-							parentItem.getChildren().add(childItem);
-							initEnvironment(childItem);
-						}
-					}
 				}
 			}
 		});
@@ -163,11 +152,11 @@ public class EnvironmentPresenter implements Initializable {
 				planningGrid.refine(2);
 				session.getActiveScenario().notifyEnvironmentChange();
 			}
-		} else if (selectedEnv instanceof PlanningContinuum) {
-			PlanningContinuum planningContinuum = (PlanningContinuum) selectedEnv;
-			if(!planningContinuum.isRefined()) {
+		} else if (selectedEnv instanceof SamplingEnvironment) {
+			SamplingEnvironment samplingEnvironment = (SamplingEnvironment) selectedEnv;
+			if(!samplingEnvironment.isRefined()) {
 				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-				planningContinuum.refine(50);
+				samplingEnvironment.refine(50);
 				session.getActiveScenario().notifyEnvironmentChange();
 			}
 		}
@@ -186,10 +175,10 @@ public class EnvironmentPresenter implements Initializable {
 				planningGrid.coarsen();
 				session.getActiveScenario().notifyEnvironmentChange();
 			}
-		} else if (selectedEnv instanceof PlanningContinuum) {
-			PlanningContinuum planningContinuum = (PlanningContinuum) selectedEnv;
+		} else if (selectedEnv instanceof SamplingEnvironment) {
+			SamplingEnvironment samplingEnvironment = (SamplingEnvironment) selectedEnv;
 			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-			planningContinuum.coarsen();
+			samplingEnvironment.coarsen();
 			session.getActiveScenario().notifyEnvironmentChange();
 		}
 		
@@ -218,14 +207,11 @@ public class EnvironmentPresenter implements Initializable {
 			if (environment instanceof PlanningGrid) {
 				PlanningGrid planningGrid = (PlanningGrid) environment;
 				return Integer.toString(planningGrid.getRefinements().size());
-			} else if (environment instanceof PlanningContinuum) {
-				PlanningContinuum planningContinuum = (PlanningContinuum) environment;
-				String str = String.format("Diagonal: %.2f\nResolution: %.2f", planningContinuum.getDiameter(),
-						planningContinuum.getResolution());
-				return str;
 			} else if (environment instanceof SamplingEnvironment) {
 				SamplingEnvironment samplingEnvironment = (SamplingEnvironment) environment;
-				return Integer.toString(samplingEnvironment.getRefinements().size());
+				String str = String.format("Diagonal: %.2f\nResolution: %.2f", samplingEnvironment.getDiameter(),
+						samplingEnvironment.getResolution());
+				return str;
 			} else {
 				return "TODO";
 			}
