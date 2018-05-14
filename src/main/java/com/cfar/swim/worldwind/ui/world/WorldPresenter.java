@@ -636,7 +636,6 @@ public class WorldPresenter implements Initializable {
 				fileChooser.setTitle(title);
 				fileChooser.getExtensionFilters().addAll(extensions);
 				File file = fileChooser.showOpenDialog(null);
-				
 				if (null != file) {
 					executor.execute(new Runnable() {
 						@Override
@@ -740,8 +739,21 @@ public class WorldPresenter implements Initializable {
 										null);
 							}
 						}
+						@Override
+						public void reviseObstacle() {
+							try {
+								IwxxmLoader loader = new IwxxmLoader();
+								Set<Obstacle> obstacles = loader.load(new InputSource(new FileInputStream(new File("./sigmet-victoria-ts.xml"))));
+								for (Obstacle obstacle : obstacles) {
+									scenario.addObstacle(obstacle);
+									planner.getEnvironment().embed(obstacle);
+								}
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
 					});
-					
+
 					if (waypoints.isEmpty()) {
 						planner.plan(origin, destination, session.getActiveScenario().getTime());
 					} else {
