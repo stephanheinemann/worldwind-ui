@@ -62,6 +62,7 @@ import org.xml.sax.InputSource;
 import com.cfar.swim.worldwind.ai.PlanRevisionListener;
 import com.cfar.swim.worldwind.ai.Planner;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
+import com.cfar.swim.worldwind.aircraft.CommunicationProtocol;
 import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.iwxxm.IwxxmLoader;
 import com.cfar.swim.worldwind.planning.CostInterval;
@@ -259,6 +260,9 @@ public class WorldPresenter implements Initializable {
 	/** the aircraft layer of this world presenter */
 	private final RenderableLayer aircraftLayer = new RenderableLayer();
 	
+	/** the aircraft layer of this world presenter */
+	private final RenderableLayer slaveAircraftsLayer = new RenderableLayer();
+	
 	/** the environment layer of this world presenter */
 	private final RenderableLayer environmentLayer = new RenderableLayer();
 	
@@ -288,6 +292,9 @@ public class WorldPresenter implements Initializable {
 	
 	/** the aircraft change listener of this world presenter */
 	private final AircraftChangeListener aircraftCl = new AircraftChangeListener();
+	
+	/** the aircraft change listener of this world presenter */
+	private final SlaveAircraftsChangeListener slaveAircraftsCl = new SlaveAircraftsChangeListener();
 	
 	/** the environment change listener of this world presenter */
 	private final EnvironmentChangeListener environmentCl = new EnvironmentChangeListener();
@@ -354,6 +361,7 @@ public class WorldPresenter implements Initializable {
 		this.scenario.addTimeChangeListener(this.timeCl);
 		this.scenario.addThresholdChangeListener(this.thresholdCl);
 		this.scenario.addAircraftChangeListener(this.aircraftCl);
+		this.scenario.addSlaveAircraftsChangeListener(this.slaveAircraftsCl);
 		this.scenario.addEnvironmentChangeListener(this.environmentCl);
 		this.scenario.addWaypointsChangeListener(this.waypointsCl);
 		this.scenario.addTrajectoryChangeListener(this.trajectoryCl);
@@ -370,6 +378,24 @@ public class WorldPresenter implements Initializable {
 				aircraftLayer.removeAllRenderables();
 				if (scenario.hasAircraft()) {
 					aircraftLayer.addRenderable(scenario.getAircraft());
+				}
+				wwd.redraw();
+			}
+		});
+	}
+	
+	/**
+	 * Initializes the aircraft of this world presenter.
+	 */
+	public void initSlaveAircrafts() {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				slaveAircraftsLayer.removeAllRenderables();
+				if (scenario.hasSlaveAircrafts()) {
+					for(Aircraft aircraft : scenario.getSlaveAircrafts()) {
+						slaveAircraftsLayer.addRenderable(aircraft);
+					}
 				}
 				wwd.redraw();
 			}
@@ -752,6 +778,23 @@ public class WorldPresenter implements Initializable {
 								e.printStackTrace();
 							}
 						}
+						public void reviseSlavePlans(ArrayList<Trajectory> Trajectories) {
+							for(Trajectory trajectory : Trajectories) {
+								if (!trajectory.isEmpty()) {
+									styleSlaveTrajectory(trajectory);
+									session.getActiveScenario().addSlaveTrajectory(trajectory);
+									Thread.yield();
+								}
+								else {
+									alert(
+											AlertType.WARNING,
+											PlannerAlert.ALERT_TITLE_TRAJECTORY_INVALID,
+											PlannerAlert.ALERT_HEADER_TRAJECTORY_INVALID,
+											PlannerAlert.ALERT_CONTENT_TRAJECTORY_INVALID,
+											null);
+								}
+							}
+						}
 					});
 
 					if (waypoints.isEmpty()) {
@@ -1009,6 +1052,27 @@ public class WorldPresenter implements Initializable {
 	}
 	
 	/**
+	 * Styles a computed trajectory for display.
+	 * 
+	 * @param trajectory the trajectory to be styled
+	 */
+	private void styleSlaveTrajectory(Trajectory trajectory) {
+		trajectory.setVisible(true);
+		trajectory.setShowPositions(true);
+		trajectory.setDrawVerticals(true);
+		trajectory.setAttributes(new BasicShapeAttributes());
+		trajectory.getAttributes().setOutlineMaterial(Material.BLUE);
+		trajectory.getAttributes().setOutlineWidth(5d);
+		trajectory.getAttributes().setOutlineOpacity(0.5d);
+		for (Waypoint waypoint : trajectory.getWaypoints()) {
+			Depiction depiction = new Depiction(symbolFactory.createPoint(Waypoint.SICD_NAV_WAYPOINT_ROUTE, waypoint, null));
+			depiction.setAnnotation(new DepictionAnnotation(waypoint.getEto().toString(), waypoint));
+			depiction.setVisible(true);
+			waypoint.setDepiction(depiction);
+		}
+	}
+	
+	/**
 	 * Realizes a world window initializer.
 	 * 
 	 * @author Stephan Heinemann
@@ -1038,6 +1102,7 @@ public class WorldPresenter implements Initializable {
 			
 			// add scenario data
 			wwd.getModel().getLayers().add(aircraftLayer);
+			wwd.getModel().getLayers().add(slaveAircraftsLayer);
 			wwd.getModel().getLayers().add(environmentLayer);
 			wwd.getModel().getLayers().add(waypointLayer);
 			wwd.getModel().getLayers().add(obstaclesLayer);
@@ -1259,10 +1324,6 @@ public class WorldPresenter implements Initializable {
 				waypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, waypoint, null)));
 				waypoint.getDepiction().setVisible(true);
 				
-				if (scenario.hasAircraft() && (0 < scenario.getWaypoints().size())) {
-					scenario.removeWaypoint(0);
-				}
-				scenario.addWaypoint(0, waypoint);
 				
 				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 				Specification<Aircraft> aircraftSpec = session.getSetup().getAircraftSpecification();
@@ -1273,8 +1334,18 @@ public class WorldPresenter implements Initializable {
         				ZonedDateTime.now(ZoneId.of("UTC")).minusYears(10),
         				ZonedDateTime.now(ZoneId.of("UTC")).plusYears(10),
         				100d));
-				scenario.setAircraft(aircraft);
 				
+				if(aircraft.getRanking()==CommunicationProtocol.MASTER) {
+					if (scenario.hasAircraft() && (0 < scenario.getWaypoints().size())) {
+						scenario.removeWaypoint(0);
+					}
+					scenario.addWaypoint(0, waypoint);
+					scenario.setAircraft(aircraft);
+				}
+				if(aircraft.getRanking()==CommunicationProtocol.SLAVE) {
+					scenario.addSlaveAircraft(aircraft);
+					scenario.addSlaveWaypoint(waypoint);
+				}
 				setWorldMode(WorldMode.VIEW);
 			}
 		}
@@ -1372,6 +1443,28 @@ public class WorldPresenter implements Initializable {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initAircraft();
+			initView();
+		}
+	}
+	
+	/**
+	 * Realizes an aircraft change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
+	private class SlaveAircraftsChangeListener implements PropertyChangeListener {
+		
+		/**
+		 * Initializes the aircraft if it changes.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+		 */
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			initSlaveAircrafts();
 			initView();
 		}
 	}

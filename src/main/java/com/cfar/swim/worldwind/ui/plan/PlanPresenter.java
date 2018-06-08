@@ -284,6 +284,9 @@ public class PlanPresenter implements Initializable {
 		if (this.scenario.hasAircraft()) {
 			this.scenario.removeAircraft();
 		}
+		if(this.scenario.hasSlaveAircrafts()) {
+			this.scenario.removeSlaveAircrafts();
+		}
 	}
 	
 	/**
