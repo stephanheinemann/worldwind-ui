@@ -286,6 +286,8 @@ public class PlanPresenter implements Initializable {
 		}
 		if(this.scenario.hasSlaveAircrafts()) {
 			this.scenario.removeSlaveAircrafts();
+			this.scenario.clearSlaveWaypoints();
+			this.scenario.clearSlaveTrajectories();
 		}
 	}
 	
