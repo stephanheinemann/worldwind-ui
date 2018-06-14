@@ -29,6 +29,13 @@
  */
 package com.cfar.swim.worldwind.ui.desirabilityzones;
 
+import com.cfar.swim.worldwind.aircraft.Aircraft;
+import com.cfar.swim.worldwind.registries.Specification;
+import com.cfar.swim.worldwind.session.Session;
+import com.cfar.swim.worldwind.session.SessionManager;
+import com.cfar.swim.worldwind.session.Setup;
+import com.cfar.swim.worldwind.ui.WorldwindPlanner;
+
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.ButtonType;
@@ -80,9 +87,13 @@ public class DesirabilityDialog extends Dialog<Double> {
 		
 		this.setResultConverter(dialogButton -> {
 			double desirability = 0.5d;
-			
+			Setup setup = null;
 			if (dialogButton.equals(ButtonType.OK)) {
+				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+				setup = session.getSetup();
+				
 				desirability = Double.parseDouble(this.desirability.getText());
+				setup.setDesirabilitySpecification(desirability);
 			}
 			
 			return desirability;

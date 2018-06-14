@@ -850,7 +850,7 @@ public class WorldPresenter implements Initializable {
 							if (!trajectory.isEmpty()) {
 								styleTrajectory(trajectory);
 								session.getActiveScenario().setTrajectory(trajectory);
-								givenWritingStringToFile_whenUsingPrintWriter_thenCorrect(trajectory);
+								printTrajectoryToFile(trajectory);
 								Thread.yield();
 							} else {
 								alert(AlertType.WARNING, PlannerAlert.ALERT_TITLE_TRAJECTORY_INVALID,
@@ -911,11 +911,9 @@ public class WorldPresenter implements Initializable {
 		});
 	}
 
-	public void givenWritingStringToFile_whenUsingPrintWriter_thenCorrect(Trajectory trajectory) {
+	public void printTrajectoryToFile(Trajectory trajectory) {
 		try {
-			System.out.println("creating file");
 			PrintWriter printWriter = new PrintWriter("waypoints.txt", "UTF-8");
-			printWriter.print("QGC WPL 110\n");
 			ArrayList<Waypoint> waypoints = new ArrayList<Waypoint>();
 			for(Waypoint waypoint : trajectory.getWaypoints()) {
 				waypoints.add(waypoint);
@@ -1430,9 +1428,7 @@ public class WorldPresenter implements Initializable {
 					if (null != envSector) {
 						Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 						session.getActiveScenario().addDesirabilitySector(envSector);
-						Specification<Environment> envSpec = session.getSetup().getEnvironmentSpecification();
-						Environment env = session.getEnvironmentFactory().createInstance(envSpec);
-						session.getActiveScenario().addDesirabilityEnvironment(env);
+						session.getActiveScenario().addDesirabilityEnvironment(envSector, session.getSetup().getDesirabilitySpecification());
 						initDesirabilityEnvironments();
 					}
 					desirabilitySectorSelector.disable();
