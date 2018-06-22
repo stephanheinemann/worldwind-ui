@@ -42,7 +42,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.time.ZoneId;
@@ -65,7 +64,7 @@ import com.cfar.swim.worldwind.ai.PlanRevisionListener;
 import com.cfar.swim.worldwind.ai.Planner;
 import com.cfar.swim.worldwind.ai.prm.mabprm.MABPRM;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
-import com.cfar.swim.worldwind.aircraft.CommunicationProtocol;
+import com.cfar.swim.worldwind.aircraft.Ranking;
 import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.iwxxm.IwxxmLoader;
 import com.cfar.swim.worldwind.planning.CostInterval;
@@ -281,14 +280,14 @@ public class WorldPresenter implements Initializable {
 	/** the aircraft layer of this world presenter */
 	private final RenderableLayer aircraftLayer = new RenderableLayer();
 
-	/** the aircraft layer of this world presenter */
+	/** the slave aircrafts layer of this world presenter */
 	private final RenderableLayer slaveAircraftsLayer = new RenderableLayer();
 
 	/** the environment layer of this world presenter */
 	private final RenderableLayer environmentLayer = new RenderableLayer();
 
-	/** the environment layer of this world presenter */
-	private final RenderableLayer desirabilityEnvironmentsLayer = new RenderableLayer();
+	/** the desirability zones layer of this world presenter */
+	private final RenderableLayer desirabilityZonesLayer = new RenderableLayer();
 
 	/** the waypoint layer of this world presenter */
 	private final RenderableLayer waypointLayer = new RenderableLayer();
@@ -320,14 +319,14 @@ public class WorldPresenter implements Initializable {
 	/** the aircraft change listener of this world presenter */
 	private final AircraftChangeListener aircraftCl = new AircraftChangeListener();
 
-	/** the aircraft change listener of this world presenter */
+	/** the slave aircrafts change listener of this world presenter */
 	private final SlaveAircraftsChangeListener slaveAircraftsCl = new SlaveAircraftsChangeListener();
 
 	/** the environment change listener of this world presenter */
 	private final EnvironmentChangeListener environmentCl = new EnvironmentChangeListener();
 
-	/** the environment change listener of this world presenter */
-	private final DesirabilityEnvironmentsChangeListener desirabilityCl = new DesirabilityEnvironmentsChangeListener();
+	/** the desirability zones change listener of this world presenter */
+	private final DesirabilityZonesChangeListener desirabilityCl = new DesirabilityZonesChangeListener();
 
 	/** the waypoints change listener of this world presenter */
 	private final WaypointsChangeListener waypointsCl = new WaypointsChangeListener();
@@ -335,7 +334,7 @@ public class WorldPresenter implements Initializable {
 	/** the trajectory change listener of this world presenter */
 	private final TrajectoryChangeListener trajectoryCl = new TrajectoryChangeListener();
 
-	/** the trajectory change listener of this world presenter */
+	/** the slave trajectories change listener of this world presenter */
 	private final SlaveTrajectoriesChangeListener slaveTrajectoriesCl = new SlaveTrajectoriesChangeListener();
 
 	/** the obstacles change listener of this world presenter */
@@ -367,9 +366,9 @@ public class WorldPresenter implements Initializable {
 		this.sectorSelector.setBorderWidth(1d);
 		this.sectorSelector.addPropertyChangeListener(SectorSelector.SECTOR_PROPERTY, new SectorChangeListener());
 
-		this.desirabilitySectorSelector.setInteriorColor(Color.MAGENTA);
+		this.desirabilitySectorSelector.setInteriorColor(Color.WHITE);
 		this.desirabilitySectorSelector.setInteriorOpacity(0.5d);
-		this.desirabilitySectorSelector.setBorderColor(Color.MAGENTA);
+		this.desirabilitySectorSelector.setBorderColor(Color.WHITE);
 		this.desirabilitySectorSelector.setBorderWidth(1d);
 		this.desirabilitySectorSelector.addPropertyChangeListener(SectorSelector.SECTOR_PROPERTY,
 				new DesirabilitySectorChangeListener());
@@ -377,7 +376,7 @@ public class WorldPresenter implements Initializable {
 		this.initScenario();
 		this.initAircraft();
 		this.initEnvironment();
-		this.initDesirabilityEnvironments();
+		this.initDesirabilityZones();
 		this.initObstacles();
 		this.initPlan();
 		this.initTrack();
@@ -405,7 +404,7 @@ public class WorldPresenter implements Initializable {
 		this.scenario.addAircraftChangeListener(this.aircraftCl);
 		this.scenario.addSlaveAircraftsChangeListener(this.slaveAircraftsCl);
 		this.scenario.addEnvironmentChangeListener(this.environmentCl);
-		this.scenario.addDesirabilityEnvironmentsChangeListener(this.desirabilityCl);
+		this.scenario.addDesirabilityZonesChangeListener(this.desirabilityCl);
 		this.scenario.addWaypointsChangeListener(this.waypointsCl);
 		this.scenario.addTrajectoryChangeListener(this.trajectoryCl);
 		this.scenario.addSlaveTrajectoriesChangeListener(this.slaveTrajectoriesCl);
@@ -461,15 +460,15 @@ public class WorldPresenter implements Initializable {
 	}
 
 	/**
-	 * Initializes the environment of this world presenter.
+	 * Initializes the desirability zones of this world presenter.
 	 */
-	public void initDesirabilityEnvironments() {
+	public void initDesirabilityZones() {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				desirabilityEnvironmentsLayer.removeAllRenderables();
-				for (Environment environment : scenario.getDesirabilityEnvironments()) {
-					desirabilityEnvironmentsLayer.addRenderable(environment);
+				desirabilityZonesLayer.removeAllRenderables();
+				for (Environment environment : scenario.getDesirabilityZones()) {
+					desirabilityZonesLayer.addRenderable(environment);
 				}
 				// desirabilityEnvironmentsLayer.addRenderables(scenario.getDesirabilityEnvironments());
 				wwd.redraw();
@@ -713,9 +712,7 @@ public class WorldPresenter implements Initializable {
 	}
 
 	/**
-	 * Opens the setup dialog with a specified tab.
-	 * 
-	 * @param tabIndex the tab index of the tab to be opened
+	 * Opens the setup desirability dialog.
 	 */
 	private void setupDesirability() {
 		Platform.runLater(new Runnable() {
@@ -911,15 +908,23 @@ public class WorldPresenter implements Initializable {
 		});
 	}
 
+	/**
+	 * Prints the current planned trajectory to a file, so that it can be read using
+	 * a python script in Mission Planner.
+	 * 
+	 * @param trajectory the planned trajectory
+	 */
 	public void printTrajectoryToFile(Trajectory trajectory) {
 		try {
 			PrintWriter printWriter = new PrintWriter("waypoints.txt", "UTF-8");
 			ArrayList<Waypoint> waypoints = new ArrayList<Waypoint>();
-			for(Waypoint waypoint : trajectory.getWaypoints()) {
+			for (Waypoint waypoint : trajectory.getWaypoints()) {
 				waypoints.add(waypoint);
 			}
-			for(int i=0; i<trajectory.getLength();i++) {
-				printWriter.printf("%d	0	0	16	0.000000	0.000000	0.000000	0.000000	%f	%f	%f	1\n", i, waypoints.get(i).getLatitude().degrees, waypoints.get(i).getLongitude().degrees, waypoints.get(i).elevation);
+			for (int i = 0; i < trajectory.getLength(); i++) {
+				printWriter.printf("%d	0	0	16	0.000000	0.000000	0.000000	0.000000	%f	%f	%f	1\n", i,
+						waypoints.get(i).getLatitude().degrees, waypoints.get(i).getLongitude().degrees,
+						waypoints.get(i).elevation);
 			}
 			printWriter.close();
 		} catch (Exception e) {
@@ -1143,9 +1148,9 @@ public class WorldPresenter implements Initializable {
 	}
 
 	/**
-	 * Styles a computed trajectory for display.
+	 * Styles a computed slave trajectory for display.
 	 * 
-	 * @param trajectory the trajectory to be styled
+	 * @param trajectory the slave trajectory to be styled
 	 */
 	private void styleSlaveTrajectory(Trajectory trajectory) {
 		trajectory.setVisible(true);
@@ -1196,7 +1201,7 @@ public class WorldPresenter implements Initializable {
 			wwd.getModel().getLayers().add(aircraftLayer);
 			wwd.getModel().getLayers().add(slaveAircraftsLayer);
 			wwd.getModel().getLayers().add(environmentLayer);
-			wwd.getModel().getLayers().add(desirabilityEnvironmentsLayer);
+			wwd.getModel().getLayers().add(desirabilityZonesLayer);
 			wwd.getModel().getLayers().add(waypointLayer);
 			wwd.getModel().getLayers().add(obstaclesLayer);
 			wwd.getModel().getLayers().add(trackLayer);
@@ -1262,6 +1267,7 @@ public class WorldPresenter implements Initializable {
 			viewControl.setSecondaryActionCommand(WorldPresenter.ACTION_VIEW_RESET);
 			viewControl.addActionListener(new ViewControlListener());
 
+			// TODO: add a new ICON for desirability annotation
 			ControlAnnotation desirabilityControl = new ControlAnnotation(environmentIcon);
 			desirabilityControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 425, 25));
 			desirabilityControl.setPrimaryActionCommand(WorldPresenter.ACTION_DESIRABILITY_ENCLOSE);
@@ -1427,9 +1433,9 @@ public class WorldPresenter implements Initializable {
 					Sector envSector = desirabilitySectorSelector.getSector();
 					if (null != envSector) {
 						Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-						session.getActiveScenario().addDesirabilitySector(envSector);
-						session.getActiveScenario().addDesirabilityEnvironment(envSector, session.getSetup().getDesirabilitySpecification());
-						initDesirabilityEnvironments();
+						session.getActiveScenario().addDesirabilityZone(envSector,
+								session.getSetup().getDesirabilitySpecification());
+						initDesirabilityZones();
 					}
 					desirabilitySectorSelector.disable();
 					setWorldMode(WorldMode.VIEW);
@@ -1468,14 +1474,14 @@ public class WorldPresenter implements Initializable {
 						new CostInterval(aircraftSpec.getId(), ZonedDateTime.now(ZoneId.of("UTC")).minusYears(10),
 								ZonedDateTime.now(ZoneId.of("UTC")).plusYears(10), 100d));
 
-				if (aircraft.getRanking() == CommunicationProtocol.MASTER) {
+				if (aircraft.getRanking() == Ranking.MASTER) {
 					if (scenario.hasAircraft() && (0 < scenario.getWaypoints().size())) {
 						scenario.removeWaypoint(0);
 					}
 					scenario.addWaypoint(0, waypoint);
 					scenario.setAircraft(aircraft);
 				}
-				if (aircraft.getRanking() == CommunicationProtocol.SLAVE) {
+				if (aircraft.getRanking() == Ranking.SLAVE) {
 					int slaveCount = scenario.getSlaveAircrafts().size();
 					scenario.addSlaveAircraft(aircraft);
 					scenario.addSlaveWaypoint(slaveCount, waypoint);
@@ -1583,15 +1589,15 @@ public class WorldPresenter implements Initializable {
 	}
 
 	/**
-	 * Realizes an aircraft change listener.
+	 * Realizes a slave aircrafts change listener.
 	 * 
-	 * @author Stephan Heinemann
+	 * @author Henrique Ferreira
 	 *
 	 */
 	private class SlaveAircraftsChangeListener implements PropertyChangeListener {
 
 		/**
-		 * Initializes the aircraft if it changes.
+		 * Initializes the aircraft and slave aircrafts if they change.
 		 * 
 		 * @param evt the property change event
 		 * 
@@ -1626,15 +1632,15 @@ public class WorldPresenter implements Initializable {
 	}
 
 	/**
-	 * Realizes an environment change listener.
+	 * Realizes a desirability zone change listener.
 	 * 
-	 * @author Stephan Heinemann
+	 * @author Henrique Ferreira
 	 *
 	 */
-	private class DesirabilityEnvironmentsChangeListener implements PropertyChangeListener {
+	private class DesirabilityZonesChangeListener implements PropertyChangeListener {
 
 		/**
-		 * Initializes the environment if it changes.
+		 * Initializes the desirability zones if they change.
 		 * 
 		 * @param evt the property change event
 		 * 
@@ -1642,7 +1648,7 @@ public class WorldPresenter implements Initializable {
 		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			initDesirabilityEnvironments();
+			initDesirabilityZones();
 		}
 	}
 
@@ -1689,15 +1695,15 @@ public class WorldPresenter implements Initializable {
 	}
 
 	/**
-	 * Realizes a trajectory change listener.
+	 * Realizes a slave trajectories change listener.
 	 * 
-	 * @author Stephan Heinemann
+	 * @author Henrique Ferreira
 	 *
 	 */
 	private class SlaveTrajectoriesChangeListener implements PropertyChangeListener {
 
 		/**
-		 * Initializes the plan if the trajectory changes.
+		 * Initializes the plan if the slave trajectories change.
 		 * 
 		 * @param evt the property change event
 		 * 
@@ -1862,28 +1868,6 @@ public class WorldPresenter implements Initializable {
 				break;
 			case WorldPresenter.ACTION_ENVIRONMENT_SETUP:
 				setup(SetupDialog.ENVIRONMENT_TAB_INDEX);
-				break;
-			}
-		}
-	}
-
-	/**
-	 * Realizes a desirability zone control listener.
-	 * 
-	 * @author Henrique Ferreira
-	 *
-	 */
-	private class DesirabilityZoneControlListener implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			switch (e.getActionCommand()) {
-			case WorldPresenter.ACTION_DESIRABILITY_ENCLOSE:
-				setWorldMode(WorldMode.ENVIRONMENT);
-				desirabilitySectorSelector.enable();
-				break;
-			case WorldPresenter.ACTION_DESIRABILITY_SETUP:
-				setupDesirability();
 				break;
 			}
 		}
@@ -2081,6 +2065,28 @@ public class WorldPresenter implements Initializable {
 				break;
 			case WorldPresenter.ACTION_VIEW_RESET:
 				view(false);
+				break;
+			}
+		}
+	}
+	
+	/**
+	 * Realizes a desirability zone control listener.
+	 * 
+	 * @author Henrique Ferreira
+	 *
+	 */
+	private class DesirabilityZoneControlListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			switch (e.getActionCommand()) {
+			case WorldPresenter.ACTION_DESIRABILITY_ENCLOSE:
+				setWorldMode(WorldMode.ENVIRONMENT);
+				desirabilitySectorSelector.enable();
+				break;
+			case WorldPresenter.ACTION_DESIRABILITY_SETUP:
+				setupDesirability();
 				break;
 			}
 		}

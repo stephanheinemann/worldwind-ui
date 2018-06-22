@@ -29,8 +29,6 @@
  */
 package com.cfar.swim.worldwind.ui.desirabilityzones;
 
-import com.cfar.swim.worldwind.aircraft.Aircraft;
-import com.cfar.swim.worldwind.registries.Specification;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.session.Setup;
@@ -42,78 +40,82 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
+
 /**
+ * Realizes a desirability zone dialog to set the desirability value.
+ * 
  * @author Henrique Ferreira
  *
  */
 public class DesirabilityDialog extends Dialog<Double> {
-	
-	/** the waypoint dialog title for addition */
+
+	/** the desirability dialog title for addition */
 	public static final String TITLE_DESIRABILITY = "Set Desirability Zone";
-	
-	/** the waypoint dialog header for addition */
+
+	/** the desirability dialog header for addition */
 	public static final String HEADER_DESIRABILITY = "Set the zone desirability";
-	
-	/** the waypoint latitude node identifier */
+
+	/** the desirability value node identifier */
 	private static final String DESIRABILITY_ID = "#desirability";
-	
-	/** the latitude text field of this waypoint dialog */
+
+	/** the desirability value text field of this desirability dialog */
 	private TextField desirability;
-	
-	/** indicates whether or not the latitude input is valid */
+
+	/** indicates whether or not the desirability value input is valid */
 	private boolean isValidDesirability = false;
-	
+
 	/**
-	 * Constructs a new waypoint dialog with a specified title and header.
+	 * Constructs a new desirability zone dialog with a specified title and header.
 	 * 
-	 * @param title the title of this waypoint dialog
-	 * @param header the header of this waypoint dialog
+	 * @param title the title of this desirability dialog
+	 * @param header the header of this desirability dialog
+	 * @param icon the icon of this desirabibility dialog
 	 */
 	public DesirabilityDialog(String title, String header, String icon) {
 		this.setTitle(title);
 		this.setHeaderText(header);
-		
+
 		ImageView imageView = new ImageView(icon);
 		imageView.setPreserveRatio(true);
 		imageView.setFitHeight(50d);
 		this.setGraphic(imageView);
-		
+
 		this.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-		
+
 		DesirabilityView desirabilityView = new DesirabilityView();
 		desirability = ((TextField) desirabilityView.getView().lookup(DesirabilityDialog.DESIRABILITY_ID));
 		desirability.textProperty().addListener(new DesirabilityValidator());
 		this.getDialogPane().setContent(desirabilityView.getView());
-		
+
 		this.setResultConverter(dialogButton -> {
 			double desirability = 0.5d;
 			Setup setup = null;
 			if (dialogButton.equals(ButtonType.OK)) {
 				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 				setup = session.getSetup();
-				
+
 				desirability = Double.parseDouble(this.desirability.getText());
 				setup.setDesirabilitySpecification(desirability);
 			}
-			
+
 			return desirability;
 		});
 	}
-	
+
 	/**
-	 * Realizes a latitude validator.
+	 * Realizes a desirability value validator.
 	 * 
-	 * @author Stephan Heinemann
+	 * @author Henrique Ferreira
 	 *
 	 */
 	private class DesirabilityValidator implements ChangeListener<String> {
-		
+
 		/**
-		 * Validates the latitude if it changes.
+		 * Validates the desirability value if it changes.
 		 * 
 		 * @param observable the observable
-		 * @param oldValue the old latitude value
-		 * @param newValue the new latitude value
+		 * @param oldValue the old desirability value
+		 * @param newValue the new desirability value
 		 */
 		@Override
 		public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {

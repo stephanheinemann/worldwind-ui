@@ -32,6 +32,8 @@ package com.cfar.swim.worldwind.ui.desirabilityzones;
 import com.airhacks.afterburner.views.FXMLView;
 
 /**
+ * Realizes a desirability view.
+ * 
  * @author Henrique Ferreira
  *
  */

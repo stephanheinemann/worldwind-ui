@@ -37,17 +37,19 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.TextField;
 
 /**
+ * Realizes a presenter for a desirability view.
+ * 
  * @author Henrique Ferreira
  *
  */
 public class DesirabilityPresenter implements Initializable {
 	
-	/** the altitude text field of the waypoint view */
+	/** the desirability value text field of the waypoint view */
 	@FXML
 	private TextField desirability;
 	
 	/**
-	 * Initializes this waypoint presenter.
+	 * Initializes this desirability presenter.
 	 * 
 	 * @param location unused
 	 * @param resources unused
