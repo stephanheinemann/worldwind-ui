@@ -62,12 +62,15 @@ import org.xml.sax.InputSource;
 
 import com.cfar.swim.worldwind.ai.PlanRevisionListener;
 import com.cfar.swim.worldwind.ai.Planner;
+import com.cfar.swim.worldwind.ai.prm.basicprm.BasicPRM;
+import com.cfar.swim.worldwind.ai.prm.basicprm.QueryPlanner;
 import com.cfar.swim.worldwind.ai.prm.mabprm.MABPRM;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
 import com.cfar.swim.worldwind.aircraft.Ranking;
 import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.iwxxm.IwxxmLoader;
 import com.cfar.swim.worldwind.planning.CostInterval;
+import com.cfar.swim.worldwind.planning.DesirabilityZone;
 import com.cfar.swim.worldwind.planning.Environment;
 import com.cfar.swim.worldwind.planning.TrackPoint;
 import com.cfar.swim.worldwind.planning.Trajectory;
@@ -81,6 +84,7 @@ import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.ui.WorldwindPlanner;
 import com.cfar.swim.worldwind.ui.desirabilityzones.DesirabilityDialog;
+import com.cfar.swim.worldwind.ui.plan.parameters.ParametersDialog;
 import com.cfar.swim.worldwind.ui.planner.PlannerAlert;
 import com.cfar.swim.worldwind.ui.planner.PlannerAlertResult;
 import com.cfar.swim.worldwind.ui.setup.SetupDialog;
@@ -467,10 +471,9 @@ public class WorldPresenter implements Initializable {
 			@Override
 			public void run() {
 				desirabilityZonesLayer.removeAllRenderables();
-				for (Environment environment : scenario.getDesirabilityZones()) {
-					desirabilityZonesLayer.addRenderable(environment);
+				for (DesirabilityZone zone : scenario.getDesirabilityZones()) {
+					desirabilityZonesLayer.addRenderable(zone);
 				}
-				// desirabilityEnvironmentsLayer.addRenderables(scenario.getDesirabilityEnvironments());
 				wwd.redraw();
 			}
 		});
@@ -747,6 +750,25 @@ public class WorldPresenter implements Initializable {
 	}
 
 	/**
+	 * Opens the setup algorithm parameters dialog.
+	 */
+	private void setupParameters(ArrayList<Double> parameters) {
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				setWorldMode(WorldMode.VIEW);
+				ParametersDialog parametersDialog = new ParametersDialog(ParametersDialog.TITLE_DESIRABILITY,
+						ParametersDialog.HEADER_DESIRABILITY, setupIcon);
+				Optional<ArrayList<Double>> inputParameters = parametersDialog.showAndWait();
+				if (inputParameters.isPresent()) {
+					ArrayList<Double> newParams = inputParameters.get();
+					parameters.addAll(newParams);
+				}
+			}
+		});
+	}
+
+	/**
 	 * Opens a file dialog and loads a SWIM file asynchronously.
 	 * 
 	 * @param title the title of the file dialog
@@ -885,6 +907,24 @@ public class WorldPresenter implements Initializable {
 								}
 							}
 						}
+
+						public void reviseParameters(ArrayList<Double> parameters) {
+							if (planner instanceof BasicPRM) {
+								BasicPRM bplanner = (BasicPRM) planner;
+								if (bplanner.getPlanner() == QueryPlanner.ARA) {
+									setupParameters(parameters);
+									while (parameters.isEmpty()) {
+										try {
+											Thread.sleep(1000);
+										} catch (InterruptedException e) {
+											// TODO Auto-generated catch block
+											e.printStackTrace();
+										}
+									}
+									setWorldMode(WorldMode.PLANNING);
+								}
+							}
+						}
 					});
 
 					if (waypoints.isEmpty()) {
@@ -946,7 +986,22 @@ public class WorldPresenter implements Initializable {
 				if (!datalink.isConnected()) {
 					datalink.connect();
 				}
+				if (!scenario.hasAircraft()) {
+					Waypoint waypoint = new Waypoint(datalink.getAircraftPosition());
+					waypoint.setDepiction(
+							new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, waypoint, null)));
+					waypoint.getDepiction().setVisible(true);
 
+					Specification<Aircraft> aircraftSpec = session.getSetup().getAircraftSpecification();
+					Aircraft aircraft = session.getAircraftFactory().createInstance(aircraftSpec);
+					aircraft.moveTo(waypoint);
+					aircraft.setCostInterval(
+							new CostInterval(aircraftSpec.getId(), ZonedDateTime.now(ZoneId.of("UTC")).minusYears(10),
+									ZonedDateTime.now(ZoneId.of("UTC")).plusYears(10), 100d));
+
+					scenario.addWaypoint(0, waypoint);
+					scenario.setAircraft(aircraft);
+				}
 				if (datalink.isConnected()) {
 					if (datalink.isMonitoring()) {
 						datalink.stopMonitoring();
@@ -2069,7 +2124,7 @@ public class WorldPresenter implements Initializable {
 			}
 		}
 	}
-	
+
 	/**
 	 * Realizes a desirability zone control listener.
 	 * 

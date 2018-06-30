@@ -61,8 +61,12 @@ public class DesirabilityDialog extends Dialog<Double> {
 	/** the desirability value text field of this desirability dialog */
 	private TextField desirability;
 
+	/** the desirability double value of this desirability dialog */
+	private double desirabilityValue;
+	
 	/** indicates whether or not the desirability value input is valid */
 	private boolean isValidDesirability = false;
+	
 
 	/**
 	 * Constructs a new desirability zone dialog with a specified title and header.
@@ -81,24 +85,27 @@ public class DesirabilityDialog extends Dialog<Double> {
 		this.setGraphic(imageView);
 
 		this.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+		this.getDialogPane().lookupButton(ButtonType.OK).setDisable(true);
 
 		DesirabilityView desirabilityView = new DesirabilityView();
 		desirability = ((TextField) desirabilityView.getView().lookup(DesirabilityDialog.DESIRABILITY_ID));
 		desirability.textProperty().addListener(new DesirabilityValidator());
 		this.getDialogPane().setContent(desirabilityView.getView());
+		
+		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+		desirability.setText(Double.toString(session.getSetup().getDesirabilitySpecification()));
 
 		this.setResultConverter(dialogButton -> {
-			double desirability = 0.5d;
-			Setup setup = null;
+			Setup setup = session.getSetup();
 			if (dialogButton.equals(ButtonType.OK)) {
-				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-				setup = session.getSetup();
-
-				desirability = Double.parseDouble(this.desirability.getText());
-				setup.setDesirabilitySpecification(desirability);
+				desirabilityValue = Double.parseDouble(this.desirability.getText());
+				setup.setDesirabilitySpecification(desirabilityValue);
+			}
+			if (dialogButton.equals(ButtonType.CANCEL)) {
+				desirabilityValue = setup.getDesirabilitySpecification();
 			}
 
-			return desirability;
+			return desirabilityValue;
 		});
 	}
 

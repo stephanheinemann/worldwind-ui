@@ -61,43 +61,43 @@ import javafx.scene.control.ScrollPane;
  *
  */
 public class SetupPresenter implements Initializable {
-	
+
 	/** the aircraft properties pane of the setup view */
 	@FXML
 	private ScrollPane aircraftPropertiesPane;
-	
+
 	/** the environment properties pane of the setup view */
 	@FXML
 	private ScrollPane envPropertiesPane;
-	
+
 	/** the planner properties pane of the setup view */
 	@FXML
 	private ScrollPane plannerPropertiesPane;
-	
+
 	/** the datalink properties pane of the setup view */
 	@FXML
 	private ScrollPane datalinkPropertiesPane;
-	
+
 	/** the aircraft selector of the setup view */
 	@FXML
 	private ComboBox<String> aircraft;
-	
+
 	/** the environment selector of the setup view */
 	@FXML
 	private ComboBox<String> environment;
-	
+
 	/** the planner selector of the setup view */
 	@FXML
 	private ComboBox<String> planner;
-	
+
 	/** the datalink selector of the setup view */
 	@FXML
 	private ComboBox<String> datalink;
-	
+
 	/** the setup model to be modified in the setup view */
 	@Inject
 	private SetupModel setupModel;
-	
+
 	/**
 	 * Initializes this setup presenter.
 	 * 
@@ -113,7 +113,7 @@ public class SetupPresenter implements Initializable {
 		this.initPlanner();
 		this.initDatalink();
 	}
-	
+
 	/**
 	 * Initializes the aircraft setup of the setup view.
 	 */
@@ -125,18 +125,19 @@ public class SetupPresenter implements Initializable {
 				for (Specification<Aircraft> aircraftSpec : session.getAircraftSpecifications()) {
 					aircraft.getItems().add(aircraftSpec.getId());
 				}
-				
+
 				Specification<Aircraft> aircraftSpec = session.getSetup().getAircraftSpecification();
 				aircraft.getSelectionModel().select(aircraftSpec.getId());
 				setupModel.setAircraftProperties(aircraftSpec.getProperties().clone());
-				PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getAircraftProperties()));
+				PropertySheet propertySheet = new PropertySheet(
+						BeanPropertyUtils.getProperties(setupModel.getAircraftProperties()));
 				aircraftPropertiesPane.setContent(propertySheet);
 				aircraft.valueProperty().addListener(new AircraftChangeListener());
 				aircraft.layout();
 			}
 		});
 	}
-	
+
 	/**
 	 * Initializes the environment setup of the setup view.
 	 */
@@ -148,18 +149,19 @@ public class SetupPresenter implements Initializable {
 				for (Specification<Environment> envSpec : session.getEnvironmentSpecifications()) {
 					environment.getItems().add(envSpec.getId());
 				}
-				
+
 				Specification<Environment> envSpec = session.getSetup().getEnvironmentSpecification();
 				environment.getSelectionModel().select(envSpec.getId());
 				setupModel.setEnvironmentProperties(envSpec.getProperties().clone());
-				PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getEnvironmentProperties()));
+				PropertySheet propertySheet = new PropertySheet(
+						BeanPropertyUtils.getProperties(setupModel.getEnvironmentProperties()));
 				envPropertiesPane.setContent(propertySheet);
 				environment.valueProperty().addListener(new EnvironmentChangeListener());
 				environment.layout();
 			}
 		});
 	}
-	
+
 	/**
 	 * Initializes the planner of the setup view.
 	 */
@@ -171,18 +173,19 @@ public class SetupPresenter implements Initializable {
 				for (Specification<Planner> plannerSpec : session.getPlannerSpecifications()) {
 					planner.getItems().add(plannerSpec.getId());
 				}
-				
+
 				Specification<Planner> plannerSpec = session.getSetup().getPlannerSpecification();
 				planner.getSelectionModel().select(plannerSpec.getId());
 				setupModel.setPlannerProperties(plannerSpec.getProperties().clone());
-				PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getPlannerProperties()));
+				PropertySheet propertySheet = new PropertySheet(
+						BeanPropertyUtils.getProperties(setupModel.getPlannerProperties()));
 				plannerPropertiesPane.setContent(propertySheet);
 				planner.valueProperty().addListener(new PlannerChangeListener());
 				planner.layout();
 			}
 		});
 	}
-	
+
 	/**
 	 * Initializes the datalink of the setup view.
 	 */
@@ -194,18 +197,19 @@ public class SetupPresenter implements Initializable {
 				for (Specification<Datalink> datalinkSpec : session.getDatalinkSpecifications()) {
 					datalink.getItems().add(datalinkSpec.getId());
 				}
-				
+
 				Specification<Datalink> datalinkSpec = session.getSetup().getDatalinkSpecification();
 				datalink.getSelectionModel().select(datalinkSpec.getId());
 				setupModel.setDatalinkProperties(datalinkSpec.getProperties().clone());
-				PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getDatalinkProperties()));
+				PropertySheet propertySheet = new PropertySheet(
+						BeanPropertyUtils.getProperties(setupModel.getDatalinkProperties()));
 				datalinkPropertiesPane.setContent(propertySheet);
 				datalink.valueProperty().addListener(new DatalinkChangeListener());
 				datalink.layout();
 			}
 		});
 	}
-	
+
 	/**
 	 * Realizes an aircraft change listener.
 	 * 
@@ -213,7 +217,7 @@ public class SetupPresenter implements Initializable {
 	 *
 	 */
 	private class AircraftChangeListener implements ChangeListener<String> {
-		
+
 		/**
 		 * Updates the aircraft setup if the aircraft changes.
 		 * 
@@ -231,14 +235,15 @@ public class SetupPresenter implements Initializable {
 					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 					Specification<Aircraft> aircraftSpec = session.getAircraftSpecification(newAircraftId);
 					setupModel.setAircraftProperties(aircraftSpec.getProperties().clone());
-					PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getAircraftProperties()));
+					PropertySheet propertySheet = new PropertySheet(
+							BeanPropertyUtils.getProperties(setupModel.getAircraftProperties()));
 					aircraftPropertiesPane.setContent(propertySheet);
 					aircraftPropertiesPane.layout();
 				}
 			});
 		}
 	}
-	
+
 	/**
 	 * Realizes an environment change listener.
 	 * 
@@ -246,7 +251,7 @@ public class SetupPresenter implements Initializable {
 	 *
 	 */
 	private class EnvironmentChangeListener implements ChangeListener<String> {
-		
+
 		/**
 		 * Updates the environment setup if the environment changes.
 		 * 
@@ -264,14 +269,15 @@ public class SetupPresenter implements Initializable {
 					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 					Specification<Environment> envSpec = session.getEnvironmentSpecification(newEnvId);
 					setupModel.setEnvironmentProperties(envSpec.getProperties().clone());
-					PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getEnvironmentProperties()));
+					PropertySheet propertySheet = new PropertySheet(
+							BeanPropertyUtils.getProperties(setupModel.getEnvironmentProperties()));
 					envPropertiesPane.setContent(propertySheet);
 					envPropertiesPane.layout();
 				}
 			});
 		}
 	}
-	
+
 	/**
 	 * Realizes a planner change listener.
 	 * 
@@ -279,7 +285,7 @@ public class SetupPresenter implements Initializable {
 	 *
 	 */
 	private class PlannerChangeListener implements ChangeListener<String> {
-		
+
 		/**
 		 * Updates the planner setup if the planner changes.
 		 * 
@@ -297,14 +303,15 @@ public class SetupPresenter implements Initializable {
 					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 					Specification<Planner> plannerSpec = session.getPlannerSpecification(newPlannerId);
 					setupModel.setPlannerProperties(plannerSpec.getProperties().clone());
-					PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getPlannerProperties()));
+					PropertySheet propertySheet = new PropertySheet(
+							BeanPropertyUtils.getProperties(setupModel.getPlannerProperties()));
 					plannerPropertiesPane.setContent(propertySheet);
 					plannerPropertiesPane.layout();
 				}
 			});
 		}
 	}
-	
+
 	/**
 	 * Realizes a datalink change listener.
 	 * 
@@ -312,7 +319,7 @@ public class SetupPresenter implements Initializable {
 	 *
 	 */
 	private class DatalinkChangeListener implements ChangeListener<String> {
-		
+
 		/**
 		 * Updates the datalink setup if the planner changes.
 		 * 
@@ -330,12 +337,13 @@ public class SetupPresenter implements Initializable {
 					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 					Specification<Datalink> datalinkSpec = session.getDatalinkSpecification(newDatalinkId);
 					setupModel.setDatalinkProperties(datalinkSpec.getProperties().clone());
-					PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getDatalinkProperties()));
+					PropertySheet propertySheet = new PropertySheet(
+							BeanPropertyUtils.getProperties(setupModel.getDatalinkProperties()));
 					datalinkPropertiesPane.setContent(propertySheet);
 					datalinkPropertiesPane.layout();
 				}
 			});
 		}
 	}
-	
+
 }
