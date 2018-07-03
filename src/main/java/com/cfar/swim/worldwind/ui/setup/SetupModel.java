@@ -30,6 +30,7 @@
 package com.cfar.swim.worldwind.ui.setup;
 
 import com.cfar.swim.worldwind.ai.Planner;
+import com.cfar.swim.worldwind.ai.PlannerFamily;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
 import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.planning.Environment;
@@ -51,6 +52,9 @@ public class SetupModel {
 	
 	/** the environment properties of this setup model */
 	private Properties<Environment> environmentProperties;
+	
+	/** */
+	private PlannerFamily plannerFamily;
 	
 	/** the planner properties of this setup model */
 	private Properties<Planner> plannerProperties;
@@ -94,6 +98,20 @@ public class SetupModel {
 		this.environmentProperties = environmentProperties;
 	}
 	
+	/**
+	 * @return the plannerFamily
+	 */
+	public PlannerFamily getPlannerFamily() {
+		return plannerFamily;
+	}
+
+	/**
+	 * @param plannerFamily the plannerFamily to set
+	 */
+	public void setPlannerFamily(PlannerFamily plannerFamily) {
+		this.plannerFamily = plannerFamily;
+	}
+
 	/**
 	 * Gets the planner properties of this setup model.
 	 * 

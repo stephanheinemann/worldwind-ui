@@ -30,6 +30,7 @@
 package com.cfar.swim.worldwind.ui.setup;
 
 import com.cfar.swim.worldwind.ai.Planner;
+import com.cfar.swim.worldwind.ai.PlannerFamily;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
 import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.planning.Environment;
@@ -117,6 +118,10 @@ public class SetupDialog extends Dialog<Setup> {
 				Specification<Environment> envSpec = session.getEnvironmentSpecification(envId);
 				envSpec.setProperties(setupModel.getEnvironmentProperties());
 				setup.setEnvironmentSpecification(envSpec);
+				
+				String plannerFamilyId = this.setupView.getPlannerFamily().getValue();
+				PlannerFamily plannerFamily = PlannerFamily.fromString(plannerFamilyId);
+				setup.setPlannerFamily(plannerFamily);
 				
 				String plannerId = this.setupView.getPlanner().getValue();
 				Specification<Planner> plannerSpec = session.getPlannerSpecification(plannerId);

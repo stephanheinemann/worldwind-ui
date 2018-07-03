@@ -29,23 +29,30 @@
  */
 package com.cfar.swim.worldwind.ui.setup;
 
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ResourceBundle;
 
 import javax.inject.Inject;
-import javax.swing.JComboBox;
 
 import org.controlsfx.control.PropertySheet;
+import org.controlsfx.control.PropertySheet.Item;
 import org.controlsfx.property.BeanPropertyUtils;
 
 import com.cfar.swim.worldwind.ai.Planner;
 import com.cfar.swim.worldwind.ai.PlannerFamily;
+import com.cfar.swim.worldwind.ai.prm.basicprm.QueryPlanner;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
 import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.planning.Environment;
 import com.cfar.swim.worldwind.registries.Specification;
+import com.cfar.swim.worldwind.registries.planners.BasicPRMProperties;
+import com.cfar.swim.worldwind.registries.planners.BasicPRMPropertiesBeanInfo;
 import com.cfar.swim.worldwind.registries.planners.PlannerProperties;
-import com.cfar.swim.worldwind.registries.planners.RRTreeProperties;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.ui.WorldwindPlanner;
@@ -57,7 +64,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.text.Font;
 import javafx.scene.control.Label;
 
 /**
@@ -325,12 +331,14 @@ public class SetupPresenter implements Initializable {
 				public void run() {
 					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 					planner.getItems().clear();
-					session.getSetup().setPlannerFamily(PlannerFamily.fromString(newPlannerId));
+					setupModel.setPlannerFamily(PlannerFamily.fromString(newPlannerId));
 					for (Specification<Planner> plannerSpec : session
-							.getPlannerSpecifications(session.getSetup().getPlannerFamily())) {
-						session.getSetup().setPlannerSpecification(plannerSpec);
+							.getPlannerSpecifications(setupModel.getPlannerFamily())) {
 						planner.getItems().add(plannerSpec.getId());
 					}
+					Specification<Planner> plannerSpec = session.getPlannerSpecification(planner.getItems().get(0));
+					setupModel.setPlannerProperties(plannerSpec.getProperties().clone());
+					planner.getSelectionModel().select(plannerSpec.getId());
 				}
 			});
 		}
@@ -358,11 +366,77 @@ public class SetupPresenter implements Initializable {
 			Platform.runLater(new Runnable() {
 				@Override
 				public void run() {
+					// TODO : when the planner family is changed, this listener is called two times.
+					// newPlannerId is null on the first time, and non-null on the second.
+					Specification<Planner> plannerSpec = null;
 					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-					Specification<Planner> plannerSpec = session.getPlannerSpecification(newPlannerId);
+					if (newPlannerId == null) {
+						plannerSpec = session.getPlannerSpecification(planner.getItems().get(0));
+					} else {
+						plannerSpec = session.getPlannerSpecification(newPlannerId);
+					}
 					setupModel.setPlannerProperties(plannerSpec.getProperties().clone());
+
+					// TODO: NOT WORKING because the properties set below are overriden by the
+					// properties in the bean info which are read later.
+					if (setupModel.getPlannerProperties() instanceof BasicPRMProperties) {
+						BasicPRMProperties basicPRMProperties = (BasicPRMProperties) setupModel.getPlannerProperties();
+						Method initialEpsilon = null;
+						Method finalEpsilon = null;
+						Method deflationStep = null;
+
+						if (basicPRMProperties.getQueryPlanner() == QueryPlanner.FAS) {
+							BeanInfo beanInfo;
+							try {
+								beanInfo = Introspector.getBeanInfo(setupModel.getPlannerProperties().getClass(),
+										Object.class);
+								for (PropertyDescriptor p : beanInfo.getPropertyDescriptors()) {
+									if (p.getDisplayName() == "Initial Epsilon") {
+										initialEpsilon = p.getWriteMethod();
+										p.setWriteMethod(null);
+										System.out.println(p.getWriteMethod());
+									}
+									if (p.getDisplayName() == "Final Epsilon") {
+										finalEpsilon = p.getWriteMethod();
+										p.setWriteMethod(null);
+									}
+									if (p.getDisplayName() == "Deflation Step") {
+										deflationStep = p.getWriteMethod();
+										p.setWriteMethod(null);
+									}
+								}
+							} catch (IntrospectionException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+						// if (basicPRMProperties.getQueryPlanner() == QueryPlanner.ARA) {
+						// BeanInfo beanInfo;
+						// try {
+						// beanInfo = Introspector.getBeanInfo(BasicPRMPropertiesBeanInfo.class,
+						// Object.class);
+						// for (PropertyDescriptor p : beanInfo.getPropertyDescriptors()) {
+						// if(p.getDisplayName()=="Initial Epsilon") {
+						// p.setWriteMethod(initialEpsilon);
+						// }
+						// if(p.getDisplayName()=="Final Epsilon") {
+						// p.setWriteMethod(finalEpsilon);
+						// }
+						// if(p.getDisplayName()=="Deflation Step") {
+						// p.setWriteMethod(deflationStep);
+						// }
+						// }
+						// } catch (IntrospectionException e) {
+						// // TODO Auto-generated catch block
+						// e.printStackTrace();
+						// }
+						// }
+					}
 					PropertySheet propertySheet = new PropertySheet(
 							BeanPropertyUtils.getProperties(setupModel.getPlannerProperties()));
+					for (Item item : propertySheet.getItems()) {
+						System.out.println(item.isEditable());
+					}
 					propertySheet.setMode(PropertySheet.Mode.CATEGORY);
 					plannerPropertiesPane.setContent(propertySheet);
 					PlannerProperties plannerProperties = (PlannerProperties) setupModel.getPlannerProperties();
