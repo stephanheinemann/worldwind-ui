@@ -69,7 +69,7 @@ public class DesirabilityDialog extends Dialog<Double> {
 	
 
 	/**
-	 * Constructs a new desirability zone dialog with a specified title and header.
+	 * Constructs a new desirability zone dialog with a specified title, header and icon.
 	 * 
 	 * @param title the title of this desirability dialog
 	 * @param header the header of this desirability dialog

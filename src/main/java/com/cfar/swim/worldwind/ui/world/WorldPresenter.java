@@ -875,7 +875,7 @@ public class WorldPresenter implements Initializable {
 								if (session.getActiveScenario().hasTrajectory()) {
 									datalink.uploadFlightPath(session.getActiveScenario().getTrajectory());
 									System.out.println("uploaded");
-									if(datalink.getAircraftMode()!="AUTO") {
+									if (datalink.getAircraftMode() != "AUTO") {
 										System.out.println("takeoffing");
 										datalink.takeOff();
 									}
@@ -1397,16 +1397,16 @@ public class WorldPresenter implements Initializable {
 	}
 
 	/**
-	 * Realizes a sector change listener.
+	 * Realizes a desirability sector change listener.
 	 * 
-	 * @author Stephan Heinemann
+	 * @author Henrique Ferreira
 	 *
 	 */
 	private class DesirabilitySectorChangeListener implements PropertyChangeListener {
 
 		/**
-		 * Obtains a selected sector and creates an environment based on the sector if
-		 * it has changed.
+		 * Obtains a selected sector and creates a desirability zone based on the sector
+		 * if it has changed.
 		 * 
 		 * @param evt the property change event
 		 * 
@@ -1717,6 +1717,7 @@ public class WorldPresenter implements Initializable {
 			initScenario();
 			initAircraft();
 			initEnvironment();
+			initDesirabilityZones();
 			initObstacles();
 			initPlan();
 			initTrack();
