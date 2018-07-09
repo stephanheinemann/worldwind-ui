@@ -29,29 +29,20 @@
  */
 package com.cfar.swim.worldwind.ui.setup;
 
-import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
 import org.controlsfx.control.PropertySheet;
-import org.controlsfx.control.PropertySheet.Item;
 import org.controlsfx.property.BeanPropertyUtils;
 
 import com.cfar.swim.worldwind.ai.Planner;
 import com.cfar.swim.worldwind.ai.PlannerFamily;
-import com.cfar.swim.worldwind.ai.prm.basicprm.QueryPlanner;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
 import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.planning.Environment;
 import com.cfar.swim.worldwind.registries.Specification;
-import com.cfar.swim.worldwind.registries.planners.BasicPRMProperties;
-import com.cfar.swim.worldwind.registries.planners.BasicPRMPropertiesBeanInfo;
 import com.cfar.swim.worldwind.registries.planners.PlannerProperties;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
@@ -207,10 +198,26 @@ public class SetupPresenter implements Initializable {
 				propertySheet.setMode(PropertySheet.Mode.CATEGORY);
 				plannerPropertiesPane.setContent(propertySheet);
 				plannerDescription.setText(((PlannerProperties) setupModel.getPlannerProperties()).getDescription());
-
+				plannerDescription.setWrapText(true);
 				plannerFamily.valueProperty().addListener(new PlannerFamilyChangeListener());
 				planner.valueProperty().addListener(new PlannerChangeListener());
 				planner.layout();
+
+				// Callback<Item, PropertyEditor<?>> oldFactory =
+				// propertySheet.getPropertyEditorFactory();
+				// propertySheet.setPropertyEditorFactory(new Callback<PropertySheet.Item,
+				// PropertyEditor<?>>() {
+				// @Override
+				// public PropertyEditor<?> call(PropertySheet.Item item) {
+				// if (item.getName() == "Planner") {
+				// QueryPlannerPropertyEditor queryEditor = new
+				// QueryPlannerPropertyEditor(item);
+				// return queryEditor.getPropertyEditor();
+				// }
+				// return oldFactory.call(item);
+				// }
+				//
+				// });
 			}
 		});
 	}
@@ -377,66 +384,8 @@ public class SetupPresenter implements Initializable {
 					}
 					setupModel.setPlannerProperties(plannerSpec.getProperties().clone());
 
-					// TODO: NOT WORKING because the properties set below are overriden by the
-					// properties in the bean info which are read later.
-					if (setupModel.getPlannerProperties() instanceof BasicPRMProperties) {
-						BasicPRMProperties basicPRMProperties = (BasicPRMProperties) setupModel.getPlannerProperties();
-						Method initialEpsilon = null;
-						Method finalEpsilon = null;
-						Method deflationStep = null;
-
-						if (basicPRMProperties.getQueryPlanner() == QueryPlanner.FAS) {
-							BeanInfo beanInfo;
-							try {
-								beanInfo = Introspector.getBeanInfo(setupModel.getPlannerProperties().getClass(),
-										Object.class);
-								for (PropertyDescriptor p : beanInfo.getPropertyDescriptors()) {
-									if (p.getDisplayName() == "Initial Epsilon") {
-										initialEpsilon = p.getWriteMethod();
-										p.setWriteMethod(null);
-										System.out.println(p.getWriteMethod());
-									}
-									if (p.getDisplayName() == "Final Epsilon") {
-										finalEpsilon = p.getWriteMethod();
-										p.setWriteMethod(null);
-									}
-									if (p.getDisplayName() == "Deflation Step") {
-										deflationStep = p.getWriteMethod();
-										p.setWriteMethod(null);
-									}
-								}
-							} catch (IntrospectionException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-						}
-						// if (basicPRMProperties.getQueryPlanner() == QueryPlanner.ARA) {
-						// BeanInfo beanInfo;
-						// try {
-						// beanInfo = Introspector.getBeanInfo(BasicPRMPropertiesBeanInfo.class,
-						// Object.class);
-						// for (PropertyDescriptor p : beanInfo.getPropertyDescriptors()) {
-						// if(p.getDisplayName()=="Initial Epsilon") {
-						// p.setWriteMethod(initialEpsilon);
-						// }
-						// if(p.getDisplayName()=="Final Epsilon") {
-						// p.setWriteMethod(finalEpsilon);
-						// }
-						// if(p.getDisplayName()=="Deflation Step") {
-						// p.setWriteMethod(deflationStep);
-						// }
-						// }
-						// } catch (IntrospectionException e) {
-						// // TODO Auto-generated catch block
-						// e.printStackTrace();
-						// }
-						// }
-					}
 					PropertySheet propertySheet = new PropertySheet(
 							BeanPropertyUtils.getProperties(setupModel.getPlannerProperties()));
-					for (Item item : propertySheet.getItems()) {
-						System.out.println(item.isEditable());
-					}
 					propertySheet.setMode(PropertySheet.Mode.CATEGORY);
 					plannerPropertiesPane.setContent(propertySheet);
 					PlannerProperties plannerProperties = (PlannerProperties) setupModel.getPlannerProperties();
@@ -466,7 +415,8 @@ public class SetupPresenter implements Initializable {
 		 * @see ChangeListener#changed(ObservableValue, Object, Object)
 		 */
 		@Override
-		public void changed(ObservableValue<? extends String> observable, String oldDatalinkId, String newDatalinkId) {
+		public void changed(ObservableValue<? extends String> observable, String oldDatalinkId,
+				String newDatalinkId) {
 			Platform.runLater(new Runnable() {
 				@Override
 				public void run() {

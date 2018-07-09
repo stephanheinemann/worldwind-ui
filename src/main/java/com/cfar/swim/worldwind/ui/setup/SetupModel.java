@@ -53,7 +53,7 @@ public class SetupModel {
 	/** the environment properties of this setup model */
 	private Properties<Environment> environmentProperties;
 	
-	/** */
+	/** the planner family of this setup model*/
 	private PlannerFamily plannerFamily;
 	
 	/** the planner properties of this setup model */
@@ -99,14 +99,18 @@ public class SetupModel {
 	}
 	
 	/**
-	 * @return the plannerFamily
+	 * Gets the planner family of this setup model.
+	 * 
+	 * @return the plannerFamily of this setup model
 	 */
 	public PlannerFamily getPlannerFamily() {
 		return plannerFamily;
 	}
 
 	/**
-	 * @param plannerFamily the plannerFamily to set
+	 * Sets the planner family of this setup model.
+	 * 
+	 * @param plannerFamily the plannerFamily to set in this setup model.
 	 */
 	public void setPlannerFamily(PlannerFamily plannerFamily) {
 		this.plannerFamily = plannerFamily;

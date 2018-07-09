@@ -61,6 +61,7 @@ import org.xml.sax.InputSource;
 
 import com.cfar.swim.worldwind.ai.PlanRevisionListener;
 import com.cfar.swim.worldwind.ai.Planner;
+import com.cfar.swim.worldwind.ai.prm.fadprm.FADPRMPlanner;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
 import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.iwxxm.IwxxmLoader;
@@ -72,6 +73,10 @@ import com.cfar.swim.worldwind.planning.Trajectory;
 import com.cfar.swim.worldwind.planning.Waypoint;
 import com.cfar.swim.worldwind.registries.Specification;
 import com.cfar.swim.worldwind.render.Obstacle;
+import com.cfar.swim.worldwind.render.TerrainObstacle;
+import com.cfar.swim.worldwind.render.airspaces.ObstacleCylinder;
+import com.cfar.swim.worldwind.render.airspaces.TerrainBox;
+import com.cfar.swim.worldwind.render.airspaces.TerrainCylinder;
 import com.cfar.swim.worldwind.render.annotations.ControlAnnotation;
 import com.cfar.swim.worldwind.render.annotations.DepictionAnnotation;
 import com.cfar.swim.worldwind.session.Scenario;
@@ -90,6 +95,7 @@ import gov.nasa.worldwind.View;
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.awt.WorldWindowGLJPanel;
 import gov.nasa.worldwind.geom.Angle;
+import gov.nasa.worldwind.geom.LatLon;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Sector;
 import gov.nasa.worldwind.layers.AnnotationLayer;
@@ -100,8 +106,12 @@ import gov.nasa.worldwind.layers.ViewControlsSelectListener;
 import gov.nasa.worldwind.render.BasicShapeAttributes;
 import gov.nasa.worldwind.render.Material;
 import gov.nasa.worldwind.render.ScreenAnnotation;
+import gov.nasa.worldwind.render.airspaces.AirspaceAttributes;
+import gov.nasa.worldwind.render.airspaces.AirspaceRenderer;
 import gov.nasa.worldwind.render.markers.Marker;
+import gov.nasa.worldwind.symbology.SymbologyConstants;
 import gov.nasa.worldwind.symbology.milstd2525.MilStd2525GraphicFactory;
+import gov.nasa.worldwind.symbology.milstd2525.MilStd2525TacticalSymbol;
 import gov.nasa.worldwind.util.StatusBar;
 import gov.nasa.worldwind.view.firstperson.BasicFlyView;
 import gov.nasa.worldwind.view.orbit.BasicOrbitView;
@@ -290,6 +300,9 @@ public class WorldPresenter implements Initializable {
 	/** the obstacles layer of this world presenter */
 	private final RenderableLayer obstaclesLayer = new RenderableLayer();
 
+	/** the terrain obstacles layer of this world presenter */
+	private final RenderableLayer terrainObstaclesLayer = new RenderableLayer();
+
 	/** the track layer of this world presenter */
 	private final MarkerLayer trackLayer = new MarkerLayer();
 
@@ -329,6 +342,9 @@ public class WorldPresenter implements Initializable {
 	/** the obstacles change listener of this world presenter */
 	private final ObstaclesChangeListener obstaclesCl = new ObstaclesChangeListener();
 
+	/** the terrain obstacles change listener of this world presenter */
+	private final TerrainObstaclesChangeListener terrainObstaclesCl = new TerrainObstaclesChangeListener();
+
 	/** the track change listener of this world presenter */
 	private final TrackChangeListener trackCl = new TrackChangeListener();
 
@@ -367,6 +383,7 @@ public class WorldPresenter implements Initializable {
 		this.initEnvironment();
 		this.initDesirabilityZones();
 		this.initObstacles();
+		this.initTerrainObstacles();
 		this.initPlan();
 		this.initTrack();
 		this.initView();
@@ -386,6 +403,7 @@ public class WorldPresenter implements Initializable {
 			this.scenario.removePropertyChangeListener(this.waypointsCl);
 			this.scenario.removePropertyChangeListener(this.trajectoryCl);
 			this.scenario.removePropertyChangeListener(this.obstaclesCl);
+			this.scenario.removePropertyChangeListener(this.terrainObstaclesCl);
 		}
 		this.scenario = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario();
 		this.scenario.addTimeChangeListener(this.timeCl);
@@ -396,6 +414,7 @@ public class WorldPresenter implements Initializable {
 		this.scenario.addWaypointsChangeListener(this.waypointsCl);
 		this.scenario.addTrajectoryChangeListener(this.trajectoryCl);
 		this.scenario.addObstaclesChangeListener(this.obstaclesCl);
+		this.scenario.addTerrainObstaclesChangeListener(this.terrainObstaclesCl);
 	}
 
 	/**
@@ -454,6 +473,20 @@ public class WorldPresenter implements Initializable {
 				obstaclesLayer.removeAllRenderables();
 				// TODO: investigate CME observed here
 				obstaclesLayer.addRenderables(scenario.getObstacles());
+				wwd.redraw();
+			}
+		});
+	}
+
+	/**
+	 * Initializes the terrain obstacles of this world presenter.
+	 */
+	public void initTerrainObstacles() {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				terrainObstaclesLayer.removeAllRenderables();
+				terrainObstaclesLayer.addRenderables(scenario.getTerrainObstacles());
 				wwd.redraw();
 			}
 		});
@@ -676,6 +709,7 @@ public class WorldPresenter implements Initializable {
 			}
 		});
 	}
+	
 
 	/**
 	 * Opens the setup desirability dialog.
@@ -749,6 +783,25 @@ public class WorldPresenter implements Initializable {
 		});
 	}
 
+	/**
+	 * 
+	 */
+	private void loadTerrainObstacles() {
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				setWorldMode(WorldMode.LOADING);
+				TerrainCylinder EOW = new TerrainCylinder(LatLon.fromDegrees(48.46136, -123.30962), 0, 100, 20);
+				TerrainBox ELW = new TerrainBox(LatLon.fromDegrees(48.46107, -123.31059), LatLon.fromDegrees(48.46109, -123.30998),33,0,0,100);
+				// to set a depiction use MilStd2525TacticalSymbol (see Quadcopter.java)
+				
+				scenario.addTerrainObstacle(EOW);
+				scenario.addTerrainObstacle(ELW);
+				setWorldMode(WorldMode.VIEW);
+			}
+		});
+	}
+	
 	/**
 	 * Opens a planner alert with a specified alert type, title, header and content.
 	 * A result can be passed for synchronization.
@@ -887,6 +940,10 @@ public class WorldPresenter implements Initializable {
 
 					if (waypoints.isEmpty()) {
 						planner.plan(origin, destination, session.getActiveScenario().getTime());
+						if(planner instanceof FADPRMPlanner) {
+							session.getActiveScenario().playTime();
+							((FADPRMPlanner) planner).planDynamic();
+						}
 					} else {
 						planner.plan(origin, destination, waypoints, session.getActiveScenario().getTime());
 					}
@@ -1190,6 +1247,7 @@ public class WorldPresenter implements Initializable {
 			wwd.getModel().getLayers().add(desirabilityZonesLayer);
 			wwd.getModel().getLayers().add(waypointLayer);
 			wwd.getModel().getLayers().add(obstaclesLayer);
+			wwd.getModel().getLayers().add(terrainObstaclesLayer);
 			wwd.getModel().getLayers().add(trackLayer);
 
 			// add planner controls
@@ -1520,6 +1578,7 @@ public class WorldPresenter implements Initializable {
 			initAircraft();
 			initEnvironment();
 			initObstacles();
+			initTerrainObstacles();
 		}
 	}
 
@@ -1544,6 +1603,7 @@ public class WorldPresenter implements Initializable {
 			initAircraft();
 			initEnvironment();
 			initObstacles();
+			initTerrainObstacles();
 		}
 	}
 
@@ -1675,6 +1735,27 @@ public class WorldPresenter implements Initializable {
 	}
 
 	/**
+	 * Realizes a terrain obstacles change listener.
+	 * 
+	 * @author Henrique Ferreira
+	 *
+	 */
+	private class TerrainObstaclesChangeListener implements PropertyChangeListener {
+
+		/**
+		 * Initializes the terrain obstacles if they change.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+		 */
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			initTerrainObstacles();
+		}
+	}
+
+	/**
 	 * Realizes a track change listener.
 	 * 
 	 * @author Stephan Heinemann
@@ -1719,6 +1800,7 @@ public class WorldPresenter implements Initializable {
 			initEnvironment();
 			initDesirabilityZones();
 			initObstacles();
+			initTerrainObstacles();
 			initPlan();
 			initTrack();
 			initView();
@@ -1778,7 +1860,9 @@ public class WorldPresenter implements Initializable {
 								WorldPresenter.FILE_CHOOSER_EXTENSION_SWIM) });
 				break;
 			case WorldPresenter.ACTION_SWIM_SETUP:
-				setup(SetupDialog.SWIM_TAB_INDEX);
+				//TODO: this was changed to add terrain obstacles
+				loadTerrainObstacles();
+//				setup(SetupDialog.SWIM_TAB_INDEX);
 				break;
 			}
 		}

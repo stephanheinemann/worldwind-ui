@@ -75,9 +75,9 @@ public class SetupView extends FXMLView {
 	}
 	
 	/**
-	 * Gets the planner selector of this setup view.
+	 * Gets the planner family selector of this setup view.
 	 * 
-	 * @return the planner selector of this setup view
+	 * @return the planner family selector of this setup view
 	 */
 	@SuppressWarnings("unchecked")
 	public ComboBox<String> getPlannerFamily() {
