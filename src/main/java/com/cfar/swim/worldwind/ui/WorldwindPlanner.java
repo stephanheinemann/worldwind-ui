@@ -72,9 +72,9 @@ public class WorldwindPlanner extends Application {
 	        */
 			
 			// Define initial position for worldwind
-			Configuration.setValue(AVKey.INITIAL_LATITUDE, 48.461342);
-			Configuration.setValue(AVKey.INITIAL_LONGITUDE, -123.309877);
-			Configuration.setValue(AVKey.INITIAL_ALTITUDE, 10000);
+			Configuration.setValue(AVKey.INITIAL_LATITUDE, 48.4611);
+			Configuration.setValue(AVKey.INITIAL_LONGITUDE, -123.3104);
+			Configuration.setValue(AVKey.INITIAL_ALTITUDE, 550);
 			
 			SessionManager.getInstance().addSession(new Session(WorldwindPlanner.APPLICATION_TITLE));
 			PlannerView plannerView = new PlannerView();

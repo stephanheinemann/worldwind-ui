@@ -42,6 +42,9 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -49,6 +52,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -63,6 +67,8 @@ import com.cfar.swim.worldwind.ai.PlanRevisionListener;
 import com.cfar.swim.worldwind.ai.Planner;
 import com.cfar.swim.worldwind.ai.prm.fadprm.FADPRMPlanner;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
+import com.cfar.swim.worldwind.aircraft.CombatIdentification;
+import com.cfar.swim.worldwind.aircraft.Iris;
 import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.iwxxm.IwxxmLoader;
 import com.cfar.swim.worldwind.planning.CostInterval;
@@ -791,12 +797,33 @@ public class WorldPresenter implements Initializable {
 			@Override
 			public void run() {
 				setWorldMode(WorldMode.LOADING);
-				TerrainCylinder EOW = new TerrainCylinder(LatLon.fromDegrees(48.46136, -123.30962), 0, 100, 20);
-				TerrainBox ELW = new TerrainBox(LatLon.fromDegrees(48.46107, -123.31059), LatLon.fromDegrees(48.46109, -123.30998),33,0,0,100);
+				TerrainCylinder EOW = new TerrainCylinder(LatLon.fromDegrees(48.46136, -123.30962), 0, 80, 20);
+				TerrainBox ELW = new TerrainBox(LatLon.fromDegrees(48.46107, -123.31059), LatLon.fromDegrees(48.46109, -123.30998),33,0,0,80);
 				// to set a depiction use MilStd2525TacticalSymbol (see Quadcopter.java)
 				
 				scenario.addTerrainObstacle(EOW);
 				scenario.addTerrainObstacle(ELW);
+				
+				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+				
+				MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
+				
+				Waypoint wpt = new Waypoint(Position.fromDegrees(48.461, -123.3108, 65));
+				wpt.setDepiction(
+						new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt, null)));
+				wpt.getDepiction().setVisible(true);
+				
+				Iris iris = new Iris(wpt, 1, CombatIdentification.FRIEND);
+				iris.moveTo(wpt);
+				iris.setCostInterval(new CostInterval(
+						"iris",
+						ZonedDateTime.now(ZoneId.of("UTC")).minusYears(10),
+						ZonedDateTime.now(ZoneId.of("UTC")).plusYears(10),
+						100d));
+//				iris.setDepiction(new Depiction(new MilStd2525TacticalSymbol("SFGPUCVUR------", wpt));
+				session.getActiveScenario().setAircraft(iris);
+				session.getActiveScenario().addWaypoint(0, wpt);
+				
 				setWorldMode(WorldMode.VIEW);
 			}
 		});
@@ -871,6 +898,8 @@ public class WorldPresenter implements Initializable {
 							if (!trajectory.isEmpty()) {
 								styleTrajectory(trajectory);
 								session.getActiveScenario().setTrajectory(trajectory);
+								printToFile(trajectory);
+								
 								Thread.yield();
 							} else {
 								alert(
@@ -896,7 +925,29 @@ public class WorldPresenter implements Initializable {
 								e.printStackTrace();
 							}
 						}
+						
+						@Override
+						public Position reviseAircraftPosition() {
+							Position aircraftPosition = null;
+							
+							File file = new File("position.txt");
+							Scanner sc = null;
+							try {
+								sc = new Scanner(file);
+							} catch (FileNotFoundException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							sc.useDelimiter(" ");
+							double lat = Double.parseDouble(sc.next());
+							double lon = Double.parseDouble(sc.next());
+							double alt = Double.parseDouble(sc.next());
 
+							aircraftPosition = new Position(Angle.fromDegrees(lat), Angle.fromDegrees(lon), alt);
+							return aircraftPosition;
+						}
+
+						/*
 						@Override
 						public Position reviseAircraftPosition() {
 							Position aircraftPosition = null;
@@ -915,6 +966,7 @@ public class WorldPresenter implements Initializable {
 							}
 							return aircraftPosition;
 						}
+						*/
 
 						@Override
 						public boolean reviseDatalinkPlan() {
@@ -959,6 +1011,26 @@ public class WorldPresenter implements Initializable {
 				}
 			}
 		});
+	}
+	
+	public void printToFile(Trajectory trajectory) {
+		try {
+			System.out.println("creating file");
+			PrintWriter printWriter = new PrintWriter("waypoints.txt", "UTF-8");
+			ArrayList<Waypoint> waypoints = new ArrayList<Waypoint>();
+			for (Waypoint waypoint : trajectory.getWaypoints()) {
+				waypoints.add(waypoint);
+			}
+			for (int i = 0; i < trajectory.getLength(); i++) {
+				printWriter.printf("%d	0	0	16	0.000000	0.000000	0.000000	0.000000	%f	%f	%f	1\n", i,
+						waypoints.get(i).getLatitude().degrees, waypoints.get(i).getLongitude().degrees,
+						waypoints.get(i).elevation);
+			}
+			printWriter.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	/**
