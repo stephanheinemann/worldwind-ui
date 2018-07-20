@@ -797,22 +797,31 @@ public class WorldPresenter implements Initializable {
 			@Override
 			public void run() {
 				setWorldMode(WorldMode.LOADING);
-				TerrainCylinder EOW = new TerrainCylinder(LatLon.fromDegrees(48.46136, -123.30962), 0, 80, 20);
-				TerrainBox ELW = new TerrainBox(LatLon.fromDegrees(48.46107, -123.31059), LatLon.fromDegrees(48.46109, -123.30998),33,0,0,80);
-				// to set a depiction use MilStd2525TacticalSymbol (see Quadcopter.java)
-				
-				scenario.addTerrainObstacle(EOW);
-				scenario.addTerrainObstacle(ELW);
-				
+				// Add Obstacle 
+				// UVic
+				// TerrainCylinder EOW = new TerrainCylinder(LatLon.fromDegrees(48.46136, -123.30962), 0, 80, 20);
+				// TerrainBox ELW = new TerrainBox(LatLon.fromDegrees(48.46107, -123.31059), LatLon.fromDegrees(48.46109, -123.30998),33,0,0,80);
+				// scenario.addTerrainObstacle(EOW);
+				// scenario.addTerrainObstacle(ELW);
+				// Tecnico
+				TerrainBox Central = new TerrainBox(LatLon.fromDegrees(38.73631, -9.13903), LatLon.fromDegrees(38.73720, -9.13911), 47.91 ,0 ,98 ,110);
+				TerrainBox Civil = new TerrainBox(LatLon.fromDegrees(38.73701, -9.13987), LatLon.fromDegrees(38.73786, -9.13993), 45.00 ,0 ,98 ,110);
+				TerrainBox Complexo = new TerrainBox(LatLon.fromDegrees(38.73571, -9.14000), LatLon.fromDegrees(38.73636, -9.14007), 18.50 ,0 ,98 ,110);
+				TerrainBox Fisica = new TerrainBox(LatLon.fromDegrees(38.73566, -9.13950), LatLon.fromDegrees(38.73558, -9.14038), 15.60 , 0 ,98 ,110);
+
+				scenario.addTerrainObstacle(Central);
+				scenario.addTerrainObstacle(Civil);
+				scenario.addTerrainObstacle(Complexo);
+				scenario.addTerrainObstacle(Fisica);
+
+				// Add aircraft
 				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-				
 				MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
-				
-				Waypoint wpt = new Waypoint(Position.fromDegrees(48.461, -123.3108, 65));
-				wpt.setDepiction(
-						new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt, null)));
+				// Waypoint wpt = new Waypoint(Position.fromDegrees(48.461, -123.3108, 65));
+				Waypoint wpt = new Waypoint(Position.fromDegrees(38.7368469, -9.1382919, 95));
+				System.out.println(session.getActiveScenario().getGlobe().getElevation(Angle.fromDegrees(38.73683), Angle.fromDegrees(-9.13799)));
+				wpt.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt, null)));
 				wpt.getDepiction().setVisible(true);
-				
 				Iris iris = new Iris(wpt, 1, CombatIdentification.FRIEND);
 				iris.moveTo(wpt);
 				iris.setCostInterval(new CostInterval(
@@ -820,7 +829,6 @@ public class WorldPresenter implements Initializable {
 						ZonedDateTime.now(ZoneId.of("UTC")).minusYears(10),
 						ZonedDateTime.now(ZoneId.of("UTC")).plusYears(10),
 						100d));
-//				iris.setDepiction(new Depiction(new MilStd2525TacticalSymbol("SFGPUCVUR------", wpt));
 				session.getActiveScenario().setAircraft(iris);
 				session.getActiveScenario().addWaypoint(0, wpt);
 				
@@ -930,7 +938,7 @@ public class WorldPresenter implements Initializable {
 						public Position reviseAircraftPosition() {
 							Position aircraftPosition = null;
 							
-							File file = new File("position.txt");
+							File file = new File("worldwind-comm/position.txt");
 							Scanner sc = null;
 							try {
 								sc = new Scanner(file);
@@ -1016,14 +1024,15 @@ public class WorldPresenter implements Initializable {
 	public void printToFile(Trajectory trajectory) {
 		try {
 			System.out.println("creating file");
-			PrintWriter printWriter = new PrintWriter("waypoints.txt", "UTF-8");
+			PrintWriter printWriter = new PrintWriter("worldwind-comm/waypoints.txt", "UTF-8");
 			ArrayList<Waypoint> waypoints = new ArrayList<Waypoint>();
 			for (Waypoint waypoint : trajectory.getWaypoints()) {
 				waypoints.add(waypoint);
 			}
 			for (int i = 0; i < trajectory.getLength(); i++) {
-				printWriter.printf("%d	0	0	16	0.000000	0.000000	0.000000	0.000000	%f	%f	%f	1\n", i,
-						waypoints.get(i).getLatitude().degrees, waypoints.get(i).getLongitude().degrees,
+				printWriter.printf("%f	%f	%f\n",
+						waypoints.get(i).getLatitude().degrees,
+						waypoints.get(i).getLongitude().degrees,
 						waypoints.get(i).elevation);
 			}
 			printWriter.close();
