@@ -82,7 +82,6 @@ import com.cfar.swim.worldwind.render.Obstacle;
 import com.cfar.swim.worldwind.render.TerrainObstacle;
 import com.cfar.swim.worldwind.render.airspaces.ObstacleCylinder;
 import com.cfar.swim.worldwind.render.airspaces.TerrainBox;
-import com.cfar.swim.worldwind.render.airspaces.TerrainCylinder;
 import com.cfar.swim.worldwind.render.annotations.ControlAnnotation;
 import com.cfar.swim.worldwind.render.annotations.DepictionAnnotation;
 import com.cfar.swim.worldwind.session.Scenario;
@@ -804,25 +803,36 @@ public class WorldPresenter implements Initializable {
 				// scenario.addTerrainObstacle(EOW);
 				// scenario.addTerrainObstacle(ELW);
 				// Tecnico
-				TerrainBox Central = new TerrainBox(LatLon.fromDegrees(38.73631, -9.13903), LatLon.fromDegrees(38.73720, -9.13911), 47.91 ,0 ,98 ,110);
-				TerrainBox Civil = new TerrainBox(LatLon.fromDegrees(38.73701, -9.13987), LatLon.fromDegrees(38.73786, -9.13993), 45.00 ,0 ,98 ,110);
-				TerrainBox Complexo = new TerrainBox(LatLon.fromDegrees(38.73571, -9.14000), LatLon.fromDegrees(38.73636, -9.14007), 18.50 ,0 ,98 ,110);
-				TerrainBox Fisica = new TerrainBox(LatLon.fromDegrees(38.73566, -9.13950), LatLon.fromDegrees(38.73558, -9.14038), 15.60 , 0 ,98 ,110);
+				File file = new File("TecnicoTerrain.csv");
+				Scanner sc = null;
+				try {
+					sc = new Scanner(file);
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				sc.useDelimiter(",");
+				while (sc.hasNextLine()) {
+					double lat0 = Double.parseDouble(sc.next());
+					double lon0 = Double.parseDouble(sc.next());
+					double lat1 = Double.parseDouble(sc.next());
+					double lon1 = Double.parseDouble(sc.next());
+					double dist = Double.parseDouble(sc.next());
+					double alt = Double.parseDouble(sc.next());
 
-				scenario.addTerrainObstacle(Central);
-				scenario.addTerrainObstacle(Civil);
-				scenario.addTerrainObstacle(Complexo);
-				scenario.addTerrainObstacle(Fisica);
+					scenario.addTerrainObstacle(new TerrainBox(LatLon.fromDegrees(lat0, lon0),
+							LatLon.fromDegrees(lat1, lon1), 0, dist, 0, alt));
+				}
 
 				// Add aircraft
 				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 				MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
 				// Waypoint wpt = new Waypoint(Position.fromDegrees(48.461, -123.3108, 65));
-				Waypoint wpt = new Waypoint(Position.fromDegrees(38.7368469, -9.1382919, 95));
-				System.out.println(session.getActiveScenario().getGlobe().getElevation(Angle.fromDegrees(38.73683), Angle.fromDegrees(-9.13799)));
+				Waypoint wpt = new Waypoint(Position.fromDegrees(38.73692, -9.13843, 98));
+				System.out.println(wpt.getElevation()>session.getActiveScenario().getGlobe().getElevation(wpt.getLatitude(), wpt.getLongitude()));
 				wpt.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt, null)));
 				wpt.getDepiction().setVisible(true);
-				Iris iris = new Iris(wpt, 1, CombatIdentification.FRIEND);
+				Iris iris = new Iris(wpt, .1, CombatIdentification.FRIEND);
 				iris.moveTo(wpt);
 				iris.setCostInterval(new CostInterval(
 						"iris",
