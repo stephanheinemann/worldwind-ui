@@ -46,6 +46,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -832,7 +833,7 @@ public class WorldPresenter implements Initializable {
 				System.out.println(wpt.getElevation()>session.getActiveScenario().getGlobe().getElevation(wpt.getLatitude(), wpt.getLongitude()));
 				wpt.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt, null)));
 				wpt.getDepiction().setVisible(true);
-				Iris iris = new Iris(wpt, .1, CombatIdentification.FRIEND);
+				Iris iris = new Iris(wpt, 2, CombatIdentification.FRIEND);
 				iris.moveTo(wpt);
 				iris.setCostInterval(new CostInterval(
 						"iris",
@@ -963,6 +964,29 @@ public class WorldPresenter implements Initializable {
 
 							aircraftPosition = new Position(Angle.fromDegrees(lat), Angle.fromDegrees(lon), alt);
 							return aircraftPosition;
+						}
+						
+						@Override
+						public Waypoint reviseAircraftTimedPosition() {
+							System.out.println("Timed Posiiton revise");
+							File file = new File("worldwind-comm/position.txt");
+							Scanner sc = null;
+							try {
+								sc = new Scanner(file);
+							} catch (FileNotFoundException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							sc.useDelimiter(" ");
+							double lat = Double.parseDouble(sc.next());
+							double lon = Double.parseDouble(sc.next());
+							double alt = Double.parseDouble(sc.next());
+							Waypoint aircraftTimedPosition = new Waypoint(new Position(Angle.fromDegrees(lat), Angle.fromDegrees(lon), alt));
+							
+							ZonedDateTime zoneDateTime = ZonedDateTime.of(LocalDateTime.parse(sc.next()), ZoneId.of("America/Los_Angeles"));
+							aircraftTimedPosition.setAto(zoneDateTime);
+							
+							return aircraftTimedPosition;
 						}
 
 						/*
