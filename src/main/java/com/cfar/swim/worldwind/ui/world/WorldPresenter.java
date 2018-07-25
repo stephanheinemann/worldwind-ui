@@ -935,7 +935,7 @@ public class WorldPresenter implements Initializable {
 							try {
 								IwxxmLoader loader = new IwxxmLoader();
 								Set<Obstacle> obstacles = loader.load(
-										new InputSource(new FileInputStream(new File("./sigmet-victoria-ts.xml"))));
+										new InputSource(new FileInputStream(new File("./sigmet-tecnico-ts.xml"))));
 								for (Obstacle obstacle : obstacles) {
 									scenario.addObstacle(obstacle);
 									planner.getEnvironment().embed(obstacle);
@@ -1162,44 +1162,41 @@ public class WorldPresenter implements Initializable {
 	 * Issues a take-off command via the datalink of the active scenario
 	 * asynchronously.
 	 */
-	// TODO: commented alert
 	private void takeoff() {
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				System.out.println("inside takeoff");
-				// PlannerAlertResult clearance = new PlannerAlertResult();
-				// alert(
-				// AlertType.CONFIRMATION,
-				// PlannerAlert.ALERT_TITLE_TAKEOFF_CONFIRM,
-				// PlannerAlert.ALERT_HEADER_TAKEOFF_CONFIRM,
-				// PlannerAlert.ALERT_CONTENT_TAKEOFF_CONFIRM,
-				// clearance);
+				PlannerAlertResult clearance = new PlannerAlertResult();
+				alert(
+						AlertType.CONFIRMATION,
+						PlannerAlert.ALERT_TITLE_TAKEOFF_CONFIRM,
+						PlannerAlert.ALERT_HEADER_TAKEOFF_CONFIRM,
+						PlannerAlert.ALERT_CONTENT_TAKEOFF_CONFIRM,
+						clearance);
 
-				// if (clearance.isOk()) {
-				setWorldMode(WorldMode.LAUNCHING);
-				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-				Datalink datalink = session.getActiveScenario().getDatalink();
+				if (clearance.isOk()) {
+					setWorldMode(WorldMode.LAUNCHING);
+					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+					Datalink datalink = session.getActiveScenario().getDatalink();
 
-				if (!datalink.isConnected()) {
-					datalink.connect();
+					if (!datalink.isConnected()) {
+						datalink.connect();
+					}
+
+					if (datalink.isConnected() && session.getActiveScenario().hasTrajectory()) {
+						// datalink.disableAircraftSafety();
+						// datalink.armAircraft();
+						datalink.takeOff(); // TODO: flight (envelope) setup
+					} else {
+						alert(
+								AlertType.ERROR,
+								PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
+								PlannerAlert.ALERT_HEADER_DATALINK_INVALID,
+								PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
+								null);
+					}
+					setWorldMode(WorldMode.VIEW);
 				}
-
-				if (datalink.isConnected() && session.getActiveScenario().hasTrajectory()) {
-					// datalink.disableAircraftSafety();
-					// datalink.armAircraft();
-					datalink.takeOff(); // TODO: flight (envelope) setup
-				} else {
-					alert(
-							AlertType.ERROR,
-							PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
-							PlannerAlert.ALERT_HEADER_DATALINK_INVALID,
-							PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
-							null);
-				}
-				setWorldMode(WorldMode.VIEW);
-				System.out.println("finishing takeoff");
-				// }
 			}
 		});
 	}
