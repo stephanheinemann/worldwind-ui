@@ -40,10 +40,12 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.time.LocalDateTime;
@@ -88,12 +90,14 @@ import com.cfar.swim.worldwind.render.annotations.DepictionAnnotation;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
+import com.cfar.swim.worldwind.session.Setup;
 import com.cfar.swim.worldwind.ui.WorldwindPlanner;
 import com.cfar.swim.worldwind.ui.desirabilityzones.DesirabilityDialog;
 import com.cfar.swim.worldwind.ui.planner.PlannerAlert;
 import com.cfar.swim.worldwind.ui.planner.PlannerAlertResult;
 import com.cfar.swim.worldwind.ui.setup.SetupDialog;
 import com.cfar.swim.worldwind.ui.setup.SetupModel;
+import com.cfar.swim.worldwind.ui.setupWaypoint.SetupWaypointDialog;
 import com.cfar.swim.worldwind.util.Depiction;
 
 import gov.nasa.worldwind.BasicModel;
@@ -148,6 +152,10 @@ public class WorldPresenter implements Initializable {
 	/** the swim icon of the world view */
 	@Inject
 	private String swimIcon;
+	
+	/** the terrain icon of the world view */
+	@Inject
+	private String terrainIcon;
 
 	/** the environment icon of the world view */
 	@Inject
@@ -180,6 +188,10 @@ public class WorldPresenter implements Initializable {
 	/** the view icon of the world view */
 	@Inject
 	private String viewIcon;
+	
+	/** the desirability icon of the world view */
+	@Inject
+	private String desirabilityIcon;
 
 	/** the setup icon of the world view */
 	@Inject
@@ -199,6 +211,12 @@ public class WorldPresenter implements Initializable {
 
 	/** the setup swim action command */
 	public static final String ACTION_SWIM_SETUP = "WorldPresenter.ActionCommand.SwimSetup";
+	
+	/** the load terrain action command */
+	public static final String ACTION_TERRAIN_LOAD = "WorldPresenter.ActionCommand.TerrainLoad";
+
+	/** the setup terrain action command */
+	public static final String ACTION_TERRAIN_SETUP = "WorldPresenter.ActionCommand.TerrainSetup";
 
 	/** the enclose environment action command */
 	public static final String ACTION_ENVIRONMENT_ENCLOSE = "WorldPresenter.ActionCommand.EnvironmentEnclose";
@@ -261,6 +279,15 @@ public class WorldPresenter implements Initializable {
 
 	/** the file chooser swim file extension */
 	public static final String FILE_CHOOSER_EXTENSION_SWIM = "*.xml";
+
+	/** the file chooser open terrain file title */
+	public static final String FILE_CHOOSER_TITLE_TERRAIN = "Open Terrain File";
+
+	/** the file chooser terrain file description */
+	public static final String FILE_CHOOSER_TERRAIN = "Terrain Files";
+
+	/** the file chooser terrain file extension */
+	public static final String FILE_CHOOSER_EXTENSION_TERRAIN = "*.csv";
 
 	/** the world pane of the world view */
 	@FXML
@@ -753,6 +780,23 @@ public class WorldPresenter implements Initializable {
 	}
 
 	/**
+	 * Opens the setup desirability dialog.
+	 */
+	private void setupWaypoint() {
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				setWorldMode(WorldMode.VIEW);
+				SetupWaypointDialog waypointDialog = new SetupWaypointDialog(SetupWaypointDialog.TITLE_SETUP,
+						SetupWaypointDialog.HEADER_SETUP);
+				Optional<Double> inputAltitude = waypointDialog.showAndWait();
+				if (inputAltitude.isPresent()) {
+					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+				}
+			}
+		});
+	}
+	/**
 	 * Opens a file dialog and loads a SWIM file asynchronously.
 	 * 
 	 * @param title the title of the file dialog
@@ -790,47 +834,88 @@ public class WorldPresenter implements Initializable {
 	}
 
 	/**
+	 * Opens a file dialog and loads a terrain file asynchronously.
 	 * 
+	 * @param title the title of the file dialog
+	 * @param extensions the extension filter of the file dialog
 	 */
-	private void loadTerrainObstacles() {
+	private void loadTerrain(String title, ExtensionFilter[] extensions) {
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				FileChooser fileChooser = new FileChooser();
+				fileChooser.setTitle(title);
+				fileChooser.getExtensionFilters().addAll(extensions);
+				File file = fileChooser.showOpenDialog(null);
+				if (null != file) {
+					executor.execute(new Runnable() {
+						@Override
+						public void run() {
+							try {
+								setWorldMode(WorldMode.LOADING);
+								String line = "";
+								try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+						            while ((line = br.readLine()) != null) {
+						                String[] values = line.split(",");
+
+										double lat0 = Double.parseDouble(values[0]);
+										double lon0 = Double.parseDouble(values[1]);
+										double lat1 = Double.parseDouble(values[2]);
+										double lon1 = Double.parseDouble(values[3]);
+										double dist = Double.parseDouble(values[4]);
+										double alt = Double.parseDouble(values[5]);
+
+										scenario.addTerrainObstacle(new TerrainBox(LatLon.fromDegrees(lat0, lon0),
+												LatLon.fromDegrees(lat1, lon1), 0, dist, 0, alt));
+						            }
+						        } catch (IOException e) {
+						            e.printStackTrace();
+						        }
+								setWorldMode(WorldMode.VIEW);
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					});
+				}
+			}
+		});
+	}
+	
+	/**
+	 * Loads the default terrain file asynchronously.
+	 */
+	private void defaultLoadTerrain() {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
 				setWorldMode(WorldMode.LOADING);
 				// Add Obstacle 
-				// UVic
-				// TerrainCylinder EOW = new TerrainCylinder(LatLon.fromDegrees(48.46136, -123.30962), 0, 80, 20);
-				// TerrainBox ELW = new TerrainBox(LatLon.fromDegrees(48.46107, -123.31059), LatLon.fromDegrees(48.46109, -123.30998),33,0,0,80);
-				// scenario.addTerrainObstacle(EOW);
-				// scenario.addTerrainObstacle(ELW);
 				// Tecnico
 				File file = new File("TecnicoTerrain.csv");
-				Scanner sc = null;
-				try {
-					sc = new Scanner(file);
-				} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				sc.useDelimiter(",");
-				while (sc.hasNextLine()) {
-					double lat0 = Double.parseDouble(sc.next());
-					double lon0 = Double.parseDouble(sc.next());
-					double lat1 = Double.parseDouble(sc.next());
-					double lon1 = Double.parseDouble(sc.next());
-					double dist = Double.parseDouble(sc.next());
-					double alt = Double.parseDouble(sc.next());
+				String line = "";
+				try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+		            while ((line = br.readLine()) != null) {
+		                String[] values = line.split(",");
 
-					scenario.addTerrainObstacle(new TerrainBox(LatLon.fromDegrees(lat0, lon0),
-							LatLon.fromDegrees(lat1, lon1), 0, dist, 0, alt));
-				}
+						double lat0 = Double.parseDouble(values[0]);
+						double lon0 = Double.parseDouble(values[1]);
+						double lat1 = Double.parseDouble(values[2]);
+						double lon1 = Double.parseDouble(values[3]);
+						double dist = Double.parseDouble(values[4]);
+						double alt = Double.parseDouble(values[5]);
+
+						scenario.addTerrainObstacle(new TerrainBox(LatLon.fromDegrees(lat0, lon0),
+								LatLon.fromDegrees(lat1, lon1), 0, dist, 0, alt));
+		            }
+		        } catch (IOException e) {
+		            e.printStackTrace();
+		        }
 
 				// Add aircraft
 				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 				MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
-				// Waypoint wpt = new Waypoint(Position.fromDegrees(48.461, -123.3108, 65));
 				Waypoint wpt = new Waypoint(Position.fromDegrees(38.73692, -9.13843, 98));
-				System.out.println(wpt.getElevation()>session.getActiveScenario().getGlobe().getElevation(wpt.getLatitude(), wpt.getLongitude()));
 				wpt.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt, null)));
 				wpt.getDepiction().setVisible(true);
 				Iris iris = new Iris(wpt, 2, CombatIdentification.FRIEND);
@@ -945,51 +1030,24 @@ public class WorldPresenter implements Initializable {
 							}
 						}
 						
-						@Override
-						public Position reviseAircraftPosition() {
-							Position aircraftPosition = null;
-							
-							File file = new File("worldwind-comm/position.txt");
-							Scanner sc = null;
-							try {
-								sc = new Scanner(file);
-							} catch (FileNotFoundException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							sc.useDelimiter(" ");
-							double lat = Double.parseDouble(sc.next());
-							double lon = Double.parseDouble(sc.next());
-							double alt = Double.parseDouble(sc.next());
-
-							aircraftPosition = new Position(Angle.fromDegrees(lat), Angle.fromDegrees(lon), alt);
-							return aircraftPosition;
-						}
 						
 						@Override
 						public Waypoint reviseAircraftTimedPosition() {
-							System.out.println("Timed Posiiton revise");
-							File file = new File("worldwind-comm/position.txt");
-							Scanner sc = null;
+							Waypoint aircraftTimedPosition = null;
 							try {
-								sc = new Scanner(file);
-							} catch (FileNotFoundException e) {
-								// TODO Auto-generated catch block
+								Session session = SessionManager.getInstance()
+										.getSession(WorldwindPlanner.APPLICATION_TITLE);
+								Datalink datalink = session.getActiveScenario().getDatalink();
+								if (!datalink.isConnected()) {
+									return null;
+								}
+								aircraftTimedPosition = datalink.getAircraftTimedPosition();
+							} catch (Exception e) {
 								e.printStackTrace();
 							}
-							sc.useDelimiter(" ");
-							double lat = Double.parseDouble(sc.next());
-							double lon = Double.parseDouble(sc.next());
-							double alt = Double.parseDouble(sc.next());
-							Waypoint aircraftTimedPosition = new Waypoint(new Position(Angle.fromDegrees(lat), Angle.fromDegrees(lon), alt));
-							
-							ZonedDateTime zoneDateTime = ZonedDateTime.of(LocalDateTime.parse(sc.next()), ZoneId.of("America/Los_Angeles"));
-							aircraftTimedPosition.setAto(zoneDateTime);
-							
 							return aircraftTimedPosition;
 						}
 
-						/*
 						@Override
 						public Position reviseAircraftPosition() {
 							Position aircraftPosition = null;
@@ -1001,14 +1059,11 @@ public class WorldPresenter implements Initializable {
 									return null;
 								}
 								aircraftPosition = datalink.getAircraftPosition();
-								System.out.println(aircraftPosition);
-								return aircraftPosition;
 							} catch (Exception e) {
 								e.printStackTrace();
 							}
 							return aircraftPosition;
 						}
-						*/
 
 						@Override
 						public boolean reviseDatalinkPlan() {
@@ -1185,7 +1240,6 @@ public class WorldPresenter implements Initializable {
 
 					if (datalink.isConnected() && session.getActiveScenario().hasTrajectory()) {
 						// datalink.disableAircraftSafety();
-						// datalink.armAircraft();
 						datalink.takeOff(); // TODO: flight (envelope) setup
 					} else {
 						alert(
@@ -1423,12 +1477,17 @@ public class WorldPresenter implements Initializable {
 			viewControl.setSecondaryActionCommand(WorldPresenter.ACTION_VIEW_RESET);
 			viewControl.addActionListener(new ViewControlListener());
 
-			// TODO: add a new ICON for desirability annotation
-			ControlAnnotation desirabilityControl = new ControlAnnotation(environmentIcon);
+			ControlAnnotation desirabilityControl = new ControlAnnotation(desirabilityIcon);
 			desirabilityControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 425, 25));
 			desirabilityControl.setPrimaryActionCommand(WorldPresenter.ACTION_DESIRABILITY_ENCLOSE);
 			desirabilityControl.setSecondaryActionCommand(ACTION_DESIRABILITY_SETUP);
 			desirabilityControl.addActionListener(new DesirabilityZoneControlListener());
+			
+			ControlAnnotation terrainControl = new ControlAnnotation(terrainIcon);
+			terrainControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 500, 25));
+			terrainControl.setPrimaryActionCommand(WorldPresenter.ACTION_TERRAIN_LOAD);
+			terrainControl.setSecondaryActionCommand(ACTION_TERRAIN_SETUP);
+			terrainControl.addActionListener(new TerrainControlListener());
 
 			controlLayer.addAnnotation(aircraftControl);
 			wwd.addSelectListener(aircraftControl);
@@ -1452,6 +1511,8 @@ public class WorldPresenter implements Initializable {
 			wwd.addSelectListener(viewControl);
 			controlLayer.addAnnotation(desirabilityControl);
 			wwd.addSelectListener(desirabilityControl);
+			controlLayer.addAnnotation(terrainControl);
+			wwd.addSelectListener(terrainControl);
 			wwd.getModel().getLayers().add(controlLayer);
 
 			// add on-screen status
@@ -1483,6 +1544,7 @@ public class WorldPresenter implements Initializable {
 					landControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 275, 25));
 					viewControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 350, 25));
 					desirabilityControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 425, 25));
+					terrainControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 500, 25));
 					statusAnnotation.setScreenPoint(new Point(wwd.getWidth() / 2, wwd.getHeight() - 75));
 				}
 			});
@@ -1660,7 +1722,16 @@ public class WorldPresenter implements Initializable {
 		public void run() {
 			Position clickedPosition = wwd.getCurrentPosition();
 			if (null != clickedPosition) {
-				Waypoint waypoint = new Waypoint(clickedPosition);
+				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+				Setup setup = session.getSetup();
+				double alt = setup.getDefaultWaypointHeight();
+				Waypoint waypoint = null;
+				if(alt>=0) {
+					waypoint = new Waypoint(new Position(clickedPosition.getLatitude(), clickedPosition.getLongitude(), alt));
+				}
+				else {
+					waypoint = new Waypoint(clickedPosition); 
+				}
 				waypoint.setDepiction(
 						new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, waypoint, null)));
 				waypoint.getDepiction().setVisible(true);
@@ -1972,9 +2043,7 @@ public class WorldPresenter implements Initializable {
 								WorldPresenter.FILE_CHOOSER_EXTENSION_SWIM) });
 				break;
 			case WorldPresenter.ACTION_SWIM_SETUP:
-				//TODO: this was changed to add terrain obstacles
-				loadTerrainObstacles();
-//				setup(SetupDialog.SWIM_TAB_INDEX);
+				setup(SetupDialog.SWIM_TAB_INDEX);
 				break;
 			}
 		}
@@ -2032,6 +2101,7 @@ public class WorldPresenter implements Initializable {
 				break;
 			case WorldPresenter.ACTION_WAYPOINT_SETUP:
 				// TODO: waypoint setup (types of waypoint graphics: POI, RWP, ...)
+				setupWaypoint();
 				setWorldMode(WorldMode.VIEW);
 				break;
 			}
@@ -2223,6 +2293,38 @@ public class WorldPresenter implements Initializable {
 				break;
 			case WorldPresenter.ACTION_DESIRABILITY_SETUP:
 				setupDesirability();
+				break;
+			}
+		}
+	}
+	
+	/**
+	 * Realizes a terrain control listener.
+	 * 
+	 * @author Manuel Rosa
+	 * @author Henrique Ferreira
+	 *
+	 */
+	private class TerrainControlListener implements ActionListener {
+
+		/**
+		 * Performs the terrain control action.
+		 * 
+		 * @param e the action event associated with the terrain control action
+		 * 
+		 * @see ActionListener#actionPerformed(ActionEvent)
+		 */
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			switch (e.getActionCommand()) {
+			case WorldPresenter.ACTION_TERRAIN_LOAD:
+				loadTerrain(WorldPresenter.FILE_CHOOSER_TITLE_TERRAIN,
+						new ExtensionFilter[] { new ExtensionFilter(
+								WorldPresenter.FILE_CHOOSER_TERRAIN,
+								WorldPresenter.FILE_CHOOSER_EXTENSION_TERRAIN) });
+				break;
+			case WorldPresenter.ACTION_TERRAIN_SETUP:
+				defaultLoadTerrain();
 				break;
 			}
 		}
