@@ -862,11 +862,13 @@ public class WorldPresenter implements Initializable {
 										double lon0 = Double.parseDouble(values[1]);
 										double lat1 = Double.parseDouble(values[2]);
 										double lon1 = Double.parseDouble(values[3]);
-										double dist = Double.parseDouble(values[4]);
-										double alt = Double.parseDouble(values[5]);
+										double left = Double.parseDouble(values[4]);
+										double right = Double.parseDouble(values[5]);
+										double bottom = Double.parseDouble(values[6]);
+										double top = Double.parseDouble(values[7]);
 
 										scenario.addTerrainObstacle(new TerrainBox(LatLon.fromDegrees(lat0, lon0),
-												LatLon.fromDegrees(lat1, lon1), 0, dist, 0, alt));
+												LatLon.fromDegrees(lat1, lon1), left, right, bottom, top));
 						            }
 						        } catch (IOException e) {
 						            e.printStackTrace();
@@ -902,11 +904,13 @@ public class WorldPresenter implements Initializable {
 						double lon0 = Double.parseDouble(values[1]);
 						double lat1 = Double.parseDouble(values[2]);
 						double lon1 = Double.parseDouble(values[3]);
-						double dist = Double.parseDouble(values[4]);
-						double alt = Double.parseDouble(values[5]);
+						double left = Double.parseDouble(values[4]);
+						double right = Double.parseDouble(values[5]);
+						double bottom = Double.parseDouble(values[6]);
+						double top = Double.parseDouble(values[7]);
 
 						scenario.addTerrainObstacle(new TerrainBox(LatLon.fromDegrees(lat0, lon0),
-								LatLon.fromDegrees(lat1, lon1), 0, dist, 0, alt));
+								LatLon.fromDegrees(lat1, lon1), left, right, bottom, top));
 		            }
 		        } catch (IOException e) {
 		            e.printStackTrace();
@@ -918,7 +922,7 @@ public class WorldPresenter implements Initializable {
 				Waypoint wpt = new Waypoint(Position.fromDegrees(38.73692, -9.13843, 98));
 				wpt.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt, null)));
 				wpt.getDepiction().setVisible(true);
-				Iris iris = new Iris(wpt, 2, CombatIdentification.FRIEND);
+				Iris iris = new Iris(wpt, 2.5, CombatIdentification.FRIEND);
 				iris.moveTo(wpt);
 				iris.setCostInterval(new CostInterval(
 						"iris",
@@ -927,6 +931,18 @@ public class WorldPresenter implements Initializable {
 						100d));
 				session.getActiveScenario().setAircraft(iris);
 				session.getActiveScenario().addWaypoint(0, wpt);
+				
+				// Add Wpt1
+				Waypoint wpt1 = new Waypoint(Position.fromDegrees(38.73762, -9.13948, 105));
+				wpt1.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt1, null)));
+				wpt1.getDepiction().setVisible(true);
+				session.getActiveScenario().addWaypoint(1, wpt1);
+				
+				// Add Wpt2
+				Waypoint wpt2 = new Waypoint(Position.fromDegrees(38.73668, -9.14024, 105));
+				wpt2.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt2, null)));
+				wpt2.getDepiction().setVisible(true);
+				session.getActiveScenario().addWaypoint(2, wpt2);
 				
 				setWorldMode(WorldMode.VIEW);
 			}
@@ -1002,7 +1018,7 @@ public class WorldPresenter implements Initializable {
 							if (!trajectory.isEmpty()) {
 								styleTrajectory(trajectory);
 								session.getActiveScenario().setTrajectory(trajectory);
-								printToFile(trajectory);
+								// printToFile(trajectory);
 								
 								Thread.yield();
 							} else {
@@ -1238,7 +1254,7 @@ public class WorldPresenter implements Initializable {
 						datalink.connect();
 					}
 
-					if (datalink.isConnected() && session.getActiveScenario().hasTrajectory()) {
+					if (datalink.isConnected()) { //&& session.getActiveScenario().hasTrajectory()) {
 						// datalink.disableAircraftSafety();
 						datalink.takeOff(); // TODO: flight (envelope) setup
 					} else {
@@ -1386,6 +1402,24 @@ public class WorldPresenter implements Initializable {
 	 *
 	 */
 	private class WorldInitializer implements Runnable {
+		
+		/**
+		 * 
+		 * @param icon
+		 * @param offset
+		 * @param primaryAction
+		 * @param secondaryAction
+		 * @return
+		 */
+		private ControlAnnotation createControlAnnotation(String icon, int offset, String primaryAction,
+				String secondaryAction) {
+			ControlAnnotation controlAnnotation = new ControlAnnotation(icon);
+			controlAnnotation.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + offset, 25));
+			controlAnnotation.setPrimaryActionCommand(primaryAction);
+			controlAnnotation.setSecondaryActionCommand(secondaryAction);
+			
+			return controlAnnotation;
+		}
 
 		/**
 		 * Initializes the world window.
@@ -1417,77 +1451,136 @@ public class WorldPresenter implements Initializable {
 			wwd.getModel().getLayers().add(trackLayer);
 
 			// add planner controls
-			ControlAnnotation aircraftControl = new ControlAnnotation(aircraftIcon);
-			aircraftControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 325, 25));
-			aircraftControl.setPrimaryActionCommand(WorldPresenter.ACTION_AICRAFT_SET);
-			aircraftControl.setSecondaryActionCommand(WorldPresenter.ACTION_AIRCAFT_SETUP);
+			int offset = -400;
+			ControlAnnotation aircraftControl = this.createControlAnnotation(aircraftIcon, offset,
+					WorldPresenter.ACTION_AICRAFT_SET, WorldPresenter.ACTION_AIRCAFT_SETUP);
 			aircraftControl.addActionListener(new AircraftControlListener());
-
-			ControlAnnotation swimControl = new ControlAnnotation(swimIcon);
-			swimControl.getAttributes().setDrawOffset((new Point((wwd.getWidth() / 2) - 250, 25)));
-			swimControl.setPrimaryActionCommand(WorldPresenter.ACTION_SWIM_LOAD);
-			swimControl.setSecondaryActionCommand(WorldPresenter.ACTION_SWIM_SETUP);
-			swimControl.addActionListener(new SwimControlListener());
-
-			ControlAnnotation environmentControl = new ControlAnnotation(environmentIcon);
-			environmentControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 175, 25));
-			environmentControl.setPrimaryActionCommand(WorldPresenter.ACTION_ENVIRONMENT_ENCLOSE);
-			environmentControl.setSecondaryActionCommand(ACTION_ENVIRONMENT_SETUP);
-			environmentControl.addActionListener(new EnvironmentControlListener());
-
-			ControlAnnotation poiControl = new ControlAnnotation(poiIcon);
-			poiControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 100, 25));
-			poiControl.setPrimaryActionCommand(WorldPresenter.ACTION_WAYPOINT_EDIT);
-			poiControl.setSecondaryActionCommand(WorldPresenter.ACTION_WAYPOINT_SETUP);
-			poiControl.addActionListener(new WaypointsControlListener());
-
-			ControlAnnotation plannerControl = new ControlAnnotation(plannerIcon);
-			plannerControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 25, 25));
-			plannerControl.setPrimaryActionCommand(WorldPresenter.ACTION_PLANNER_PLAN);
-			plannerControl.setSecondaryActionCommand(WorldPresenter.ACTION_PLANNER_SETUP);
-			plannerControl.addActionListener(new PlannerControlListener());
-
-			ControlAnnotation datalinkControl = new ControlAnnotation(datalinkIcon);
-			datalinkControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 50, 25));
-			datalinkControl.setPrimaryActionCommand(WorldPresenter.ACTION_DATALINK_MONITOR);
-			datalinkControl.setSecondaryActionCommand(WorldPresenter.ACTION_DATALINK_SETUP);
-			datalinkControl.addActionListener(new DatalinkControlListener());
-
-			ControlAnnotation uploadControl = new ControlAnnotation(uploadIcon);
-			uploadControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 125, 25));
-			uploadControl.setPrimaryActionCommand(WorldPresenter.ACTION_TRANSFER_UPLOAD);
-			uploadControl.setSecondaryActionCommand(WorldPresenter.ACTION_NONE);
-			uploadControl.addActionListener(new UploadControlListener());
-
-			ControlAnnotation takeoffControl = new ControlAnnotation(takeoffIcon);
-			takeoffControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 200, 25));
-			takeoffControl.setPrimaryActionCommand(WorldPresenter.ACTION_FLIGHT_TAKEOFF);
-			takeoffControl.setSecondaryActionCommand(WorldPresenter.ACTION_FLIGHT_SETUP);
-			takeoffControl.addActionListener(new TakeOffControlListener());
-
-			ControlAnnotation landControl = new ControlAnnotation(landIcon);
-			landControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 275, 25));
-			landControl.setPrimaryActionCommand(WorldPresenter.ACTION_FLIGHT_LAND);
-			landControl.setSecondaryActionCommand(WorldPresenter.ACTION_FLIGHT_RETURN);
-			landControl.addActionListener(new LandControlListener());
-
-			ControlAnnotation viewControl = new ControlAnnotation(viewIcon);
-			viewControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 350, 25));
-			viewControl.setPrimaryActionCommand(WorldPresenter.ACTION_VIEW_CYCLE);
-			viewControl.setSecondaryActionCommand(WorldPresenter.ACTION_VIEW_RESET);
-			viewControl.addActionListener(new ViewControlListener());
-
-			ControlAnnotation desirabilityControl = new ControlAnnotation(desirabilityIcon);
-			desirabilityControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 425, 25));
-			desirabilityControl.setPrimaryActionCommand(WorldPresenter.ACTION_DESIRABILITY_ENCLOSE);
-			desirabilityControl.setSecondaryActionCommand(ACTION_DESIRABILITY_SETUP);
-			desirabilityControl.addActionListener(new DesirabilityZoneControlListener());
+			offset += 75;
 			
-			ControlAnnotation terrainControl = new ControlAnnotation(terrainIcon);
-			terrainControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 500, 25));
-			terrainControl.setPrimaryActionCommand(WorldPresenter.ACTION_TERRAIN_LOAD);
-			terrainControl.setSecondaryActionCommand(ACTION_TERRAIN_SETUP);
+			ControlAnnotation terrainControl = this.createControlAnnotation(terrainIcon, offset,
+					WorldPresenter.ACTION_TERRAIN_LOAD, WorldPresenter.ACTION_TERRAIN_SETUP);
 			terrainControl.addActionListener(new TerrainControlListener());
+			offset += 75;
+			
+			ControlAnnotation swimControl = this.createControlAnnotation(swimIcon, offset,
+					WorldPresenter.ACTION_SWIM_LOAD, WorldPresenter.ACTION_SWIM_SETUP);
+			swimControl.addActionListener(new SwimControlListener());
+			offset += 75;
+			
+			ControlAnnotation environmentControl = this.createControlAnnotation(environmentIcon, offset,
+					WorldPresenter.ACTION_ENVIRONMENT_ENCLOSE, WorldPresenter.ACTION_ENVIRONMENT_SETUP);
+			environmentControl.addActionListener(new EnvironmentControlListener());
+			offset += 75;
+			
+			ControlAnnotation desirabilityControl = this.createControlAnnotation(desirabilityIcon, offset,
+					WorldPresenter.ACTION_DESIRABILITY_ENCLOSE, WorldPresenter.ACTION_DESIRABILITY_SETUP);
+			desirabilityControl.addActionListener(new DesirabilityZoneControlListener());
+			offset += 75;
+			
+			ControlAnnotation poiControl = this.createControlAnnotation(poiIcon, offset,
+					WorldPresenter.ACTION_WAYPOINT_EDIT, WorldPresenter.ACTION_WAYPOINT_SETUP);
+			poiControl.addActionListener(new WaypointsControlListener());
+			offset += 75;
+			
+			ControlAnnotation plannerControl = this.createControlAnnotation(plannerIcon, offset,
+					WorldPresenter.ACTION_PLANNER_PLAN, WorldPresenter.ACTION_PLANNER_SETUP);
+			plannerControl.addActionListener(new PlannerControlListener());
+			offset += 75;
+			
+			ControlAnnotation datalinkControl = this.createControlAnnotation(datalinkIcon, offset,
+					WorldPresenter.ACTION_DATALINK_MONITOR, WorldPresenter.ACTION_DATALINK_SETUP);
+			datalinkControl.addActionListener(new DatalinkControlListener());
+			offset += 75;
+			
+			ControlAnnotation uploadControl = this.createControlAnnotation(uploadIcon, offset,
+					WorldPresenter.ACTION_TRANSFER_UPLOAD, WorldPresenter.ACTION_NONE);
+			uploadControl.addActionListener(new UploadControlListener());
+			offset += 75;
+			
+			ControlAnnotation takeoffControl = this.createControlAnnotation(takeoffIcon, offset,
+					WorldPresenter.ACTION_FLIGHT_TAKEOFF, WorldPresenter.ACTION_FLIGHT_SETUP);
+			takeoffControl.addActionListener(new TakeOffControlListener());
+			offset += 75;
+			
+			ControlAnnotation landControl = this.createControlAnnotation(landIcon, offset,
+					WorldPresenter.ACTION_FLIGHT_LAND, WorldPresenter.ACTION_FLIGHT_RETURN);
+			landControl.addActionListener(new LandControlListener());
+			offset += 75;
+			
+			ControlAnnotation viewControl = this.createControlAnnotation(viewIcon, offset,
+					WorldPresenter.ACTION_VIEW_CYCLE, WorldPresenter.ACTION_VIEW_RESET);
+			viewControl.addActionListener(new ViewControlListener());
+			//			ControlAnnotation aircraftControl = new ControlAnnotation(aircraftIcon);
+//			aircraftControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 400, 25));
+//			aircraftControl.setPrimaryActionCommand(WorldPresenter.ACTION_AICRAFT_SET);
+//			aircraftControl.setSecondaryActionCommand(WorldPresenter.ACTION_AIRCAFT_SETUP);
+//			aircraftControl.addActionListener(new AircraftControlListener());
+//			
+//			ControlAnnotation terrainControl = new ControlAnnotation(terrainIcon);
+//			terrainControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 250, 25));
+//			terrainControl.setPrimaryActionCommand(WorldPresenter.ACTION_TERRAIN_LOAD);
+//			terrainControl.setSecondaryActionCommand(ACTION_TERRAIN_SETUP);
+//			terrainControl.addActionListener(new TerrainControlListener());
+//
+//			ControlAnnotation swimControl = new ControlAnnotation(swimIcon);
+//			swimControl.getAttributes().setDrawOffset((new Point((wwd.getWidth() / 2) - 250, 25)));
+//			swimControl.setPrimaryActionCommand(WorldPresenter.ACTION_SWIM_LOAD);
+//			swimControl.setSecondaryActionCommand(WorldPresenter.ACTION_SWIM_SETUP);
+//			swimControl.addActionListener(new SwimControlListener());
+//
+//			ControlAnnotation environmentControl = new ControlAnnotation(environmentIcon);
+//			environmentControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 175, 25));
+//			environmentControl.setPrimaryActionCommand(WorldPresenter.ACTION_ENVIRONMENT_ENCLOSE);
+//			environmentControl.setSecondaryActionCommand(ACTION_ENVIRONMENT_SETUP);
+//			environmentControl.addActionListener(new EnvironmentControlListener());
+//			
+//			ControlAnnotation desirabilityControl = new ControlAnnotation(desirabilityIcon);
+//			desirabilityControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 425, 25));
+//			desirabilityControl.setPrimaryActionCommand(WorldPresenter.ACTION_DESIRABILITY_ENCLOSE);
+//			desirabilityControl.setSecondaryActionCommand(ACTION_DESIRABILITY_SETUP);
+//			desirabilityControl.addActionListener(new DesirabilityZoneControlListener());
+//
+//			ControlAnnotation poiControl = new ControlAnnotation(poiIcon);
+//			poiControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 100, 25));
+//			poiControl.setPrimaryActionCommand(WorldPresenter.ACTION_WAYPOINT_EDIT);
+//			poiControl.setSecondaryActionCommand(WorldPresenter.ACTION_WAYPOINT_SETUP);
+//			poiControl.addActionListener(new WaypointsControlListener());
+//
+//			ControlAnnotation plannerControl = new ControlAnnotation(plannerIcon);
+//			plannerControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 25, 25));
+//			plannerControl.setPrimaryActionCommand(WorldPresenter.ACTION_PLANNER_PLAN);
+//			plannerControl.setSecondaryActionCommand(WorldPresenter.ACTION_PLANNER_SETUP);
+//			plannerControl.addActionListener(new PlannerControlListener());
+//
+//			ControlAnnotation datalinkControl = new ControlAnnotation(datalinkIcon);
+//			datalinkControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 50, 25));
+//			datalinkControl.setPrimaryActionCommand(WorldPresenter.ACTION_DATALINK_MONITOR);
+//			datalinkControl.setSecondaryActionCommand(WorldPresenter.ACTION_DATALINK_SETUP);
+//			datalinkControl.addActionListener(new DatalinkControlListener());
+//
+//			ControlAnnotation uploadControl = new ControlAnnotation(uploadIcon);
+//			uploadControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 125, 25));
+//			uploadControl.setPrimaryActionCommand(WorldPresenter.ACTION_TRANSFER_UPLOAD);
+//			uploadControl.setSecondaryActionCommand(WorldPresenter.ACTION_NONE);
+//			uploadControl.addActionListener(new UploadControlListener());
+//
+//			ControlAnnotation takeoffControl = new ControlAnnotation(takeoffIcon);
+//			takeoffControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 200, 25));
+//			takeoffControl.setPrimaryActionCommand(WorldPresenter.ACTION_FLIGHT_TAKEOFF);
+//			takeoffControl.setSecondaryActionCommand(WorldPresenter.ACTION_FLIGHT_SETUP);
+//			takeoffControl.addActionListener(new TakeOffControlListener());
+//
+//			ControlAnnotation landControl = new ControlAnnotation(landIcon);
+//			landControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 275, 25));
+//			landControl.setPrimaryActionCommand(WorldPresenter.ACTION_FLIGHT_LAND);
+//			landControl.setSecondaryActionCommand(WorldPresenter.ACTION_FLIGHT_RETURN);
+//			landControl.addActionListener(new LandControlListener());
+//
+//			ControlAnnotation viewControl = new ControlAnnotation(viewIcon);
+//			viewControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 350, 25));
+//			viewControl.setPrimaryActionCommand(WorldPresenter.ACTION_VIEW_CYCLE);
+//			viewControl.setSecondaryActionCommand(WorldPresenter.ACTION_VIEW_RESET);
+//			viewControl.addActionListener(new ViewControlListener());
 
 			controlLayer.addAnnotation(aircraftControl);
 			wwd.addSelectListener(aircraftControl);
@@ -1533,18 +1626,30 @@ public class WorldPresenter implements Initializable {
 			wwd.addComponentListener(new ComponentAdapter() {
 				@Override
 				public void componentResized(ComponentEvent event) {
-					aircraftControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 325, 25));
-					swimControl.getAttributes().setDrawOffset((new Point((wwd.getWidth() / 2) - 250, 25)));
-					environmentControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 175, 25));
-					poiControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 100, 25));
-					plannerControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 25, 25));
-					datalinkControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 50, 25));
-					uploadControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 125, 25));
-					takeoffControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 200, 25));
-					landControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 275, 25));
-					viewControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 350, 25));
-					desirabilityControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 425, 25));
-					terrainControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 500, 25));
+					int offset = -400;
+					aircraftControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + offset, 25));
+					offset += 75;
+					terrainControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + offset, 25));
+					offset += 75;
+					swimControl.getAttributes().setDrawOffset((new Point((wwd.getWidth() / 2) + offset, 25)));
+					offset += 75;
+					environmentControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + offset, 25));
+					offset += 75;
+					desirabilityControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + offset, 25));
+					offset += 75;
+					poiControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + offset, 25));
+					offset += 75;
+					plannerControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + offset, 25));
+					offset += 75;
+					datalinkControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + offset, 25));
+					offset += 75;
+					uploadControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + offset, 25));
+					offset += 75;
+					takeoffControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + offset, 25));
+					offset += 75;
+					landControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + offset, 25));
+					offset += 75;
+					viewControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + offset, 25));
 					statusAnnotation.setScreenPoint(new Point(wwd.getWidth() / 2, wwd.getHeight() - 75));
 				}
 			});
