@@ -268,6 +268,12 @@ public class WorldPresenter implements Initializable {
 
 	/** the reset view action command */
 	public static final String ACTION_VIEW_RESET = "WorldPresenter.ActionCommand.ViewReset";
+	
+	// TODO: Temporary for telemetry
+	@Inject
+	private String telemetryIcon;
+	public static final String ACTION_TELEMETRY_WRITE = "WorldPresenter.ActionCommand.TelemetryWrite";
+	public static final String ACTION_TELEMETRY_READ = "WorldPresenter.ActionCommand.TelemetryRead";
 
 	// TODO: consider to move all visible UI text into properties files
 
@@ -1125,27 +1131,6 @@ public class WorldPresenter implements Initializable {
 			}
 		});
 	}
-	
-	public void printToFile(Trajectory trajectory) {
-		try {
-			System.out.println("creating file");
-			PrintWriter printWriter = new PrintWriter("worldwind-comm/waypoints.txt", "UTF-8");
-			ArrayList<Waypoint> waypoints = new ArrayList<Waypoint>();
-			for (Waypoint waypoint : trajectory.getWaypoints()) {
-				waypoints.add(waypoint);
-			}
-			for (int i = 0; i < trajectory.getLength(); i++) {
-				printWriter.printf("%f	%f	%f\n",
-						waypoints.get(i).getLatitude().degrees,
-						waypoints.get(i).getLongitude().degrees,
-						waypoints.get(i).elevation);
-			}
-			printWriter.close();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
 
 	/**
 	 * Toggles the datalink monitor of the active scenario asynchronously.
@@ -1510,77 +1495,12 @@ public class WorldPresenter implements Initializable {
 			ControlAnnotation viewControl = this.createControlAnnotation(viewIcon, offset,
 					WorldPresenter.ACTION_VIEW_CYCLE, WorldPresenter.ACTION_VIEW_RESET);
 			viewControl.addActionListener(new ViewControlListener());
-			//			ControlAnnotation aircraftControl = new ControlAnnotation(aircraftIcon);
-//			aircraftControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 400, 25));
-//			aircraftControl.setPrimaryActionCommand(WorldPresenter.ACTION_AICRAFT_SET);
-//			aircraftControl.setSecondaryActionCommand(WorldPresenter.ACTION_AIRCAFT_SETUP);
-//			aircraftControl.addActionListener(new AircraftControlListener());
-//			
-//			ControlAnnotation terrainControl = new ControlAnnotation(terrainIcon);
-//			terrainControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 250, 25));
-//			terrainControl.setPrimaryActionCommand(WorldPresenter.ACTION_TERRAIN_LOAD);
-//			terrainControl.setSecondaryActionCommand(ACTION_TERRAIN_SETUP);
-//			terrainControl.addActionListener(new TerrainControlListener());
-//
-//			ControlAnnotation swimControl = new ControlAnnotation(swimIcon);
-//			swimControl.getAttributes().setDrawOffset((new Point((wwd.getWidth() / 2) - 250, 25)));
-//			swimControl.setPrimaryActionCommand(WorldPresenter.ACTION_SWIM_LOAD);
-//			swimControl.setSecondaryActionCommand(WorldPresenter.ACTION_SWIM_SETUP);
-//			swimControl.addActionListener(new SwimControlListener());
-//
-//			ControlAnnotation environmentControl = new ControlAnnotation(environmentIcon);
-//			environmentControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 175, 25));
-//			environmentControl.setPrimaryActionCommand(WorldPresenter.ACTION_ENVIRONMENT_ENCLOSE);
-//			environmentControl.setSecondaryActionCommand(ACTION_ENVIRONMENT_SETUP);
-//			environmentControl.addActionListener(new EnvironmentControlListener());
-//			
-//			ControlAnnotation desirabilityControl = new ControlAnnotation(desirabilityIcon);
-//			desirabilityControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 425, 25));
-//			desirabilityControl.setPrimaryActionCommand(WorldPresenter.ACTION_DESIRABILITY_ENCLOSE);
-//			desirabilityControl.setSecondaryActionCommand(ACTION_DESIRABILITY_SETUP);
-//			desirabilityControl.addActionListener(new DesirabilityZoneControlListener());
-//
-//			ControlAnnotation poiControl = new ControlAnnotation(poiIcon);
-//			poiControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 100, 25));
-//			poiControl.setPrimaryActionCommand(WorldPresenter.ACTION_WAYPOINT_EDIT);
-//			poiControl.setSecondaryActionCommand(WorldPresenter.ACTION_WAYPOINT_SETUP);
-//			poiControl.addActionListener(new WaypointsControlListener());
-//
-//			ControlAnnotation plannerControl = new ControlAnnotation(plannerIcon);
-//			plannerControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 25, 25));
-//			plannerControl.setPrimaryActionCommand(WorldPresenter.ACTION_PLANNER_PLAN);
-//			plannerControl.setSecondaryActionCommand(WorldPresenter.ACTION_PLANNER_SETUP);
-//			plannerControl.addActionListener(new PlannerControlListener());
-//
-//			ControlAnnotation datalinkControl = new ControlAnnotation(datalinkIcon);
-//			datalinkControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 50, 25));
-//			datalinkControl.setPrimaryActionCommand(WorldPresenter.ACTION_DATALINK_MONITOR);
-//			datalinkControl.setSecondaryActionCommand(WorldPresenter.ACTION_DATALINK_SETUP);
-//			datalinkControl.addActionListener(new DatalinkControlListener());
-//
-//			ControlAnnotation uploadControl = new ControlAnnotation(uploadIcon);
-//			uploadControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 125, 25));
-//			uploadControl.setPrimaryActionCommand(WorldPresenter.ACTION_TRANSFER_UPLOAD);
-//			uploadControl.setSecondaryActionCommand(WorldPresenter.ACTION_NONE);
-//			uploadControl.addActionListener(new UploadControlListener());
-//
-//			ControlAnnotation takeoffControl = new ControlAnnotation(takeoffIcon);
-//			takeoffControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 200, 25));
-//			takeoffControl.setPrimaryActionCommand(WorldPresenter.ACTION_FLIGHT_TAKEOFF);
-//			takeoffControl.setSecondaryActionCommand(WorldPresenter.ACTION_FLIGHT_SETUP);
-//			takeoffControl.addActionListener(new TakeOffControlListener());
-//
-//			ControlAnnotation landControl = new ControlAnnotation(landIcon);
-//			landControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 275, 25));
-//			landControl.setPrimaryActionCommand(WorldPresenter.ACTION_FLIGHT_LAND);
-//			landControl.setSecondaryActionCommand(WorldPresenter.ACTION_FLIGHT_RETURN);
-//			landControl.addActionListener(new LandControlListener());
-//
-//			ControlAnnotation viewControl = new ControlAnnotation(viewIcon);
-//			viewControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 350, 25));
-//			viewControl.setPrimaryActionCommand(WorldPresenter.ACTION_VIEW_CYCLE);
-//			viewControl.setSecondaryActionCommand(WorldPresenter.ACTION_VIEW_RESET);
-//			viewControl.addActionListener(new ViewControlListener());
+			
+			// TODO Temporary for telemetry
+			offset += 75;
+			ControlAnnotation telemetryControl = this.createControlAnnotation(telemetryIcon, offset,
+					WorldPresenter.ACTION_TELEMETRY_WRITE, WorldPresenter.ACTION_TELEMETRY_READ);
+			telemetryControl.addActionListener(new TelemetryControlListener());
 
 			controlLayer.addAnnotation(aircraftControl);
 			wwd.addSelectListener(aircraftControl);
@@ -1606,6 +1526,8 @@ public class WorldPresenter implements Initializable {
 			wwd.addSelectListener(desirabilityControl);
 			controlLayer.addAnnotation(terrainControl);
 			wwd.addSelectListener(terrainControl);
+			controlLayer.addAnnotation(telemetryControl);
+			wwd.addSelectListener(telemetryControl);
 			wwd.getModel().getLayers().add(controlLayer);
 
 			// add on-screen status
@@ -1650,6 +1572,8 @@ public class WorldPresenter implements Initializable {
 					landControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + offset, 25));
 					offset += 75;
 					viewControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + offset, 25));
+					offset += 75;
+					telemetryControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + offset, 25));
 					statusAnnotation.setScreenPoint(new Point(wwd.getWidth() / 2, wwd.getHeight() - 75));
 				}
 			});
@@ -2434,5 +2358,78 @@ public class WorldPresenter implements Initializable {
 			}
 		}
 	}
+	
+	// TODO Temporary for telemetry
+	private class TelemetryControlListener implements ActionListener {
 
+		/**
+		 * Performs the terrain control action.
+		 * 
+		 * @param e the action event associated with the terrain control action
+		 * 
+		 * @see ActionListener#actionPerformed(ActionEvent)
+		 */
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+			Scenario scenario = session.getActiveScenario();
+			switch (e.getActionCommand()) {
+			case WorldPresenter.ACTION_TELEMETRY_WRITE:
+				printToFile(scenario.getTrajectory());
+				break;
+			case WorldPresenter.ACTION_TELEMETRY_READ:
+				// Read lat-lon-hei
+				File file = new File("worldwind-comm/position.txt");
+				Scanner sc = null;
+				try {
+					sc = new Scanner(file);
+				} catch (FileNotFoundException exc) {
+					exc.printStackTrace();
+				}
+				sc.useDelimiter(" ");
+				double lat = Double.parseDouble(sc.next());
+				double lon = Double.parseDouble(sc.next());
+				double alt = Double.parseDouble(sc.next());
+				// Add aircraft
+				if (scenario.hasAircraft() && (0 < scenario.getWaypoints().size())) {
+					scenario.removeWaypoint(0);
+				}
+				MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
+				Waypoint wpt = new Waypoint(Position.fromDegrees(lat, lon, alt));
+				wpt.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt, null)));
+				wpt.getDepiction().setVisible(true);
+				Iris iris = new Iris(wpt, 2.5, CombatIdentification.FRIEND);
+				iris.moveTo(wpt);
+				iris.setCostInterval(new CostInterval(
+						"iris",
+						ZonedDateTime.now(ZoneId.of("UTC")).minusYears(10),
+						ZonedDateTime.now(ZoneId.of("UTC")).plusYears(10),
+						100d));
+				session.getActiveScenario().setAircraft(iris);
+				session.getActiveScenario().addWaypoint(0, wpt);
+				break;
+			}
+		}
+	}
+	
+	public void printToFile(Trajectory trajectory) {
+		try {
+			System.out.println("creating file");
+			PrintWriter printWriter = new PrintWriter("worldwind-comm/waypoints.txt", "UTF-8");
+			ArrayList<Waypoint> waypoints = new ArrayList<Waypoint>();
+			for (Waypoint waypoint : trajectory.getWaypoints()) {
+				waypoints.add(waypoint);
+			}
+			for (int i = 0; i < trajectory.getLength(); i++) {
+				printWriter.printf("%f	%f	%f\n",
+						waypoints.get(i).getLatitude().degrees,
+						waypoints.get(i).getLongitude().degrees,
+						waypoints.get(i).elevation);
+			}
+			printWriter.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }
