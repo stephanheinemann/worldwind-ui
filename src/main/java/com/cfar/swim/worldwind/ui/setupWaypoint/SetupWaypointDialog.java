@@ -39,8 +39,6 @@ import com.cfar.swim.worldwind.ui.WorldwindPlanner;
 
 import gov.nasa.worldwind.Configuration;
 import gov.nasa.worldwind.avlist.AVKey;
-import gov.nasa.worldwind.geom.Angle;
-import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.symbology.milstd2525.MilStd2525PointGraphicRetriever;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;

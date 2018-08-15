@@ -1215,6 +1215,37 @@ public class WorldPresenter implements Initializable {
 	}
 
 	/**
+	 * Starts a mission, by changing the aircraft mode to AUTO.
+	 */
+	private void startMission() {
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+				Datalink datalink = session.getActiveScenario().getDatalink();
+
+				if (!datalink.isConnected()) {
+					datalink.connect();
+				}
+				// TODO: check if aircraft has an uploaded mission, instead of checking if
+				// active scenario has trajectory
+				if (datalink.isConnected() && session.getActiveScenario().hasTrajectory()) {
+					setWorldMode(WorldMode.UPLOADING);
+					datalink.setAircraftMode("AUTO");
+					setWorldMode(WorldMode.VIEW);
+				} else {
+					alert(
+							AlertType.ERROR,
+							PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
+							PlannerAlert.ALERT_HEADER_DATALINK_INVALID,
+							PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
+							null);
+				}
+			}
+		});
+	}
+
+	/**
 	 * Issues a take-off command via the datalink of the active scenario
 	 * asynchronously.
 	 */
@@ -2216,6 +2247,8 @@ public class WorldPresenter implements Initializable {
 				break;
 			case WorldPresenter.ACTION_NONE:
 				// TODO: possibly download flight-log, TransferControlListener
+				// Sets the aircraft mode to AUTO, in order to begin the autonomous mission
+				startMission();
 				break;
 			}
 		}

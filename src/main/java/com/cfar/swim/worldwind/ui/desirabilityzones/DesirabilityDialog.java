@@ -85,6 +85,8 @@ public class DesirabilityDialog extends Dialog<Double> {
 		this.setGraphic(imageView);
 
 		this.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+		ButtonType clear = new ButtonType("Clear");
+		this.getDialogPane().getButtonTypes().add(clear);
 		this.getDialogPane().lookupButton(ButtonType.OK).setDisable(true);
 
 		DesirabilityView desirabilityView = new DesirabilityView();
@@ -103,6 +105,10 @@ public class DesirabilityDialog extends Dialog<Double> {
 			}
 			if (dialogButton.equals(ButtonType.CANCEL)) {
 				desirabilityValue = setup.getDesirabilitySpecification();
+			}
+			if (dialogButton.equals(clear)) {
+				desirabilityValue = setup.getDesirabilitySpecification();
+				session.getActiveScenario().clearDesirabilityZones();
 			}
 
 			return desirabilityValue;
