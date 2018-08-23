@@ -94,11 +94,11 @@
             </VBox>
       </content>
     </Tab>
-      <Tab text="SWIM">
+      <!--Tab text="SWIM">
         <content>
           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="400.0" prefWidth="600.0" />
         </content>
-      </Tab>
+      </Tab-->
       <Tab text="Planner">
         <content>
             <VBox prefHeight="400.0" prefWidth="600.0">

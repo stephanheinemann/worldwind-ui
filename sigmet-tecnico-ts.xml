@@ -51,8 +51,8 @@
     <!-- Valid period for this report -->
     <iwxxm:validPeriod>
         <gml:TimePeriod gml:id="tp-20120825T1600Z-20120825T2200Z">
-            <gml:beginPosition>2018-07-24T16:00:00Z</gml:beginPosition>
-            <gml:endPosition>2018-07-24T18:00:00Z</gml:endPosition>
+            <gml:beginPosition>2018-08-01T00:00:00Z</gml:beginPosition>
+            <gml:endPosition>2018-08-01T02:00:00Z</gml:endPosition>
         </gml:TimePeriod>
     </iwxxm:validPeriod>
 
@@ -66,13 +66,13 @@
             <!-- time of observed conditions -->
             <om:phenomenonTime>
                 <gml:TimeInstant gml:id="ti-20120825T1600Z">
-                    <gml:timePosition>2018-07-24T16:00:00Z</gml:timePosition>
+                    <gml:timePosition>2018-08-01T00:00:00Z</gml:timePosition>
                 </gml:TimeInstant>
             </om:phenomenonTime>
             <!-- time at which the results of the observation were made available -->
             <om:resultTime>
                 <gml:TimeInstant gml:id="ti-201208251600Z">
-                    <gml:timePosition>2018-07-24T16:00:00Z</gml:timePosition>
+                    <gml:timePosition>2018-08-01T00:00:00Z</gml:timePosition>
                 </gml:TimeInstant>
             </om:resultTime>
             <!-- The valid period for this observation is the period of the entire SIGMET -->
@@ -150,13 +150,13 @@
             <!-- time of forecast conditions -->
             <om:phenomenonTime>
                 <gml:TimeInstant gml:id="ti-20120825T1600Z2">
-                    <gml:timePosition>2018-07-24T18:00:00Z</gml:timePosition>
+                    <gml:timePosition>2018-08-01T02:00:00Z</gml:timePosition>
                 </gml:TimeInstant>
             </om:phenomenonTime>
             <!-- time at which the results of the observation were made available -->
             <om:resultTime>
                 <gml:TimeInstant gml:id="ti-201208251600Z3">
-                    <gml:timePosition>2018-07-24T16:00:00Z</gml:timePosition>
+                    <gml:timePosition>2018-08-01T00:00:00Z</gml:timePosition>
                 </gml:TimeInstant>
             </om:resultTime>
             <!-- The valid period for this observation is the period of the entire SIGMET -->

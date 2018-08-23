@@ -48,7 +48,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -82,8 +81,6 @@ import com.cfar.swim.worldwind.planning.Trajectory;
 import com.cfar.swim.worldwind.planning.Waypoint;
 import com.cfar.swim.worldwind.registries.Specification;
 import com.cfar.swim.worldwind.render.Obstacle;
-import com.cfar.swim.worldwind.render.TerrainObstacle;
-import com.cfar.swim.worldwind.render.airspaces.ObstacleCylinder;
 import com.cfar.swim.worldwind.render.airspaces.TerrainBox;
 import com.cfar.swim.worldwind.render.annotations.ControlAnnotation;
 import com.cfar.swim.worldwind.render.annotations.DepictionAnnotation;
@@ -116,12 +113,8 @@ import gov.nasa.worldwind.layers.ViewControlsSelectListener;
 import gov.nasa.worldwind.render.BasicShapeAttributes;
 import gov.nasa.worldwind.render.Material;
 import gov.nasa.worldwind.render.ScreenAnnotation;
-import gov.nasa.worldwind.render.airspaces.AirspaceAttributes;
-import gov.nasa.worldwind.render.airspaces.AirspaceRenderer;
 import gov.nasa.worldwind.render.markers.Marker;
-import gov.nasa.worldwind.symbology.SymbologyConstants;
 import gov.nasa.worldwind.symbology.milstd2525.MilStd2525GraphicFactory;
-import gov.nasa.worldwind.symbology.milstd2525.MilStd2525TacticalSymbol;
 import gov.nasa.worldwind.util.StatusBar;
 import gov.nasa.worldwind.view.firstperson.BasicFlyView;
 import gov.nasa.worldwind.view.orbit.BasicOrbitView;
@@ -250,6 +243,9 @@ public class WorldPresenter implements Initializable {
 
 	/** the upload action command */
 	public static final String ACTION_TRANSFER_UPLOAD = "WorldPresenter.ActionCommand.TransferUpload";
+	
+	/** the start misision action command */
+	public static final String ACTION_START_MISSION = "WorldPresenter.ActionCommand.StartMisiion";
 
 	/** the take-off action command */
 	public static final String ACTION_FLIGHT_TAKEOFF = "WorldPresenter.ActionCommand.FlightTakeOff";
@@ -262,6 +258,9 @@ public class WorldPresenter implements Initializable {
 
 	/** the return action command */
 	public static final String ACTION_FLIGHT_RETURN = "WorldPresenter.ActionCommand.Return";
+	
+	/** the auto action command */
+	public static final String ACTION_FLIGHT_AUTO = "WorldPresenter.ActionCommand.Auto";
 
 	/** the cycle view action command */
 	public static final String ACTION_VIEW_CYCLE = "WorldPresenter.ActionCommand.ViewCycle";
@@ -956,6 +955,43 @@ public class WorldPresenter implements Initializable {
 	}
 	
 	/**
+	 * Loads the default SWIM file asynchronously.
+	 */
+	private void defaultLoadSWIM() {
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				setWorldMode(WorldMode.LOADING);
+				// Add Obstacle 
+				// Tecnico
+				File file = new File("sigmet-tecnico-ts.xml");
+				if (null != file) {
+					executor.execute(new Runnable() {
+						@Override
+						public void run() {
+							try {
+								setWorldMode(WorldMode.LOADING);
+								// TODO: generic SWIM loader
+								IwxxmLoader loader = new IwxxmLoader();
+								Set<Obstacle> obstacles = loader.load(new InputSource(new FileInputStream(file)));
+								for (Obstacle obstacle : obstacles) {
+									scenario.addObstacle(obstacle);
+								}
+								setWorldMode(WorldMode.VIEW);
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					});
+				}
+
+				setWorldMode(WorldMode.VIEW);
+			}
+			
+		});
+	}
+	
+	/**
 	 * Opens a planner alert with a specified alert type, title, header and content.
 	 * A result can be passed for synchronization.
 	 * 
@@ -1509,7 +1545,7 @@ public class WorldPresenter implements Initializable {
 			offset += 75;
 			
 			ControlAnnotation uploadControl = this.createControlAnnotation(uploadIcon, offset,
-					WorldPresenter.ACTION_TRANSFER_UPLOAD, WorldPresenter.ACTION_NONE);
+					WorldPresenter.ACTION_TRANSFER_UPLOAD, WorldPresenter.ACTION_START_MISSION);
 			uploadControl.addActionListener(new UploadControlListener());
 			offset += 75;
 			
@@ -2103,7 +2139,8 @@ public class WorldPresenter implements Initializable {
 								WorldPresenter.FILE_CHOOSER_EXTENSION_SWIM) });
 				break;
 			case WorldPresenter.ACTION_SWIM_SETUP:
-				setup(SetupDialog.SWIM_TAB_INDEX);
+				defaultLoadSWIM(); // TODO: Temporary for flight testing
+				// setup(SetupDialog.SWIM_TAB_INDEX);
 				break;
 			}
 		}
@@ -2245,10 +2282,10 @@ public class WorldPresenter implements Initializable {
 			case WorldPresenter.ACTION_TRANSFER_UPLOAD:
 				upload();
 				break;
-			case WorldPresenter.ACTION_NONE:
+			case WorldPresenter.ACTION_START_MISSION:
+				startMission();
 				// TODO: possibly download flight-log, TransferControlListener
 				// Sets the aircraft mode to AUTO, in order to begin the autonomous mission
-				startMission();
 				break;
 			}
 		}
@@ -2386,7 +2423,7 @@ public class WorldPresenter implements Initializable {
 								WorldPresenter.FILE_CHOOSER_EXTENSION_TERRAIN) });
 				break;
 			case WorldPresenter.ACTION_TERRAIN_SETUP:
-				defaultLoadTerrain();
+				defaultLoadTerrain();  // TODO: Temporary for flight testing
 				break;
 			}
 		}
