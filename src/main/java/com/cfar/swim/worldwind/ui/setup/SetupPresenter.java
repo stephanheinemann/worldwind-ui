@@ -43,6 +43,9 @@ import com.cfar.swim.worldwind.aircraft.Aircraft;
 import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.planning.Environment;
 import com.cfar.swim.worldwind.registries.Specification;
+import com.cfar.swim.worldwind.registries.aircraft.AircraftProperties;
+import com.cfar.swim.worldwind.registries.connections.DatalinkProperties;
+import com.cfar.swim.worldwind.registries.environments.EnvironmentProperties;
 import com.cfar.swim.worldwind.registries.planners.PlannerProperties;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
@@ -101,8 +104,21 @@ public class SetupPresenter implements Initializable {
 	@FXML
 	private ComboBox<String> datalink;
 
+	/** the aircraft label contain its description */
+	@FXML
+	private Label aircraftDescription;
+	
+	/** the environment label contain its description */
+	@FXML
+	private Label environmentDescription;
+	
+	/** the planer label contain its description */
 	@FXML
 	private Label plannerDescription;
+	
+	/** the data link label contain its description */
+	@FXML
+	private Label datalinkDescription;
 
 	/** the setup model to be modified in the setup view */
 	@Inject
@@ -141,7 +157,12 @@ public class SetupPresenter implements Initializable {
 				setupModel.setAircraftProperties(aircraftSpec.getProperties().clone());
 				PropertySheet propertySheet = new PropertySheet(
 						BeanPropertyUtils.getProperties(setupModel.getAircraftProperties()));
+				propertySheet.setMode(PropertySheet.Mode.CATEGORY);
 				aircraftPropertiesPane.setContent(propertySheet);
+				
+				aircraftDescription.setText(((AircraftProperties) setupModel.getAircraftProperties()).getDescription());
+				aircraftDescription.setWrapText(true);
+				
 				aircraft.valueProperty().addListener(new AircraftChangeListener());
 				aircraft.layout();
 			}
@@ -167,6 +188,10 @@ public class SetupPresenter implements Initializable {
 						BeanPropertyUtils.getProperties(setupModel.getEnvironmentProperties()));
 				propertySheet.setMode(PropertySheet.Mode.CATEGORY);
 				envPropertiesPane.setContent(propertySheet);
+				
+				environmentDescription.setText(((EnvironmentProperties) setupModel.getEnvironmentProperties()).getDescription());
+				environmentDescription.setWrapText(true);
+				
 				environment.valueProperty().addListener(new EnvironmentChangeListener());
 				environment.layout();
 			}
@@ -197,27 +222,14 @@ public class SetupPresenter implements Initializable {
 						BeanPropertyUtils.getProperties(setupModel.getPlannerProperties()));
 				propertySheet.setMode(PropertySheet.Mode.CATEGORY);
 				plannerPropertiesPane.setContent(propertySheet);
+				
 				plannerDescription.setText(((PlannerProperties) setupModel.getPlannerProperties()).getDescription());
 				plannerDescription.setWrapText(true);
+				
 				plannerFamily.valueProperty().addListener(new PlannerFamilyChangeListener());
 				planner.valueProperty().addListener(new PlannerChangeListener());
 				planner.layout();
 
-				// Callback<Item, PropertyEditor<?>> oldFactory =
-				// propertySheet.getPropertyEditorFactory();
-				// propertySheet.setPropertyEditorFactory(new Callback<PropertySheet.Item,
-				// PropertyEditor<?>>() {
-				// @Override
-				// public PropertyEditor<?> call(PropertySheet.Item item) {
-				// if (item.getName() == "Planner") {
-				// QueryPlannerPropertyEditor queryEditor = new
-				// QueryPlannerPropertyEditor(item);
-				// return queryEditor.getPropertyEditor();
-				// }
-				// return oldFactory.call(item);
-				// }
-				//
-				// });
 			}
 		});
 	}
@@ -239,7 +251,12 @@ public class SetupPresenter implements Initializable {
 				setupModel.setDatalinkProperties(datalinkSpec.getProperties().clone());
 				PropertySheet propertySheet = new PropertySheet(
 						BeanPropertyUtils.getProperties(setupModel.getDatalinkProperties()));
+				propertySheet.setMode(PropertySheet.Mode.CATEGORY);
 				datalinkPropertiesPane.setContent(propertySheet);
+				
+				datalinkDescription.setText(((DatalinkProperties) setupModel.getDatalinkProperties()).getDescription());
+				datalinkDescription.setWrapText(true);
+				
 				datalink.valueProperty().addListener(new DatalinkChangeListener());
 				datalink.layout();
 			}
@@ -273,7 +290,12 @@ public class SetupPresenter implements Initializable {
 					setupModel.setAircraftProperties(aircraftSpec.getProperties().clone());
 					PropertySheet propertySheet = new PropertySheet(
 							BeanPropertyUtils.getProperties(setupModel.getAircraftProperties()));
+					propertySheet.setMode(PropertySheet.Mode.CATEGORY);
 					aircraftPropertiesPane.setContent(propertySheet);
+					
+					aircraftDescription.setText(((AircraftProperties) setupModel.getAircraftProperties()).getDescription());
+					aircraftDescription.setWrapText(true);
+					
 					aircraftPropertiesPane.layout();
 				}
 			});
@@ -307,7 +329,12 @@ public class SetupPresenter implements Initializable {
 					setupModel.setEnvironmentProperties(envSpec.getProperties().clone());
 					PropertySheet propertySheet = new PropertySheet(
 							BeanPropertyUtils.getProperties(setupModel.getEnvironmentProperties()));
+					propertySheet.setMode(PropertySheet.Mode.CATEGORY);
 					envPropertiesPane.setContent(propertySheet);
+					
+					environmentDescription.setText(((EnvironmentProperties) setupModel.getEnvironmentProperties()).getDescription());
+					environmentDescription.setWrapText(true);
+					
 					envPropertiesPane.layout();
 				}
 			});
@@ -425,7 +452,12 @@ public class SetupPresenter implements Initializable {
 					setupModel.setDatalinkProperties(datalinkSpec.getProperties().clone());
 					PropertySheet propertySheet = new PropertySheet(
 							BeanPropertyUtils.getProperties(setupModel.getDatalinkProperties()));
+					propertySheet.setMode(PropertySheet.Mode.CATEGORY);
 					datalinkPropertiesPane.setContent(propertySheet);
+					
+					datalinkDescription.setText(((DatalinkProperties) setupModel.getDatalinkProperties()).getDescription());
+					datalinkDescription.setWrapText(true);
+					
 					datalinkPropertiesPane.layout();
 				}
 			});
