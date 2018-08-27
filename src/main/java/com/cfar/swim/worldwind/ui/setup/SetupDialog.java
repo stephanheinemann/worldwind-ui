@@ -66,13 +66,13 @@ public class SetupDialog extends Dialog<Setup> {
 	public static final int ENVIRONMENT_TAB_INDEX = 1;
 	
 	/** the swim tab index of a setup dialog */
-	public static final int SWIM_TAB_INDEX = 2;
+	// public static final int SWIM_TAB_INDEX = 2;
 	
 	/** the planner tab index of a setup dialog */
-	public static final int PLANNER_TAB_INDEX = 3;
+	public static final int PLANNER_TAB_INDEX = 2;
 	
 	/** the datalink tab index of a setup dialog */
-	public static final int DATALINK_TAB_INDEX = 4;
+	public static final int DATALINK_TAB_INDEX = 3;
 	
 	/** the setup view populated in this setup dialog */
 	private SetupView setupView = null;

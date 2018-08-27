@@ -795,9 +795,6 @@ public class WorldPresenter implements Initializable {
 				SetupWaypointDialog waypointDialog = new SetupWaypointDialog(SetupWaypointDialog.TITLE_SETUP,
 						SetupWaypointDialog.HEADER_SETUP);
 				Optional<Double> inputAltitude = waypointDialog.showAndWait();
-				if (inputAltitude.isPresent()) {
-					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-				}
 			}
 		});
 	}
