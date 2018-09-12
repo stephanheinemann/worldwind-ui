@@ -43,6 +43,14 @@
    <children>
       <MenuBar maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="30.0" prefWidth="1366.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <menus>
+          <Menu mnemonicParsing="false" text="Settings">
+            <items>
+                  <MenuItem mnemonicParsing="false" onAction="#about" text="About" />
+                  <MenuItem mnemonicParsing="false" onAction="#exit" text="Exit" />
+            </items>
+          </Menu>
+        </menus>
+        <!--menus>
           <Menu mnemonicParsing="false" text="Planner">
             <items>
                   <MenuItem mnemonicParsing="false" text="Plan" />
@@ -57,19 +65,19 @@
                   <MenuItem mnemonicParsing="false" text="Planner" />
                   <MenuItem mnemonicParsing="false" text="SWIM" />
               </items>
-            </Menu>
-            <Menu mnemonicParsing="false" text="Statistics">
-              <items>
-                <MenuItem mnemonicParsing="false" text="View" />
-              </items>
-            </Menu>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Statistics">
+            <items>
+              <MenuItem mnemonicParsing="false" text="View" />
+            </items>
+          </Menu>
           <Menu mnemonicParsing="false" text="Help">
             <items>
               <MenuItem mnemonicParsing="false" onAction="#about" text="About" />
             </items>
           </Menu>
-        </menus>
-      </MenuBar>
+        </menus--> 
+      </MenuBar>  
       <SplitPane dividerPositions="0.75" layoutY="30.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" orientation="VERTICAL" prefHeight="715.0" prefWidth="1366.0" AnchorPane.bottomAnchor="23.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="30.0">
         <items>
           <AnchorPane fx:id="worldPane">
