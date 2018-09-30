@@ -72,10 +72,12 @@ import com.cfar.swim.worldwind.aircraft.Aircraft;
 import com.cfar.swim.worldwind.aircraft.CombatIdentification;
 import com.cfar.swim.worldwind.aircraft.Iris;
 import com.cfar.swim.worldwind.connections.Datalink;
+import com.cfar.swim.worldwind.geom.Box;
 import com.cfar.swim.worldwind.iwxxm.IwxxmLoader;
 import com.cfar.swim.worldwind.planning.CostInterval;
 import com.cfar.swim.worldwind.planning.DesirabilityZone;
 import com.cfar.swim.worldwind.planning.Environment;
+import com.cfar.swim.worldwind.planning.SamplingEnvironment;
 import com.cfar.swim.worldwind.planning.TrackPoint;
 import com.cfar.swim.worldwind.planning.Trajectory;
 import com.cfar.swim.worldwind.planning.Waypoint;
@@ -105,6 +107,8 @@ import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.LatLon;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Sector;
+import gov.nasa.worldwind.globes.Earth;
+import gov.nasa.worldwind.globes.Globe;
 import gov.nasa.worldwind.layers.AnnotationLayer;
 import gov.nasa.worldwind.layers.MarkerLayer;
 import gov.nasa.worldwind.layers.RenderableLayer;
@@ -918,10 +922,14 @@ public class WorldPresenter implements Initializable {
 		            e.printStackTrace();
 		        }
 
+				// Test scenario
+				Position origin = Position.fromDegrees(38.737, -9.137, 80);
+				Position destination = Position.fromDegrees(38.7367, -9.1402, 105);
 				// Add aircraft
 				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 				MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
-				Waypoint wpt = new Waypoint(Position.fromDegrees(38.73692, -9.13843, 98));
+				Waypoint wpt = new Waypoint(origin);
+				// Waypoint wpt = new Waypoint(Position.fromDegrees(38.73692, -9.13843, 98));
 				wpt.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt, null)));
 				wpt.getDepiction().setVisible(true);
 				Iris iris = new Iris(wpt, 2.5, CombatIdentification.FRIEND);
@@ -935,16 +943,32 @@ public class WorldPresenter implements Initializable {
 				session.getActiveScenario().addWaypoint(0, wpt);
 				
 				// Add Wpt1
-				Waypoint wpt1 = new Waypoint(Position.fromDegrees(38.73762, -9.13948, 105));
+				Waypoint wpt1 = new Waypoint(destination);
+				// Waypoint wpt1 = new Waypoint(Position.fromDegrees(38.73762, -9.13948, 105));
 				wpt1.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt1, null)));
 				wpt1.getDepiction().setVisible(true);
 				session.getActiveScenario().addWaypoint(1, wpt1);
 				
 				// Add Wpt2
-				Waypoint wpt2 = new Waypoint(Position.fromDegrees(38.73668, -9.14024, 105));
-				wpt2.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt2, null)));
-				wpt2.getDepiction().setVisible(true);
-				session.getActiveScenario().addWaypoint(2, wpt2);
+//				Waypoint wpt2 = new Waypoint(Position.fromDegrees(38.73668, -9.14024, 105));
+//				wpt2.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt2, null)));
+//				wpt2.getDepiction().setVisible(true);
+//				session.getActiveScenario().addWaypoint(2, wpt2);
+				
+				// Define Environment
+				Globe globe = new Earth();
+				Sector tecnico = new Sector(
+						Angle.fromDegrees(38.7381),
+						Angle.fromDegrees(38.7354),
+						Angle.fromDegrees(-9.1408),
+						Angle.fromDegrees(-9.1364));
+				session.getActiveScenario().setSector(tecnico);
+				gov.nasa.worldwind.geom.Box boxNASA = Sector.computeBoundingBox(globe, 1.0, tecnico, 80d, 109d);
+				// Create environment from box
+				SamplingEnvironment samplingEnv = new SamplingEnvironment(new Box(boxNASA));
+				samplingEnv.setGlobe(globe);
+				session.getActiveScenario().setEnvironment(samplingEnv);
+				initEnvironment();
 				
 				setWorldMode(WorldMode.VIEW);
 			}
