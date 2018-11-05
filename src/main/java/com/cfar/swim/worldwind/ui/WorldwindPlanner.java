@@ -77,9 +77,13 @@ public class WorldwindPlanner extends Application {
 			// Configuration.setValue(AVKey.INITIAL_LONGITUDE, -123.3104);
 			// Configuration.setValue(AVKey.INITIAL_ALTITUDE, 550);
 			// Tecnico
-			Configuration.setValue(AVKey.INITIAL_LATITUDE, 38.73678);
-			Configuration.setValue(AVKey.INITIAL_LONGITUDE, -9.13933);
-			Configuration.setValue(AVKey.INITIAL_ALTITUDE, 1500);
+			 Configuration.setValue(AVKey.INITIAL_LATITUDE, 38.73678);
+			 Configuration.setValue(AVKey.INITIAL_LONGITUDE, -9.13933);
+			 Configuration.setValue(AVKey.INITIAL_ALTITUDE, 1500);
+			// Sea
+//			Configuration.setValue(AVKey.INITIAL_LATITUDE, 48.4725);
+//			Configuration.setValue(AVKey.INITIAL_LONGITUDE, -123.255);
+//			Configuration.setValue(AVKey.INITIAL_ALTITUDE, 2000);
 			
 			SessionManager.getInstance().addSession(new Session(WorldwindPlanner.APPLICATION_TITLE));
 			PlannerView plannerView = new PlannerView();

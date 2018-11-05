@@ -923,7 +923,8 @@ public class WorldPresenter implements Initializable {
 		        }
 
 				// Test scenario
-				Position origin = Position.fromDegrees(38.737, -9.137, 80);
+//				Position origin = Position.fromDegrees(38.737, -9.137, 80); //TestClass
+				Position origin = Position.fromDegrees(38.73692, -9.13843, 98); //RealFlight
 				Position destination = Position.fromDegrees(38.7367, -9.1402, 105);
 				// Add aircraft
 				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
@@ -985,7 +986,7 @@ public class WorldPresenter implements Initializable {
 				setWorldMode(WorldMode.LOADING);
 				// Add Obstacle 
 				// Tecnico
-				File file = new File("sigmet-tecnico-ts.xml");
+				File file = new File("sigmet-victoria-thunderstrom.xml");
 				if (null != file) {
 					executor.execute(new Runnable() {
 						@Override
@@ -1005,7 +1006,68 @@ public class WorldPresenter implements Initializable {
 						}
 					});
 				}
+				File file2 = new File("sigmet-victoria-tropCyc.xml");
+				if (null != file2) {
+					executor.execute(new Runnable() {
+						@Override
+						public void run() {
+							try {
+								setWorldMode(WorldMode.LOADING);
+								// TODO: generic SWIM loader
+								IwxxmLoader loader = new IwxxmLoader();
+								Set<Obstacle> obstacles = loader.load(new InputSource(new FileInputStream(file2)));
+								for (Obstacle obstacle : obstacles) {
+									scenario.addObstacle(obstacle);
+								}
+								setWorldMode(WorldMode.VIEW);
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					});
+				}
 
+				// Test scenario
+				Position origin = Position.fromDegrees(48.4705, -123.259, 10);
+				Position destination = Position.fromDegrees(48.4745, -123.251, 40);
+				// Add aircraft
+				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+				MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
+				Waypoint wpt = new Waypoint(origin);
+				wpt.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt, null)));
+				wpt.getDepiction().setVisible(true);
+				Iris iris = new Iris(wpt, 2.5, CombatIdentification.FRIEND);
+				iris.moveTo(wpt);
+				iris.setCostInterval(new CostInterval(
+						"iris",
+						ZonedDateTime.now(ZoneId.of("UTC")).minusYears(10),
+						ZonedDateTime.now(ZoneId.of("UTC")).plusYears(10),
+						100d));
+				session.getActiveScenario().setAircraft(iris);
+				session.getActiveScenario().addWaypoint(0, wpt);
+				
+				// Add Wpt1
+				Waypoint wpt1 = new Waypoint(destination);
+				wpt1.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt1, null)));
+				wpt1.getDepiction().setVisible(true);
+				session.getActiveScenario().addWaypoint(1, wpt1);
+				
+				
+				// Define Environment
+				Globe globe = new Earth();
+				Sector sea = new Sector(
+						Angle.fromDegrees(48.470),
+						Angle.fromDegrees(48.475),
+						Angle.fromDegrees(-123.26),
+						Angle.fromDegrees(-123.25));
+				session.getActiveScenario().setSector(sea);
+				gov.nasa.worldwind.geom.Box boxNASA = Sector.computeBoundingBox(globe, 1.0, sea, 0d, 50d);
+				// Create environment from box
+				SamplingEnvironment samplingEnv = new SamplingEnvironment(new Box(boxNASA));
+				samplingEnv.setGlobe(globe);
+				session.getActiveScenario().setEnvironment(samplingEnv);
+				initEnvironment();
+				
 				setWorldMode(WorldMode.VIEW);
 			}
 			
