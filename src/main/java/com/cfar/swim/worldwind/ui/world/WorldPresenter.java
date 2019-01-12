@@ -48,6 +48,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -68,15 +70,18 @@ import org.xml.sax.InputSource;
 import com.cfar.swim.worldwind.ai.PlanRevisionListener;
 import com.cfar.swim.worldwind.ai.Planner;
 import com.cfar.swim.worldwind.ai.prm.fadprm.FADPRMPlanner;
+import com.cfar.swim.worldwind.aircraft.A320;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
 import com.cfar.swim.worldwind.aircraft.CombatIdentification;
 import com.cfar.swim.worldwind.aircraft.Iris;
 import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.geom.Box;
+import com.cfar.swim.worldwind.geom.Cube;
 import com.cfar.swim.worldwind.iwxxm.IwxxmLoader;
 import com.cfar.swim.worldwind.planning.CostInterval;
 import com.cfar.swim.worldwind.planning.DesirabilityZone;
 import com.cfar.swim.worldwind.planning.Environment;
+import com.cfar.swim.worldwind.planning.PlanningGrid;
 import com.cfar.swim.worldwind.planning.SamplingEnvironment;
 import com.cfar.swim.worldwind.planning.TrackPoint;
 import com.cfar.swim.worldwind.planning.Trajectory;
@@ -149,7 +154,7 @@ public class WorldPresenter implements Initializable {
 	/** the swim icon of the world view */
 	@Inject
 	private String swimIcon;
-	
+
 	/** the terrain icon of the world view */
 	@Inject
 	private String terrainIcon;
@@ -185,7 +190,7 @@ public class WorldPresenter implements Initializable {
 	/** the view icon of the world view */
 	@Inject
 	private String viewIcon;
-	
+
 	/** the desirability icon of the world view */
 	@Inject
 	private String desirabilityIcon;
@@ -208,7 +213,7 @@ public class WorldPresenter implements Initializable {
 
 	/** the setup swim action command */
 	public static final String ACTION_SWIM_SETUP = "WorldPresenter.ActionCommand.SwimSetup";
-	
+
 	/** the load terrain action command */
 	public static final String ACTION_TERRAIN_LOAD = "WorldPresenter.ActionCommand.TerrainLoad";
 
@@ -247,7 +252,7 @@ public class WorldPresenter implements Initializable {
 
 	/** the upload action command */
 	public static final String ACTION_TRANSFER_UPLOAD = "WorldPresenter.ActionCommand.TransferUpload";
-	
+
 	/** the start misision action command */
 	public static final String ACTION_START_MISSION = "WorldPresenter.ActionCommand.StartMisiion";
 
@@ -262,7 +267,7 @@ public class WorldPresenter implements Initializable {
 
 	/** the return action command */
 	public static final String ACTION_FLIGHT_RETURN = "WorldPresenter.ActionCommand.Return";
-	
+
 	/** the auto action command */
 	public static final String ACTION_FLIGHT_AUTO = "WorldPresenter.ActionCommand.Auto";
 
@@ -271,7 +276,7 @@ public class WorldPresenter implements Initializable {
 
 	/** the reset view action command */
 	public static final String ACTION_VIEW_RESET = "WorldPresenter.ActionCommand.ViewReset";
-	
+
 	// TODO: Temporary for telemetry
 	@Inject
 	private String telemetryIcon;
@@ -581,8 +586,7 @@ public class WorldPresenter implements Initializable {
 						BasicOrbitView basicOrbitView = (BasicOrbitView) view;
 						if (viewMode.equals(ViewMode.PLANNED_ABOVE)) {
 							if (scenario.hasAircraft()) {
-								basicOrbitView.setCenterPosition(
-										scenario.getAircraft().getReferencePosition());
+								basicOrbitView.setCenterPosition(scenario.getAircraft().getReferencePosition());
 								// TODO: plan does not contain attitude (airdata, heading)
 							} else {
 								view(false);
@@ -751,7 +755,6 @@ public class WorldPresenter implements Initializable {
 			}
 		});
 	}
-	
 
 	/**
 	 * Opens the setup desirability dialog.
@@ -802,6 +805,7 @@ public class WorldPresenter implements Initializable {
 			}
 		});
 	}
+
 	/**
 	 * Opens a file dialog and loads a SWIM file asynchronously.
 	 * 
@@ -861,8 +865,8 @@ public class WorldPresenter implements Initializable {
 								setWorldMode(WorldMode.LOADING);
 								String line = "";
 								try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-						            while ((line = br.readLine()) != null) {
-						                String[] values = line.split(",");
+									while ((line = br.readLine()) != null) {
+										String[] values = line.split(",");
 
 										double lat0 = Double.parseDouble(values[0]);
 										double lon0 = Double.parseDouble(values[1]);
@@ -875,10 +879,10 @@ public class WorldPresenter implements Initializable {
 
 										scenario.addTerrainObstacle(new TerrainBox(LatLon.fromDegrees(lat0, lon0),
 												LatLon.fromDegrees(lat1, lon1), left, right, bottom, top));
-						            }
-						        } catch (IOException e) {
-						            e.printStackTrace();
-						        }
+									}
+								} catch (IOException e) {
+									e.printStackTrace();
+								}
 								setWorldMode(WorldMode.VIEW);
 							} catch (Exception e) {
 								e.printStackTrace();
@@ -889,7 +893,7 @@ public class WorldPresenter implements Initializable {
 			}
 		});
 	}
-	
+
 	/**
 	 * Loads the default terrain file asynchronously.
 	 */
@@ -898,84 +902,154 @@ public class WorldPresenter implements Initializable {
 			@Override
 			public void run() {
 				setWorldMode(WorldMode.LOADING);
-				// Add Obstacle 
-				// Tecnico
-				File file = new File("TecnicoTerrain.csv");
-				String line = "";
-				try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-		            while ((line = br.readLine()) != null) {
-		                String[] values = line.split(",");
-
-						double lat0 = Double.parseDouble(values[0]);
-						double lon0 = Double.parseDouble(values[1]);
-						double lat1 = Double.parseDouble(values[2]);
-						double lon1 = Double.parseDouble(values[3]);
-						double left = Double.parseDouble(values[4]);
-						double right = Double.parseDouble(values[5]);
-						double bottom = Double.parseDouble(values[6]);
-						double top = Double.parseDouble(values[7]);
-
-						scenario.addTerrainObstacle(new TerrainBox(LatLon.fromDegrees(lat0, lon0),
-								LatLon.fromDegrees(lat1, lon1), left, right, bottom, top));
-		            }
-		        } catch (IOException e) {
-		            e.printStackTrace();
-		        }
-
-				// Test scenario
-//				Position origin = Position.fromDegrees(38.737, -9.137, 80); //TestClass
-				Position origin = Position.fromDegrees(38.73692, -9.13843, 98); //RealFlight
-				Position destination = Position.fromDegrees(38.7367, -9.1402, 105);
-				// Add aircraft
 				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-				MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
-				Waypoint wpt = new Waypoint(origin);
-				// Waypoint wpt = new Waypoint(Position.fromDegrees(38.73692, -9.13843, 98));
-				wpt.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt, null)));
-				wpt.getDepiction().setVisible(true);
-				Iris iris = new Iris(wpt, 2.5, CombatIdentification.FRIEND);
-				iris.moveTo(wpt);
-				iris.setCostInterval(new CostInterval(
-						"iris",
-						ZonedDateTime.now(ZoneId.of("UTC")).minusYears(10),
-						ZonedDateTime.now(ZoneId.of("UTC")).plusYears(10),
-						100d));
-				session.getActiveScenario().setAircraft(iris);
-				session.getActiveScenario().addWaypoint(0, wpt);
+				//SEA
+				// Create box area in globe
+//				Globe globe = new Earth();
+//				Sector sea = new Sector(Angle.fromDegrees(48.470), Angle.fromDegrees(48.51), Angle.fromDegrees(-123.26),
+//						Angle.fromDegrees(-123.15));
+//				session.getActiveScenario().setSector(sea);
+//				double floor = 0d, ceilling = 210d;
+//				gov.nasa.worldwind.geom.Box boxNASA = Sector.computeBoundingBox(globe, 1.0, sea, floor, ceilling);
+//
+//				// Create environment from box
+//				SamplingEnvironment samplingEnv = new SamplingEnvironment(new Box(boxNASA));
+//				samplingEnv.setGlobe(globe);
+//				session.getActiveScenario().setEnvironment(samplingEnv);
+//				initEnvironment();
+
+//				// Tecnico
+//				File file = new File("TecnicoTerrain.csv");
+//
+//				// Clutter
+//				// File file = new File("ClutterTerrain.csv");
 				
-				// Add Wpt1
-				Waypoint wpt1 = new Waypoint(destination);
-				// Waypoint wpt1 = new Waypoint(Position.fromDegrees(38.73762, -9.13948, 105));
-				wpt1.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt1, null)));
-				wpt1.getDepiction().setVisible(true);
-				session.getActiveScenario().addWaypoint(1, wpt1);
-				
-				// Add Wpt2
-//				Waypoint wpt2 = new Waypoint(Position.fromDegrees(38.73668, -9.14024, 105));
-//				wpt2.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt2, null)));
-//				wpt2.getDepiction().setVisible(true);
-//				session.getActiveScenario().addWaypoint(2, wpt2);
-				
-				// Define Environment
-				Globe globe = new Earth();
-				Sector tecnico = new Sector(
-						Angle.fromDegrees(38.7381),
-						Angle.fromDegrees(38.7354),
-						Angle.fromDegrees(-9.1408),
-						Angle.fromDegrees(-9.1364));
-				session.getActiveScenario().setSector(tecnico);
-				gov.nasa.worldwind.geom.Box boxNASA = Sector.computeBoundingBox(globe, 1.0, tecnico, 80d, 109d);
-				// Create environment from box
-				SamplingEnvironment samplingEnv = new SamplingEnvironment(new Box(boxNASA));
-				samplingEnv.setGlobe(globe);
-				session.getActiveScenario().setEnvironment(samplingEnv);
-				initEnvironment();
-				
+//				String line = "";
+//				try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+//					while ((line = br.readLine()) != null) {
+//						String[] values = line.split(",");
+//
+//						double lat0 = Double.parseDouble(values[0]);
+//						double lon0 = Double.parseDouble(values[1]);
+//						double lat1 = Double.parseDouble(values[2]);
+//						double lon1 = Double.parseDouble(values[3]);
+//						double left = Double.parseDouble(values[4]);
+//						double right = Double.parseDouble(values[5]);
+//						double bottom = Double.parseDouble(values[6]);
+//						double top = Double.parseDouble(values[7]);
+//
+//						scenario.addTerrainObstacle(new TerrainBox(LatLon.fromDegrees(lat0, lon0),
+//								LatLon.fromDegrees(lat1, lon1), left, right, bottom, top));
+//					}
+//				} catch (IOException e) {
+//					e.printStackTrace();
+//				}
+//
+//				// Test scenario
+//				Position origin = Position.fromDegrees(38.737, -9.137, 80);
+//				Position destination = Position.fromDegrees(38.7367, -9.1402, 105);
+//				// Add aircraft
+//				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+//				MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
+//				Waypoint wpt = new Waypoint(origin);
+//				// Waypoint wpt = new Waypoint(Position.fromDegrees(38.73692, -9.13843, 98));
+//				wpt.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt, null)));
+//				wpt.getDepiction().setVisible(true);
+//				Iris iris = new Iris(wpt, 2.5, CombatIdentification.FRIEND);
+//				iris.moveTo(wpt);
+//				iris.setCostInterval(new CostInterval("iris", ZonedDateTime.now(ZoneId.of("UTC")).minusYears(10),
+//						ZonedDateTime.now(ZoneId.of("UTC")).plusYears(10), 100d));
+//				session.getActiveScenario().setAircraft(iris);
+//				session.getActiveScenario().addWaypoint(0, wpt);
+//
+//				// Add Wpt1
+//				Waypoint wpt1 = new Waypoint(destination);
+//				// Waypoint wpt1 = new Waypoint(Position.fromDegrees(38.73762, -9.13948, 105));
+//				wpt1.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt1, null)));
+//				wpt1.getDepiction().setVisible(true);
+//				session.getActiveScenario().addWaypoint(1, wpt1);
+//
+//				// Add Wpt2
+//				// Waypoint wpt2 = new Waypoint(Position.fromDegrees(38.73668, -9.14024, 105));
+//				// wpt2.setDepiction(new
+//				// Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt2,
+//				// null)));
+//				// wpt2.getDepiction().setVisible(true);
+//				// session.getActiveScenario().addWaypoint(2, wpt2);
+//
+//				// Define Environment
+//				Globe globe = new Earth();
+//				Sector tecnico = new Sector(Angle.fromDegrees(38.7381), Angle.fromDegrees(38.7354),
+//						Angle.fromDegrees(-9.1408), Angle.fromDegrees(-9.1364));
+//				session.getActiveScenario().setSector(tecnico);
+//				gov.nasa.worldwind.geom.Box boxNASA = Sector.computeBoundingBox(globe, 1.0, tecnico, 80d, 109d);
+//				// Create environment from box
+//				SamplingEnvironment samplingEnv = new SamplingEnvironment(new Box(boxNASA));
+//				samplingEnv.setGlobe(globe);
+//				session.getActiveScenario().setEnvironment(samplingEnv);
+//				initEnvironment();
+
+				// Clutter
+//				Globe globe = new Earth();
+//				Sector clutter = new Sector(Angle.fromDegrees(38.71599275409678), Angle.fromDegrees(38.72068608621655),
+//						Angle.fromDegrees(-9.170225205236282), Angle.fromDegrees(-9.161513724287005));
+//				session.getActiveScenario().setSector(clutter);
+//				gov.nasa.worldwind.geom.Box boxNASA = Sector.computeBoundingBox(globe, 1.0, clutter, 105d, 135d);
+//				// Create environment from box
+//				SamplingEnvironment samplingEnv = new SamplingEnvironment(new Box(boxNASA));
+//				samplingEnv.setGlobe(globe);
+//				session.getActiveScenario().setEnvironment(samplingEnv);
+//				initEnvironment();
+
+				// DEFAULT LOAD SEA ENVIRONMENT
+				// Globe globe = new Earth();
+				// Sector sea = new Sector(Angle.fromDegrees(48.47), Angle.fromDegrees(48.51),
+				// Angle.fromDegrees(-123.26),
+				// Angle.fromDegrees(-123.15));
+				// double floor = 0d, ceilling = 210d;
+				// gov.nasa.worldwind.geom.Box boxNASA = Sector.computeBoundingBox(globe, 1.0,
+				// sea, floor, ceilling);
+				//
+				// // Create environment from box
+				// SamplingEnvironment samplingEnv = new SamplingEnvironment(new Box(boxNASA));
+				// samplingEnv.setGlobe(globe);
+				//
+				// session.getActiveScenario().setEnvironment(samplingEnv);
+				// initEnvironment();
+				// ZonedDateTime etd = ZonedDateTime.of(LocalDate.of(2019, 1, 10),
+				// LocalTime.of(0, 0), ZoneId.of("UTC"));
+				// try {
+				// IwxxmLoader loader = new IwxxmLoader();
+				// Set<Obstacle> obstacles = loader.load(new InputSource(
+				// new FileInputStream(new File("sigmet-sea-tropCyc.xml"))));
+				// for (Obstacle obstacle : obstacles) {
+				// samplingEnv.embed(obstacle);
+				// }
+				// for (Obstacle obstacle : obstacles) {
+				// scenario.addObstacle(obstacle);
+				// }
+				// } catch (Exception e) {
+				// e.printStackTrace();
+				// }
+				// try {
+				// IwxxmLoader loader = new IwxxmLoader();
+				// Set<Obstacle> obstacles = loader.load(new InputSource(
+				// new FileInputStream(new File("sigmet-sea-thunderstorm.xml"))));
+				// for (Obstacle obstacle : obstacles) {
+				// samplingEnv.embed(obstacle);
+				// }
+				// for (Obstacle obstacle : obstacles) {
+				// scenario.addObstacle(obstacle);
+				// }
+				// } catch (Exception e) {
+				// e.printStackTrace();
+				// }
+				// samplingEnv.setTime(etd);
 				setWorldMode(WorldMode.VIEW);
 			}
 		});
 	}
-	
+
 	/**
 	 * Loads the default SWIM file asynchronously.
 	 */
@@ -984,9 +1058,9 @@ public class WorldPresenter implements Initializable {
 			@Override
 			public void run() {
 				setWorldMode(WorldMode.LOADING);
-				// Add Obstacle 
+				// Add Obstacle
 				// Tecnico
-				File file = new File("sigmet-victoria-thunderstrom.xml");
+				File file = new File("sigmet-tecnico-ts.xml");
 				if (null != file) {
 					executor.execute(new Runnable() {
 						@Override
@@ -1006,74 +1080,13 @@ public class WorldPresenter implements Initializable {
 						}
 					});
 				}
-				File file2 = new File("sigmet-victoria-tropCyc.xml");
-				if (null != file2) {
-					executor.execute(new Runnable() {
-						@Override
-						public void run() {
-							try {
-								setWorldMode(WorldMode.LOADING);
-								// TODO: generic SWIM loader
-								IwxxmLoader loader = new IwxxmLoader();
-								Set<Obstacle> obstacles = loader.load(new InputSource(new FileInputStream(file2)));
-								for (Obstacle obstacle : obstacles) {
-									scenario.addObstacle(obstacle);
-								}
-								setWorldMode(WorldMode.VIEW);
-							} catch (Exception e) {
-								e.printStackTrace();
-							}
-						}
-					});
-				}
 
-				// Test scenario
-				Position origin = Position.fromDegrees(48.4705, -123.259, 10);
-				Position destination = Position.fromDegrees(48.4745, -123.251, 40);
-				// Add aircraft
-				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-				MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
-				Waypoint wpt = new Waypoint(origin);
-				wpt.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt, null)));
-				wpt.getDepiction().setVisible(true);
-				Iris iris = new Iris(wpt, 2.5, CombatIdentification.FRIEND);
-				iris.moveTo(wpt);
-				iris.setCostInterval(new CostInterval(
-						"iris",
-						ZonedDateTime.now(ZoneId.of("UTC")).minusYears(10),
-						ZonedDateTime.now(ZoneId.of("UTC")).plusYears(10),
-						100d));
-				session.getActiveScenario().setAircraft(iris);
-				session.getActiveScenario().addWaypoint(0, wpt);
-				
-				// Add Wpt1
-				Waypoint wpt1 = new Waypoint(destination);
-				wpt1.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, wpt1, null)));
-				wpt1.getDepiction().setVisible(true);
-				session.getActiveScenario().addWaypoint(1, wpt1);
-				
-				
-				// Define Environment
-				Globe globe = new Earth();
-				Sector sea = new Sector(
-						Angle.fromDegrees(48.470),
-						Angle.fromDegrees(48.475),
-						Angle.fromDegrees(-123.26),
-						Angle.fromDegrees(-123.25));
-				session.getActiveScenario().setSector(sea);
-				gov.nasa.worldwind.geom.Box boxNASA = Sector.computeBoundingBox(globe, 1.0, sea, 0d, 50d);
-				// Create environment from box
-				SamplingEnvironment samplingEnv = new SamplingEnvironment(new Box(boxNASA));
-				samplingEnv.setGlobe(globe);
-				session.getActiveScenario().setEnvironment(samplingEnv);
-				initEnvironment();
-				
 				setWorldMode(WorldMode.VIEW);
 			}
-			
+
 		});
 	}
-	
+
 	/**
 	 * Opens a planner alert with a specified alert type, title, header and content.
 	 * A result can be passed for synchronization.
@@ -1086,10 +1099,7 @@ public class WorldPresenter implements Initializable {
 	 * 
 	 * @see PlannerAlert
 	 */
-	private void alert(
-			AlertType type,
-			String title, String header, String content,
-			PlannerAlertResult result) {
+	private void alert(AlertType type, String title, String header, String content, PlannerAlertResult result) {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
@@ -1127,10 +1137,8 @@ public class WorldPresenter implements Initializable {
 				List<Position> waypoints = new ArrayList<Position>();
 				waypoints.addAll(session.getActiveScenario().getWaypoints());
 
-				if (planner.supports(planner.getAircraft()) &&
-						planner.supports(planner.getEnvironment()) &&
-						planner.supports(waypoints) &&
-						1 < waypoints.size()) {
+				if (planner.supports(planner.getAircraft()) && planner.supports(planner.getEnvironment())
+						&& planner.supports(waypoints) && 1 < waypoints.size()) {
 
 					setWorldMode(WorldMode.PLANNING);
 					origin = waypoints.remove(0);
@@ -1144,15 +1152,12 @@ public class WorldPresenter implements Initializable {
 								styleTrajectory(trajectory);
 								session.getActiveScenario().setTrajectory(trajectory);
 								// printToFile(trajectory);
-								
+
 								Thread.yield();
 							} else {
-								alert(
-										AlertType.WARNING,
-										PlannerAlert.ALERT_TITLE_TRAJECTORY_INVALID,
+								alert(AlertType.WARNING, PlannerAlert.ALERT_TITLE_TRAJECTORY_INVALID,
 										PlannerAlert.ALERT_HEADER_TRAJECTORY_INVALID,
-										PlannerAlert.ALERT_CONTENT_TRAJECTORY_INVALID,
-										null);
+										PlannerAlert.ALERT_CONTENT_TRAJECTORY_INVALID, null);
 							}
 						}
 
@@ -1170,8 +1175,7 @@ public class WorldPresenter implements Initializable {
 								e.printStackTrace();
 							}
 						}
-						
-						
+
 						@Override
 						public Waypoint reviseAircraftTimedPosition() {
 							Waypoint aircraftTimedPosition = null;
@@ -1230,21 +1234,18 @@ public class WorldPresenter implements Initializable {
 
 					if (waypoints.isEmpty()) {
 						planner.plan(origin, destination, session.getActiveScenario().getTime());
-						if(planner instanceof FADPRMPlanner) {
-							session.getActiveScenario().playTime();
-							((FADPRMPlanner) planner).planDynamic();
-						}
+						// if(planner instanceof FADPRMPlanner) {
+						// session.getActiveScenario().playTime();
+						// ((FADPRMPlanner) planner).planDynamic();
+						// }
 					} else {
 						planner.plan(origin, destination, waypoints, session.getActiveScenario().getTime());
 					}
 
 					setWorldMode(WorldMode.VIEW);
 				} else {
-					alert(
-							AlertType.ERROR,
-							PlannerAlert.ALERT_TITLE_PLANNER_INVALID,
-							PlannerAlert.ALERT_HEADER_PLANNER_INVALID,
-							PlannerAlert.ALERT_CONTENT_PLANNER_INVALID,
+					alert(AlertType.ERROR, PlannerAlert.ALERT_TITLE_PLANNER_INVALID,
+							PlannerAlert.ALERT_HEADER_PLANNER_INVALID, PlannerAlert.ALERT_CONTENT_PLANNER_INVALID,
 							null);
 				}
 			}
@@ -1291,11 +1292,8 @@ public class WorldPresenter implements Initializable {
 					}
 					displayMonitor(datalink.isMonitoring());
 				} else {
-					alert(
-							AlertType.ERROR,
-							PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
-							PlannerAlert.ALERT_HEADER_DATALINK_INVALID,
-							PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
+					alert(AlertType.ERROR, PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
+							PlannerAlert.ALERT_HEADER_DATALINK_INVALID, PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
 							null);
 				}
 			}
@@ -1322,11 +1320,8 @@ public class WorldPresenter implements Initializable {
 					datalink.uploadFlightPath(trajectory);
 					setWorldMode(WorldMode.VIEW);
 				} else {
-					alert(
-							AlertType.ERROR,
-							PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
-							PlannerAlert.ALERT_HEADER_DATALINK_INVALID,
-							PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
+					alert(AlertType.ERROR, PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
+							PlannerAlert.ALERT_HEADER_DATALINK_INVALID, PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
 							null);
 				}
 			}
@@ -1353,11 +1348,8 @@ public class WorldPresenter implements Initializable {
 					datalink.setAircraftMode("AUTO");
 					setWorldMode(WorldMode.VIEW);
 				} else {
-					alert(
-							AlertType.ERROR,
-							PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
-							PlannerAlert.ALERT_HEADER_DATALINK_INVALID,
-							PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
+					alert(AlertType.ERROR, PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
+							PlannerAlert.ALERT_HEADER_DATALINK_INVALID, PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
 							null);
 				}
 			}
@@ -1373,11 +1365,8 @@ public class WorldPresenter implements Initializable {
 			@Override
 			public void run() {
 				PlannerAlertResult clearance = new PlannerAlertResult();
-				alert(
-						AlertType.CONFIRMATION,
-						PlannerAlert.ALERT_TITLE_TAKEOFF_CONFIRM,
-						PlannerAlert.ALERT_HEADER_TAKEOFF_CONFIRM,
-						PlannerAlert.ALERT_CONTENT_TAKEOFF_CONFIRM,
+				alert(AlertType.CONFIRMATION, PlannerAlert.ALERT_TITLE_TAKEOFF_CONFIRM,
+						PlannerAlert.ALERT_HEADER_TAKEOFF_CONFIRM, PlannerAlert.ALERT_CONTENT_TAKEOFF_CONFIRM,
 						clearance);
 
 				if (clearance.isOk()) {
@@ -1389,15 +1378,12 @@ public class WorldPresenter implements Initializable {
 						datalink.connect();
 					}
 
-					if (datalink.isConnected()) { //&& session.getActiveScenario().hasTrajectory()) {
+					if (datalink.isConnected()) { // && session.getActiveScenario().hasTrajectory()) {
 						// datalink.disableAircraftSafety();
 						datalink.takeOff(); // TODO: flight (envelope) setup
 					} else {
-						alert(
-								AlertType.ERROR,
-								PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
-								PlannerAlert.ALERT_HEADER_DATALINK_INVALID,
-								PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
+						alert(AlertType.ERROR, PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
+								PlannerAlert.ALERT_HEADER_DATALINK_INVALID, PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
 								null);
 					}
 					setWorldMode(WorldMode.VIEW);
@@ -1417,12 +1403,8 @@ public class WorldPresenter implements Initializable {
 			@Override
 			public void run() {
 				PlannerAlertResult clearance = new PlannerAlertResult();
-				alert(
-						AlertType.CONFIRMATION,
-						PlannerAlert.ALERT_TITLE_LAND_CONFIRM,
-						PlannerAlert.ALERT_HEADER_LAND_CONFIRM,
-						PlannerAlert.ALERT_CONTENT_LAND_CONFIRM,
-						clearance);
+				alert(AlertType.CONFIRMATION, PlannerAlert.ALERT_TITLE_LAND_CONFIRM,
+						PlannerAlert.ALERT_HEADER_LAND_CONFIRM, PlannerAlert.ALERT_CONTENT_LAND_CONFIRM, clearance);
 
 				if (clearance.isOk()) {
 					setWorldMode(WorldMode.LANDING);
@@ -1440,11 +1422,8 @@ public class WorldPresenter implements Initializable {
 							datalink.land();
 						}
 					} else {
-						alert(
-								AlertType.ERROR,
-								PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
-								PlannerAlert.ALERT_HEADER_DATALINK_INVALID,
-								PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
+						alert(AlertType.ERROR, PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
+								PlannerAlert.ALERT_HEADER_DATALINK_INVALID, PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
 								null);
 					}
 					setWorldMode(WorldMode.VIEW);
@@ -1537,7 +1516,7 @@ public class WorldPresenter implements Initializable {
 	 *
 	 */
 	private class WorldInitializer implements Runnable {
-		
+
 		/**
 		 * 
 		 * @param icon
@@ -1552,7 +1531,7 @@ public class WorldPresenter implements Initializable {
 			controlAnnotation.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + offset, 25));
 			controlAnnotation.setPrimaryActionCommand(primaryAction);
 			controlAnnotation.setSecondaryActionCommand(secondaryAction);
-			
+
 			return controlAnnotation;
 		}
 
@@ -1591,61 +1570,61 @@ public class WorldPresenter implements Initializable {
 					WorldPresenter.ACTION_AICRAFT_SET, WorldPresenter.ACTION_AIRCAFT_SETUP);
 			aircraftControl.addActionListener(new AircraftControlListener());
 			offset += 75;
-			
+
 			ControlAnnotation terrainControl = this.createControlAnnotation(terrainIcon, offset,
 					WorldPresenter.ACTION_TERRAIN_LOAD, WorldPresenter.ACTION_TERRAIN_SETUP);
 			terrainControl.addActionListener(new TerrainControlListener());
 			offset += 75;
-			
+
 			ControlAnnotation swimControl = this.createControlAnnotation(swimIcon, offset,
 					WorldPresenter.ACTION_SWIM_LOAD, WorldPresenter.ACTION_SWIM_SETUP);
 			swimControl.addActionListener(new SwimControlListener());
 			offset += 75;
-			
+
 			ControlAnnotation environmentControl = this.createControlAnnotation(environmentIcon, offset,
 					WorldPresenter.ACTION_ENVIRONMENT_ENCLOSE, WorldPresenter.ACTION_ENVIRONMENT_SETUP);
 			environmentControl.addActionListener(new EnvironmentControlListener());
 			offset += 75;
-			
+
 			ControlAnnotation desirabilityControl = this.createControlAnnotation(desirabilityIcon, offset,
 					WorldPresenter.ACTION_DESIRABILITY_ENCLOSE, WorldPresenter.ACTION_DESIRABILITY_SETUP);
 			desirabilityControl.addActionListener(new DesirabilityZoneControlListener());
 			offset += 75;
-			
+
 			ControlAnnotation poiControl = this.createControlAnnotation(poiIcon, offset,
 					WorldPresenter.ACTION_WAYPOINT_EDIT, WorldPresenter.ACTION_WAYPOINT_SETUP);
 			poiControl.addActionListener(new WaypointsControlListener());
 			offset += 75;
-			
+
 			ControlAnnotation plannerControl = this.createControlAnnotation(plannerIcon, offset,
 					WorldPresenter.ACTION_PLANNER_PLAN, WorldPresenter.ACTION_PLANNER_SETUP);
 			plannerControl.addActionListener(new PlannerControlListener());
 			offset += 75;
-			
+
 			ControlAnnotation datalinkControl = this.createControlAnnotation(datalinkIcon, offset,
 					WorldPresenter.ACTION_DATALINK_MONITOR, WorldPresenter.ACTION_DATALINK_SETUP);
 			datalinkControl.addActionListener(new DatalinkControlListener());
 			offset += 75;
-			
+
 			ControlAnnotation uploadControl = this.createControlAnnotation(uploadIcon, offset,
 					WorldPresenter.ACTION_TRANSFER_UPLOAD, WorldPresenter.ACTION_START_MISSION);
 			uploadControl.addActionListener(new UploadControlListener());
 			offset += 75;
-			
+
 			ControlAnnotation takeoffControl = this.createControlAnnotation(takeoffIcon, offset,
 					WorldPresenter.ACTION_FLIGHT_TAKEOFF, WorldPresenter.ACTION_FLIGHT_SETUP);
 			takeoffControl.addActionListener(new TakeOffControlListener());
 			offset += 75;
-			
+
 			ControlAnnotation landControl = this.createControlAnnotation(landIcon, offset,
 					WorldPresenter.ACTION_FLIGHT_LAND, WorldPresenter.ACTION_FLIGHT_RETURN);
 			landControl.addActionListener(new LandControlListener());
 			offset += 75;
-			
+
 			ControlAnnotation viewControl = this.createControlAnnotation(viewIcon, offset,
 					WorldPresenter.ACTION_VIEW_CYCLE, WorldPresenter.ACTION_VIEW_RESET);
 			viewControl.addActionListener(new ViewControlListener());
-			
+
 			// TODO Temporary for telemetry
 			offset += 75;
 			ControlAnnotation telemetryControl = this.createControlAnnotation(telemetryIcon, offset,
@@ -1831,7 +1810,9 @@ public class WorldPresenter implements Initializable {
 					if (null != envSector) {
 						Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 						session.getActiveScenario().addDesirabilityZone(envSector,
-								session.getSetup().getDesirabilitySpecification());
+								session.getSetup().getDesirabilitySpecification(),
+								session.getSetup().getFloorDesirabilitySpecification(),
+								session.getSetup().getCeilingDesirabilitySpecification());
 						initDesirabilityZones();
 					}
 					desirabilitySectorSelector.disable();
@@ -1872,11 +1853,9 @@ public class WorldPresenter implements Initializable {
 				Specification<Aircraft> aircraftSpec = session.getSetup().getAircraftSpecification();
 				Aircraft aircraft = session.getAircraftFactory().createInstance(aircraftSpec);
 				aircraft.moveTo(waypoint);
-				aircraft.setCostInterval(new CostInterval(
-						aircraftSpec.getId(),
-						ZonedDateTime.now(ZoneId.of("UTC")).minusYears(10),
-						ZonedDateTime.now(ZoneId.of("UTC")).plusYears(10),
-						100d));
+				aircraft.setCostInterval(
+						new CostInterval(aircraftSpec.getId(), ZonedDateTime.now(ZoneId.of("UTC")).minusYears(10),
+								ZonedDateTime.now(ZoneId.of("UTC")).plusYears(10), 100d));
 				scenario.setAircraft(aircraft);
 
 				setWorldMode(WorldMode.VIEW);
@@ -1905,11 +1884,11 @@ public class WorldPresenter implements Initializable {
 				Setup setup = session.getSetup();
 				double alt = setup.getDefaultWaypointHeight();
 				Waypoint waypoint = null;
-				if(alt>=0) {
-					waypoint = new Waypoint(new Position(clickedPosition.getLatitude(), clickedPosition.getLongitude(), alt));
-				}
-				else {
-					waypoint = new Waypoint(clickedPosition); 
+				if (alt >= 0) {
+					waypoint = new Waypoint(
+							new Position(clickedPosition.getLatitude(), clickedPosition.getLongitude(), alt));
+				} else {
+					waypoint = new Waypoint(clickedPosition);
 				}
 				waypoint.setDepiction(
 						new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, waypoint, null)));
@@ -2217,8 +2196,7 @@ public class WorldPresenter implements Initializable {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_SWIM_LOAD:
 				load(WorldPresenter.FILE_CHOOSER_TITLE_SWIM,
-						new ExtensionFilter[] { new ExtensionFilter(
-								WorldPresenter.FILE_CHOOSER_SWIM,
+						new ExtensionFilter[] { new ExtensionFilter(WorldPresenter.FILE_CHOOSER_SWIM,
 								WorldPresenter.FILE_CHOOSER_EXTENSION_SWIM) });
 				break;
 			case WorldPresenter.ACTION_SWIM_SETUP:
@@ -2479,7 +2457,7 @@ public class WorldPresenter implements Initializable {
 			}
 		}
 	}
-	
+
 	/**
 	 * Realizes a terrain control listener.
 	 * 
@@ -2501,17 +2479,16 @@ public class WorldPresenter implements Initializable {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_TERRAIN_LOAD:
 				loadTerrain(WorldPresenter.FILE_CHOOSER_TITLE_TERRAIN,
-						new ExtensionFilter[] { new ExtensionFilter(
-								WorldPresenter.FILE_CHOOSER_TERRAIN,
+						new ExtensionFilter[] { new ExtensionFilter(WorldPresenter.FILE_CHOOSER_TERRAIN,
 								WorldPresenter.FILE_CHOOSER_EXTENSION_TERRAIN) });
 				break;
 			case WorldPresenter.ACTION_TERRAIN_SETUP:
-				defaultLoadTerrain();  // TODO: Temporary for flight testing
+				defaultLoadTerrain(); // TODO: Temporary for flight testing
 				break;
 			}
 		}
 	}
-	
+
 	// TODO Temporary for telemetry
 	private class TelemetryControlListener implements ActionListener {
 
@@ -2553,18 +2530,15 @@ public class WorldPresenter implements Initializable {
 				wpt.getDepiction().setVisible(true);
 				Iris iris = new Iris(wpt, 2.5, CombatIdentification.FRIEND);
 				iris.moveTo(wpt);
-				iris.setCostInterval(new CostInterval(
-						"iris",
-						ZonedDateTime.now(ZoneId.of("UTC")).minusYears(10),
-						ZonedDateTime.now(ZoneId.of("UTC")).plusYears(10),
-						100d));
+				iris.setCostInterval(new CostInterval("iris", ZonedDateTime.now(ZoneId.of("UTC")).minusYears(10),
+						ZonedDateTime.now(ZoneId.of("UTC")).plusYears(10), 100d));
 				session.getActiveScenario().setAircraft(iris);
 				session.getActiveScenario().addWaypoint(0, wpt);
 				break;
 			}
 		}
 	}
-	
+
 	public void printToFile(Trajectory trajectory) {
 		try {
 			System.out.println("creating file");
@@ -2574,10 +2548,8 @@ public class WorldPresenter implements Initializable {
 				waypoints.add(waypoint);
 			}
 			for (int i = 0; i < trajectory.getLength(); i++) {
-				printWriter.printf("%f	%f	%f\n",
-						waypoints.get(i).getLatitude().degrees,
-						waypoints.get(i).getLongitude().degrees,
-						waypoints.get(i).elevation);
+				printWriter.printf("%f	%f	%f\n", waypoints.get(i).getLatitude().degrees,
+						waypoints.get(i).getLongitude().degrees, waypoints.get(i).elevation);
 			}
 			printWriter.close();
 		} catch (Exception e) {

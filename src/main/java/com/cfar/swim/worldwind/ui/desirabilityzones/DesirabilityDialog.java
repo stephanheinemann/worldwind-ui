@@ -57,12 +57,30 @@ public class DesirabilityDialog extends Dialog<Double> {
 
 	/** the desirability value node identifier */
 	private static final String DESIRABILITY_ID = "#desirability";
+	
+	/** the desirability value node identifier */
+	private static final String FLOOR_ID = "#floor";
+	
+	/** the desirability value node identifier */
+	private static final String CEILING_ID = "#ceiling";
 
 	/** the desirability value text field of this desirability dialog */
 	private TextField desirability;
+	
+	/** the floor altitude text field of this desirability dialog */
+	private TextField floor;
+	
+	/** the ceiling altitude text field of this desirability dialog */
+	private TextField ceiling;
 
 	/** the desirability double value of this desirability dialog */
 	private double desirabilityValue;
+	
+	/** the floor altitude double value of this desirability dialog */
+	private double floorValue;
+	
+	/** the ceiling altitude double value of this desirability dialog */
+	private double ceilingValue;
 	
 	/** indicates whether or not the desirability value input is valid */
 	private boolean isValidDesirability = false;
@@ -91,17 +109,25 @@ public class DesirabilityDialog extends Dialog<Double> {
 
 		DesirabilityView desirabilityView = new DesirabilityView();
 		desirability = ((TextField) desirabilityView.getView().lookup(DesirabilityDialog.DESIRABILITY_ID));
+		floor = ((TextField) desirabilityView.getView().lookup(DesirabilityDialog.FLOOR_ID));
+		ceiling = ((TextField) desirabilityView.getView().lookup(DesirabilityDialog.CEILING_ID));
 		desirability.textProperty().addListener(new DesirabilityValidator());
 		this.getDialogPane().setContent(desirabilityView.getView());
 		
 		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 		desirability.setText(Double.toString(session.getSetup().getDesirabilitySpecification()));
-
+		floor.setText(Double.toString(session.getSetup().getFloorDesirabilitySpecification()));
+		ceiling.setText(Double.toString(session.getSetup().getCeilingDesirabilitySpecification()));
+		
 		this.setResultConverter(dialogButton -> {
 			Setup setup = session.getSetup();
 			if (dialogButton.equals(ButtonType.OK)) {
 				desirabilityValue = Double.parseDouble(this.desirability.getText());
+				floorValue = Double.parseDouble(this.floor.getText());
+				ceilingValue = Double.parseDouble(this.ceiling.getText());
 				setup.setDesirabilitySpecification(desirabilityValue);
+				setup.setFloorDesirabilitySpecification(floorValue);
+				setup.setCeilingDesirabilitySpecification(ceilingValue);
 			}
 			if (dialogButton.equals(ButtonType.CANCEL)) {
 				desirabilityValue = setup.getDesirabilitySpecification();
