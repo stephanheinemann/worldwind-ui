@@ -29,4 +29,4 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-mvn clean compile exec:java -Dexec.mainClass="com.cfar.swim.worldwind.ui.Main"
+mvn clean compile exec:java -Dexec.mainClass="com.cfar.swim.worldwind.ui.Main" -Djdk.gtk.version=2
