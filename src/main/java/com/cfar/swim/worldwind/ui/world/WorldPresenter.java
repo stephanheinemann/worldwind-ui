@@ -59,6 +59,7 @@ import javax.swing.SwingUtilities;
 
 import org.xml.sax.InputSource;
 
+import com.cfar.swim.worldwind.ai.DynamicPlanner;
 import com.cfar.swim.worldwind.ai.PlanRevisionListener;
 import com.cfar.swim.worldwind.ai.Planner;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
@@ -700,6 +701,18 @@ public class WorldPresenter implements Initializable {
 	 * asynchronously.
 	 */
 	private void plan() {
+		
+		// TODO: synchronization / volatile world mode / concurrent modifications
+		if (WorldMode.PLANNING == getWorldMode()) {
+			// terminate a running dynamic planner
+			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+			Planner planner = session.getActiveScenario().getPlanner();
+			if (planner instanceof DynamicPlanner) {
+				((DynamicPlanner) planner).terminate();
+			}
+			return;
+		}
+		
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {
