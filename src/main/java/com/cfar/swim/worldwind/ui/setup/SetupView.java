@@ -94,4 +94,14 @@ public class SetupView extends FXMLView {
 		return (ComboBox<String>) this.getView().lookup("#datalink");
 	}
 	
+	/**
+	 * Gets the SWIM connection selector of this setup view.
+	 * 
+	 * @return the SWIM connection selector of this setup view
+	 */
+	@SuppressWarnings("unchecked")
+	public ComboBox<String> getSwimConnection() {
+		return (ComboBox<String>) this.getView().lookup("#swimConnection");
+	}
+	
 }
