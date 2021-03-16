@@ -899,6 +899,7 @@ public class WorldPresenter implements Initializable {
 						session.getSwimConnectionFactory().setSpecification(swimConnectionSpec);
 						swimConnection = session.getSwimConnectionFactory().createInstance();
 						session.getActiveScenario().setSwimConnection(swimConnection);
+						session.getActiveScenario().getSwimConnection().setObstacleManager(session.getActiveScenario());
 					}
 					// connect current SWIM connection
 					swimConnection.connect();
