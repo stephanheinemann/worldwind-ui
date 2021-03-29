@@ -845,14 +845,15 @@ public class WorldPresenter implements Initializable {
 							planner.addPlanRevisionListener(new PlanRevisionListener() {
 								@Override
 								public void revisePlan(Trajectory trajectory) {
-									if (!trajectory.isEmpty()) {
+									// TODO: clearing trajectory versus uploading empty trajectory
+									//if (!trajectory.isEmpty()) {
 										styleTrajectory(trajectory);
 										session.getActiveScenario().setTrajectory(trajectory);
 										// TODO: consider automatic data uplink if connected
 										// TODO: anytime, dyanmic and online planners
 										System.out.println("revising plan...");
 										Thread.yield();
-									}
+									//}
 								}
 							});
 							
