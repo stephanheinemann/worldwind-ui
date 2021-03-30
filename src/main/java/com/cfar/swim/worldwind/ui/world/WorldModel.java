@@ -68,7 +68,7 @@ public class WorldModel {
 	/**
 	 * Sets the world mode of this world model.
 	 * 
-	 * @param mode the world mode to be set
+	 * @param worldMode the world mode to be set
 	 */
 	public void setWorldMode(WorldMode worldMode) {
 		this.worldMode = worldMode;
