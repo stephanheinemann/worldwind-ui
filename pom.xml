@@ -33,7 +33,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.uvic-cfar.swim</groupId>
 	<artifactId>worldwind-ui</artifactId>
-	<version>1.0.0-alpha2</version>
+	<version>1.0.0-alpha3-SNAPSHOT</version>
 	<packaging>bundle</packaging>
 	<name>SWIM Worldwind UI</name>
 	<description>NASA Worldwind User Interface for SWIM-based Planning, Decision-Making and Support</description>
