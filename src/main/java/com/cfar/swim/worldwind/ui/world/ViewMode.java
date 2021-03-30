@@ -30,19 +30,17 @@
 package com.cfar.swim.worldwind.ui.world;
 
 /**
- * Enumerates the world modes.
+ * Enumerates the view modes.
  * 
  * @author Stephan Heinemann
  *
  */
-public enum WorldMode {
-	VIEW,
-	AIRCRAFT,
-	ENVIRONMENT,
-	WAYPOINT,
-	PLANNING,
-	LOADING,
-	UPLOADING,
-	LAUNCHING,
-	LANDING
+public enum ViewMode {
+	FIX,
+	PLANNED_ABOVE,
+	PLANNED_CHASE,
+	PLANNED_FPV,
+	ACTUAL_ABOVE,
+	ACTUAL_CHASE,
+	ACTUAL_FPV
 }

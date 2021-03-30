@@ -31,6 +31,8 @@ package com.cfar.swim.worldwind.ui.setup;
 
 import com.cfar.swim.worldwind.ai.Planner;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
+import com.cfar.swim.worldwind.connections.Datalink;
+import com.cfar.swim.worldwind.connections.SwimConnection;
 import com.cfar.swim.worldwind.planning.Environment;
 import com.cfar.swim.worldwind.registries.Specification;
 import com.cfar.swim.worldwind.session.Session;
@@ -63,11 +65,14 @@ public class SetupDialog extends Dialog<Setup> {
 	/** the environment tab index of a setup dialog */
 	public static final int ENVIRONMENT_TAB_INDEX = 1;
 	
-	/** the swim tab index of a setup dialog */
-	public static final int SWIM_TAB_INDEX = 2;
-	
 	/** the planner tab index of a setup dialog */
-	public static final int PLANNER_TAB_INDEX = 3;
+	public static final int PLANNER_TAB_INDEX = 2;
+	
+	/** the swim tab index of a setup dialog */
+	public static final int SWIM_TAB_INDEX = 3;
+	
+	/** the datalink tab index of a setup dialog */
+	public static final int DATALINK_TAB_INDEX = 4;
 	
 	/** the setup view populated in this setup dialog */
 	private SetupView setupView = null;
@@ -98,12 +103,10 @@ public class SetupDialog extends Dialog<Setup> {
 		this.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 		
 		this.setResultConverter(dialogButton -> {
-			Setup setup = null;
+			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+			Setup setup = session.getSetup();
 			
 			if (dialogButton.equals(ButtonType.OK)) {
-				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-				setup = session.getSetup();
-				
 				String aircraftId = this.setupView.getAircraft().getValue();
 				Specification<Aircraft> aircraftSpec = session.getAircraftSpecification(aircraftId);
 				aircraftSpec.setProperties(setupModel.getAircraftProperties());
@@ -119,7 +122,15 @@ public class SetupDialog extends Dialog<Setup> {
 				plannerSpec.setProperties(setupModel.getPlannerProperties());
 				setup.setPlannerSpecification(plannerSpec);
 				
-				// TODO: complete SWIM setup
+				String datalinkId = this.setupView.getDatalink().getValue();
+				Specification<Datalink> datalinkSpec = session.getDatalinkSpecification(datalinkId);
+				datalinkSpec.setProperties(setupModel.getDatalinkProperties());
+				setup.setDatalinkSpecification(datalinkSpec);
+				
+				String swimConnectionId = this.setupView.getSwimConnection().getValue();
+				Specification<SwimConnection> swimConnectionSpec = session.getSwimConnectionSpecification(swimConnectionId);
+				swimConnectionSpec.setProperties(setupModel.getSwimConnectionProperties());
+				setup.setSwimConnectionSpecification(swimConnectionSpec);
 			}
 			
 			return setup;

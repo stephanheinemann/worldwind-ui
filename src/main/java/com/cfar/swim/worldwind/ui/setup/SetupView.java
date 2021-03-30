@@ -34,26 +34,74 @@ import com.airhacks.afterburner.views.FXMLView;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TabPane;
 
+/**
+ * Realizes a setup view.
+ * 
+ * @author Stephan Heinemann
+ *
+ */
 public class SetupView extends FXMLView {
 	
+	/**
+	 * Gets the view of this setup view.
+	 * 
+	 * @return the view of this setup view
+	 * 
+	 * @see FXMLView#getView()
+	 */
 	@Override
 	public TabPane getView() {
 		return (TabPane) super.getView();
 	}
 	
+	/**
+	 * Gets the aircraft selector of this setup view.
+	 * 
+	 * @return the aircraft selector of this setup view
+	 */
 	@SuppressWarnings("unchecked")
 	public ComboBox<String> getAircraft() {
 		return (ComboBox<String>) this.getView().lookup("#aircraft");
 	}
 	
+	/**
+	 * Gets the environment selector of this setup view.
+	 * 
+	 * @return the environment selector of this setup view
+	 */
 	@SuppressWarnings("unchecked")
 	public ComboBox<String> getEnvironment() {
 		return (ComboBox<String>) this.getView().lookup("#environment");
 	}
 	
+	/**
+	 * Gets the planner selector of this setup view.
+	 * 
+	 * @return the planner selector of this setup view
+	 */
 	@SuppressWarnings("unchecked")
 	public ComboBox<String> getPlanner() {
 		return (ComboBox<String>) this.getView().lookup("#planner");
+	}
+	
+	/**
+	 * Gets the datalink selector of this setup view.
+	 * 
+	 * @return the datalink selector of this setup view
+	 */
+	@SuppressWarnings("unchecked")
+	public ComboBox<String> getDatalink() {
+		return (ComboBox<String>) this.getView().lookup("#datalink");
+	}
+	
+	/**
+	 * Gets the SWIM connection selector of this setup view.
+	 * 
+	 * @return the SWIM connection selector of this setup view
+	 */
+	@SuppressWarnings("unchecked")
+	public ComboBox<String> getSwimConnection() {
+		return (ComboBox<String>) this.getView().lookup("#swimConnection");
 	}
 	
 }

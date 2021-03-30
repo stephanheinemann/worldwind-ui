@@ -27,15 +27,11 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.cfar.swim.worldwind.ui.time;
+package com.cfar.swim.worldwind.ui.timer;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.ResourceBundle;
 
 import com.cfar.swim.worldwind.session.Scenario;
@@ -44,38 +40,30 @@ import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.ui.WorldwindPlanner;
 
 import javafx.application.Platform;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.AnchorPane;
-import javafx.util.Callback;
-import jfxtras.scene.control.LocalDateTimePicker;
+import javafx.scene.control.Label;
 
 /**
- * Realizes a presenter of a time view.
+ * Realizes a presenter of a timer view.
  * 
  * @author Stephan Heinemann
  *
  */
-public class TimePresenter implements Initializable {
-	
-	/** the time pane of the time view */
+public class TimerPresenter implements Initializable {
+
+	/** the time label of the timer view */
 	@FXML
-	private AnchorPane timePane;
+	private Label timeLabel;
 	
-	/** the date and time picker of this time presenter */
-	private LocalDateTimePicker picker;
-	
-	/** the time change listener of this time presenter */
+	/** the time change listener of this timer presenter */
 	private final TimeChangeListener tcl = new TimeChangeListener();
 	
-	/** the active scenario of this time presenter */
+	/** the active scenario of this timer presenter */
 	private Scenario scenario = null;
 	
 	/**
-	 * Initializes this time presenter.
+	 * Initializes this timer presenter.
 	 * 
 	 * @param location unused
 	 * @param resources unused
@@ -84,15 +72,6 @@ public class TimePresenter implements Initializable {
 	 */
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		this.picker = new LocalDateTimePicker(LocalDateTime.now(ZoneId.of("UTC")));
-		this.timePane.getChildren().add(this.picker);
-		this.picker.setValueValidationCallback(new PlanningTimeCallback());
-		this.picker.addEventFilter(KeyEvent.KEY_PRESSED, new PlanningTimeKeyHandler());
-		AnchorPane.setTopAnchor(this.picker, 5d);
-		AnchorPane.setLeftAnchor(this.picker, 5d);
-		AnchorPane.setRightAnchor(this.picker, 5d);
-		AnchorPane.setBottomAnchor(this.picker, 5d);
-		
 		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 		session.addActiveScenarioChangeListener(new ActiveScenarioChangeListener());
 		this.initScenario();
@@ -100,7 +79,7 @@ public class TimePresenter implements Initializable {
 	}
 	
 	/**
-	 * Initializes the scenario of this time presenter.
+	 * Initializes the scenario of this timer presenter.
 	 */
 	public void initScenario() {
 		if (null != this.scenario) {
@@ -111,92 +90,51 @@ public class TimePresenter implements Initializable {
 	}
 	
 	/**
-	 * Initializes the time of this time presenter.
+	 * Initializes the time of this timer presenter.
 	 */
 	public void initTime() {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				picker.setLocalDateTime(scenario.getTime().toLocalDateTime());
-				picker.layout();
+				timeLabel.setText(scenario.getTime().toString());
+				timeLabel.layout();
 			}
 		});
 	}
 	
 	/**
-	 * Realizes a planning time callback.
-	 * 
-	 * @author Stephan Heinemann
-	 *
+	 * Rewinds the time of the active scenario of this timer presenter.
 	 */
-	private class PlanningTimeCallback implements Callback<LocalDateTime, Boolean> {
-		
-		/**
-		 * Sets the time of the active scenario.
-		 * 
-		 * @param localDateTime the date and time to be set
-		 * 
-		 * @see Callback#call(Object)
-		 */
-		@Override
-		public Boolean call(LocalDateTime localDateTime) {
-			if ((null != localDateTime) && !scenario.isTimed()) {
-				scenario.setTime(ZonedDateTime.of(localDateTime, ZoneId.of("UTC")));
-			}
-			return true;
-		}
+	public void rewind() {
+		this.scenario.rewindTime();
 	}
 	
 	/**
-	 * Realizes a planning time key handler.
-	 * 
-	 * @author Stephan Heinemann
-	 *
+	 * Stops the time of the active scenario of this timer presenter.
 	 */
-	private class PlanningTimeKeyHandler implements EventHandler<KeyEvent> {
-
-		/** the maximum planning time step duration */
-		private final Duration DURATION_MAX = Duration.ofHours(24);
-		
-		/** the current planning time step duration */
-		private Duration duration = Duration.ofMinutes(10);
-		
-		/**
-		 * Handles the key events to change the current planning time and
-		 * planning time step duration.
-		 * 
-		 * @param event the key event associated with the date and time picker
-		 * 
-		 * @see EventHandler#handle(javafx.event.Event)
-		 */
-		@Override
-		public void handle(KeyEvent event) {
-			if (KeyCode.RIGHT.equals(event.getCode())) {
-				if (event.isControlDown()) {
-					// increase time step
-					if (0 > this.duration.compareTo(DURATION_MAX)) {
-						this.duration = this.duration.plusMinutes(1);
-					}
-				} else {
-					// obtain increased time
-					picker.setLocalDateTime(picker.getLocalDateTime().plus(this.duration));
-					picker.getValueValidationCallback().call(picker.getLocalDateTime());
-				}
-				event.consume();
-			} else if (KeyCode.LEFT.equals(event.getCode())) {
-				if (event.isControlDown()) {
-					// decrease time step
-					if (0 < this.duration.compareTo(Duration.ZERO)) {
-						this.duration = this.duration.minusMinutes(1);
-					}
-				} else {
-					// obtain decreased time
-					picker.setLocalDateTime(picker.getLocalDateTime().minus(this.duration));
-					picker.getValueValidationCallback().call(picker.getLocalDateTime());
-				}
-				event.consume();
-			}
-		}
+	public void stop() {
+		this.scenario.stopTime();
+	}
+	
+	/**
+	 * Tracks the time of the active scenario of this timer presenter.
+	 */
+	public void track() {
+		this.scenario.trackTime();
+	}
+	
+	/**
+	 * Plays the time of the active scenario of this timer presenter.
+	 */
+	public void play() {
+		this.scenario.playTime();
+	}
+	
+	/**
+	 * Fast forwards the time of the active scenario of this timer presenter.
+	 */
+	public void fastForward() {
+		this.scenario.fastForwardTime();
 	}
 	
 	/**
@@ -208,7 +146,7 @@ public class TimePresenter implements Initializable {
 	private class TimeChangeListener implements PropertyChangeListener {
 		
 		/**
-		 * Initializes the time if the time changes.
+		 * Initializes the timer if the time changes.
 		 * 
 		 * @param evt the property change event
 		 * 

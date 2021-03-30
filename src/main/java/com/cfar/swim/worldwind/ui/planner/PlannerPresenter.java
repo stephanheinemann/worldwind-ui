@@ -42,6 +42,7 @@ import com.cfar.swim.worldwind.ui.scenario.ScenarioView;
 import com.cfar.swim.worldwind.ui.swim.SwimView;
 import com.cfar.swim.worldwind.ui.threshold.ThresholdView;
 import com.cfar.swim.worldwind.ui.time.TimeView;
+import com.cfar.swim.worldwind.ui.timer.TimerView;
 import com.cfar.swim.worldwind.ui.world.WorldModel;
 import com.cfar.swim.worldwind.ui.world.WorldView;
 
@@ -124,6 +125,9 @@ public class PlannerPresenter implements Initializable {
 		this.timeAccordion.getPanes().add(timeView.getView());
 		this.timeAccordion.setExpandedPane(timeView.getView());
 		
+		TimerView timerView = new TimerView();
+		this.timeAccordion.getPanes().add(timerView.getView());
+		
 		ThresholdView thresholdView = new ThresholdView();
 		this.swimAccordion.getPanes().add(thresholdView.getView());
 		this.swimAccordion.setExpandedPane(thresholdView.getView());
@@ -142,7 +146,7 @@ public class PlannerPresenter implements Initializable {
 		this.plannerAccordion.setExpandedPane(planView.getView());
 		
 		this.progressIndicator.setVisible(false);
-		this.worldModel.addModeChangeListener(new ModeChangeListener());
+		this.worldModel.addWorldModeChangeListener(new ModeChangeListener());
 	}
 	
 	/**
@@ -185,9 +189,12 @@ public class PlannerPresenter implements Initializable {
 			Platform.runLater(new Runnable() {
 				@Override
 				public void run() {
-					switch (worldModel.getMode()) {
+					switch (worldModel.getWorldMode()) {
 					case PLANNING:
 					case LOADING:
+					case UPLOADING:
+					case LAUNCHING:
+					case LANDING:
 						progressBar.setProgress(-1d);
 						progressIndicator.toFront();
 						progressIndicator.setVisible(true);

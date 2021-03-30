@@ -31,10 +31,19 @@ package com.cfar.swim.worldwind.ui.swim;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.FileInputStream;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import org.xml.sax.InputSource;
+
+import com.cfar.swim.worldwind.iwxxm.IwxxmLoader;
+import com.cfar.swim.worldwind.render.Obstacle;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
@@ -44,6 +53,8 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 
 /**
  * Realizes a presenter of a swim view.
@@ -52,6 +63,17 @@ import javafx.scene.control.ListView;
  *
  */
 public class SwimPresenter implements Initializable {
+	
+	// TODO: consider to move all visible UI text into properties files
+	
+	/** the file chooser open swim file title */
+	public static final String FILE_CHOOSER_TITLE_SWIM = "Open SWIM File";
+	
+	/** the file chooser swim file description */
+	public static final String FILE_CHOOSER_SWIM = "SWIM Files";
+	
+	/** the file chooser swim file extension */
+	public static final String FILE_CHOOSER_EXTENSION_SWIM = "*.xml";
 	
 	/** the swim list of the swim view */
 	@FXML
@@ -62,6 +84,9 @@ public class SwimPresenter implements Initializable {
 	
 	/** the obstacle change listener of this swim presenter */
 	private ObstaclesChangeListener ocl = new ObstaclesChangeListener();
+	
+	/** the executor of this swim presenter */
+	private final Executor executor = Executors.newSingleThreadScheduledExecutor();
 	
 	/**
 	 * Initializes this swim presenter.
@@ -115,7 +140,41 @@ public class SwimPresenter implements Initializable {
 	 * Adds a swim item to the swim view.
 	 */
 	public void addSwimItem() {
-		// TODO: load
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				FileChooser fileChooser = new FileChooser();
+				fileChooser.setTitle(SwimPresenter.FILE_CHOOSER_TITLE_SWIM);
+				fileChooser.getExtensionFilters().addAll(
+						new ExtensionFilter[] { new ExtensionFilter(
+								SwimPresenter.FILE_CHOOSER_SWIM,
+								SwimPresenter.FILE_CHOOSER_EXTENSION_SWIM)});
+				File file = fileChooser.showOpenDialog(null);
+				
+				if (null != file) {
+					// TODO: this and other concurrent scenario modifications
+					// need to be controlled by a scenario executor
+					// TODO: status and progress bar available to all presenters
+					executor.execute(new Runnable() {
+						@Override
+						public void run() {
+							try {
+								//setWorldMode(WorldMode.LOADING);
+								// TODO: generic SWIM loader
+								IwxxmLoader loader = new IwxxmLoader();
+								Set<Obstacle> obstacles = loader.load(new InputSource(new FileInputStream(file)));
+								for (Obstacle obstacle : obstacles) {
+									scenario.addObstacle(obstacle);
+								}
+								//setWorldMode(WorldMode.VIEW);
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					});
+				}
+			}
+		});
 	}
 	
 	/**

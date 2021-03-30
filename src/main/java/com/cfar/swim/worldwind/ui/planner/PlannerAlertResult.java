@@ -27,22 +27,49 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.cfar.swim.worldwind.ui.world;
+package com.cfar.swim.worldwind.ui.planner;
 
 /**
- * Enumerates the world modes.
+ * Realizes a planner alert result which can be used to synchronize
+ * with an alert from another thread.
  * 
  * @author Stephan Heinemann
  *
  */
-public enum WorldMode {
-	VIEW,
-	AIRCRAFT,
-	ENVIRONMENT,
-	WAYPOINT,
-	PLANNING,
-	LOADING,
-	UPLOADING,
-	LAUNCHING,
-	LANDING
+public class PlannerAlertResult {
+
+	/** indicates whether or not the OK button was pressed */
+	private boolean ok = false;
+	
+	/** indicates whether or not the result is ready */ 
+	private boolean ready = false;
+	
+	/**
+	 * Indicates whether or not the OK button was pressed.
+	 * 
+	 * @return true if the OK button was pressed, false otherwise
+	 */
+	public synchronized boolean isOk() {
+		while (!this.ready) {
+			try {
+				this.wait();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return this.ok;
+	}
+	
+	/**
+	 * Set the result of the OK button.
+	 * 
+	 * @param ok the result of the OK button to be set
+	 */
+	public synchronized void setOk(boolean ok) {
+		this.ok = ok;
+		this.ready = true;
+		this.notifyAll();
+	}
+
 }

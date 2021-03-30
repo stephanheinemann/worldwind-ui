@@ -41,44 +41,75 @@ import java.beans.PropertyChangeSupport;
 public class WorldModel {
 	
 	/** the world mode of the world model */
-	private WorldMode mode;
+	private WorldMode worldMode;
+	private ViewMode viewMode;
 
 	/** the property change support of this world model */
 	private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 	
 	/**
-	 * Constructs a new world model in view mode.
+	 * Constructs a new world model in view world mode with
+	 * fix view mode.
 	 */
 	public WorldModel() {
-		this.mode = WorldMode.VIEW;
+		this.worldMode = WorldMode.VIEW;
+		this.viewMode = ViewMode.FIX;
 	}
 	
 	/**
-	 * Sets the mode of this world model.
+	 * Gets the world mode of this world model.
 	 * 
-	 * @param mode the mode to be set
+	 * @return the world mode of this world model
 	 */
-	public void setMode(WorldMode mode) {
-		this.mode = mode;
-		this.pcs.firePropertyChange("mode", null, this.mode);
+	public WorldMode getWorldMode() {
+		return this.worldMode;
 	}
 	
 	/**
-	 * Gets the mode of this world model.
+	 * Sets the world mode of this world model.
 	 * 
-	 * @return the mode of this world model
+	 * @param worldMode the world mode to be set
 	 */
-	public WorldMode getMode() {
-		return this.mode;
+	public void setWorldMode(WorldMode worldMode) {
+		this.worldMode = worldMode;
+		this.pcs.firePropertyChange("worldMode", null, this.worldMode);
 	}
 	
 	/**
-	 * Adds a mode change listener to this world model.
+	 * Gets the view mode of this world model.
 	 * 
-	 * @param listener the property change listener to be added
+	 * @return the view mode of this world model
 	 */
-	public void addModeChangeListener(PropertyChangeListener listener) {
-		this.pcs.addPropertyChangeListener("mode", listener);
+	public ViewMode getViewMode() {
+		return this.viewMode;
+	}
+	
+	/**
+	 * Sets the view mode of this world model.
+	 * 
+	 * @param viewMode the view mode to be set
+	 */
+	public void setViewMode(ViewMode viewMode) {
+		this.viewMode = viewMode;
+		this.pcs.firePropertyChange("viewMode", null, this.viewMode);
+	}
+	
+	/**
+	 * Adds a world mode change listener to this world model.
+	 * 
+	 * @param listener the world mode change listener to be added
+	 */
+	public void addWorldModeChangeListener(PropertyChangeListener listener) {
+		this.pcs.addPropertyChangeListener("worldMode", listener);
+	}
+	
+	/**
+	 * Adds a view mode change listener to this world model.
+	 * 
+	 * @param listener the view mode change listener to be added
+	 */
+	public void addViewModeChangeListener(PropertyChangeListener listener) {
+		this.pcs.addPropertyChangeListener("viewMode", listener);
 	}
 
 }

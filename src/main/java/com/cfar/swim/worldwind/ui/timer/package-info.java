@@ -27,22 +27,4 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.cfar.swim.worldwind.ui.world;
-
-/**
- * Enumerates the world modes.
- * 
- * @author Stephan Heinemann
- *
- */
-public enum WorldMode {
-	VIEW,
-	AIRCRAFT,
-	ENVIRONMENT,
-	WAYPOINT,
-	PLANNING,
-	LOADING,
-	UPLOADING,
-	LAUNCHING,
-	LANDING
-}
+package com.cfar.swim.worldwind.ui.timer;

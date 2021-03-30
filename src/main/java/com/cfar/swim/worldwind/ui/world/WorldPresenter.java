@@ -40,15 +40,13 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.io.FileInputStream;
 import java.net.URL;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -56,17 +54,18 @@ import javax.inject.Inject;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import org.xml.sax.InputSource;
-
+import com.cfar.swim.worldwind.ai.DynamicPlanner;
+import com.cfar.swim.worldwind.ai.PlanRevisionListener;
 import com.cfar.swim.worldwind.ai.Planner;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
-import com.cfar.swim.worldwind.iwxxm.IwxxmLoader;
+import com.cfar.swim.worldwind.connections.Datalink;
+import com.cfar.swim.worldwind.connections.SwimConnection;
 import com.cfar.swim.worldwind.planning.CostInterval;
 import com.cfar.swim.worldwind.planning.Environment;
+import com.cfar.swim.worldwind.planning.TrackPoint;
 import com.cfar.swim.worldwind.planning.Trajectory;
 import com.cfar.swim.worldwind.planning.Waypoint;
 import com.cfar.swim.worldwind.registries.Specification;
-import com.cfar.swim.worldwind.render.Obstacle;
 import com.cfar.swim.worldwind.render.annotations.ControlAnnotation;
 import com.cfar.swim.worldwind.render.annotations.DepictionAnnotation;
 import com.cfar.swim.worldwind.session.Scenario;
@@ -74,33 +73,39 @@ import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.ui.WorldwindPlanner;
 import com.cfar.swim.worldwind.ui.planner.PlannerAlert;
+import com.cfar.swim.worldwind.ui.planner.PlannerAlertResult;
 import com.cfar.swim.worldwind.ui.setup.SetupDialog;
 import com.cfar.swim.worldwind.ui.setup.SetupModel;
 import com.cfar.swim.worldwind.util.Depiction;
 
 import gov.nasa.worldwind.BasicModel;
+import gov.nasa.worldwind.View;
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.awt.WorldWindowGLJPanel;
+import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Sector;
 import gov.nasa.worldwind.layers.AnnotationLayer;
+import gov.nasa.worldwind.layers.MarkerLayer;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import gov.nasa.worldwind.layers.ViewControlsLayer;
 import gov.nasa.worldwind.layers.ViewControlsSelectListener;
 import gov.nasa.worldwind.render.BasicShapeAttributes;
 import gov.nasa.worldwind.render.Material;
 import gov.nasa.worldwind.render.ScreenAnnotation;
+import gov.nasa.worldwind.render.markers.Marker;
 import gov.nasa.worldwind.symbology.milstd2525.MilStd2525GraphicFactory;
 import gov.nasa.worldwind.util.StatusBar;
+import gov.nasa.worldwind.view.firstperson.BasicFlyView;
+import gov.nasa.worldwind.view.orbit.BasicOrbitView;
 import gov.nasa.worldwindx.examples.util.SectorSelector;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingNode;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import javafx.scene.layout.AnchorPane;
-import javafx.stage.FileChooser;
-import javafx.stage.FileChooser.ExtensionFilter;
 
 /**
  * Realizes a presenter of a world view.
@@ -110,14 +115,11 @@ import javafx.stage.FileChooser.ExtensionFilter;
  */
 public class WorldPresenter implements Initializable {
 	
-	/** the aircraft icon of the world view */
-	@Inject private String aircraftIcon;
-	
-	/** the swim icon of the world view */
-	@Inject private String swimIcon;
-	
 	/** the environment icon of the world view */
 	@Inject private String environmentIcon;
+	
+	/** the aircraft icon of the world view */
+	@Inject private String aircraftIcon;
 	
 	/** the point of interest icon of the world view */
 	@Inject private String poiIcon;
@@ -125,11 +127,23 @@ public class WorldPresenter implements Initializable {
 	/** the planner icon of the world view */
 	@Inject private String plannerIcon;
 	
+	/** the swim icon of the world view */
+	@Inject private String swimIcon;
+	
+	/** the datalink icon of the world view */
+	@Inject private String datalinkIcon;
+	
+	/** the upload icon of the world view */
+	@Inject private String uploadIcon;
+	
 	/** the take-off icon of the world view */
 	@Inject private String takeoffIcon;
 	
 	/** the land icon of the world view */
 	@Inject private String landIcon;
+	
+	/** the view icon of the world view */
+	@Inject private String viewIcon;
 	
 	/** the setup icon of the world view */
 	@Inject private String setupIcon;
@@ -137,23 +151,17 @@ public class WorldPresenter implements Initializable {
 	/** the no action command */
 	public static final String ACTION_NONE = "WorldPresenter.ActionCommand.None";
 	
-	/** the set aircraft action command */
-	public static final String ACTION_AICRAFT_SET = "WorldPresenter.ActionCommand.AircraftSet";
-	
-	/** the setup aircraft action command */
-	public static final String ACTION_AIRCAFT_SETUP = "WorldPresenter.ActionCommand.AircraftSetup";
-	
-	/** the load swim action command */
-	public static final String ACTION_SWIM_LOAD = "WorldPresenter.ActionCommand.SwimLoad";
-	
-	/** the setup swim action command */
-	public static final String ACTION_SWIM_SETUP = "WorldPresenter.ActionCommand.SwimSetup";
-	
 	/** the enclose environment action command */
 	public static final String ACTION_ENVIRONMENT_ENCLOSE = "WorldPresenter.ActionCommand.EnvironmentEnclose";
 	
 	/** the setup environment action command */
 	public static final String ACTION_ENVIRONMENT_SETUP = "WorldPresenter.ActionCommand.EnvironmentSetup";
+	
+	/** the set aircraft action command */
+	public static final String ACTION_AICRAFT_SET = "WorldPresenter.ActionCommand.AircraftSet";
+	
+	/** the setup aircraft action command */
+	public static final String ACTION_AIRCAFT_SETUP = "WorldPresenter.ActionCommand.AircraftSetup";
 	
 	/** the edit waypoint action command */
 	public static final String ACTION_WAYPOINT_EDIT = "WorldPresenter.ActionCommand.WaypointEdit";
@@ -167,11 +175,38 @@ public class WorldPresenter implements Initializable {
 	/** the setup planner action command */
 	public static final String ACTION_PLANNER_SETUP = "WorldPresenter.ActionCommand.PlannerSetup";
 	
+	/** the connect swim action command */
+	public static final String ACTION_SWIM_CONNECT = "WorldPresenter.ActionCommand.SwimConnect";
+	
+	/** the setup swim action command */
+	public static final String ACTION_SWIM_SETUP = "WorldPresenter.ActionCommand.SwimSetup";
+	
+	/** the connect datalink action command */
+	public static final String ACTION_DATALINK_CONNECT = "WorldPresenter.ActionCommand.DatalinkConnect";
+	
+	/** the setup datalink action command */
+	public static final String ACTION_DATALINK_SETUP = "WorldPresenter.ActionCommand.DatalinkSetup";
+	
+	/** the upload action command */
+	public static final String ACTION_TRANSFER_UPLOAD = "WorldPresenter.ActionCommand.TransferUpload";
+	
 	/** the take-off action command */
-	public static final String ACTION_TAKEOFF = "WorldPresenter.ActionCommand.TakeOff";
+	public static final String ACTION_FLIGHT_TAKEOFF = "WorldPresenter.ActionCommand.FlightTakeOff";
+	
+	/** the setup flight action command */
+	public static final String ACTION_FLIGHT_SETUP = "WorldPresenter.ActionCommand.FlightSetup";
 	
 	/** the land action command */
-	public static final String ACTION_LAND = "WorldPresenter.ActionCommand.Land";
+	public static final String ACTION_FLIGHT_LAND = "WorldPresenter.ActionCommand.Land";
+	
+	/** the return action command */
+	public static final String ACTION_FLIGHT_RETURN = "WorldPresenter.ActionCommand.Return";
+	
+	/** the cycle view action command */
+	public static final String ACTION_VIEW_CYCLE = "WorldPresenter.ActionCommand.ViewCycle";
+	
+	/** the reset view action command */
+	public static final String ACTION_VIEW_RESET = "WorldPresenter.ActionCommand.ViewReset";
 	
 	// TODO: consider to move all visible UI text into properties files
 	
@@ -191,6 +226,39 @@ public class WorldPresenter implements Initializable {
 	/** the world node of the world view (swing inside fx) */
 	@FXML
 	private SwingNode worldNode;
+	
+	/** the environment control of this world presenter */
+	private ControlAnnotation environmentControl;
+	
+	/** the aircraft control of this world presenter */
+	private ControlAnnotation aircraftControl;
+	
+	/** the point of interest control of this world presenter */
+	private ControlAnnotation poiControl;
+	
+	/** the planner control of this world presenter */
+	private ControlAnnotation plannerControl;
+	
+	/** the SWIM control of this world presenter */
+	private ControlAnnotation swimControl;
+	
+	/** the datalink control of this world presenter */
+	private ControlAnnotation datalinkControl;
+	
+	/** the upload control of this world presenter */
+	private ControlAnnotation uploadControl;
+	
+	/** the take-off control of this world presenter */
+	private ControlAnnotation takeoffControl;
+	
+	/** the land control of this world presenter */
+	private ControlAnnotation landControl;
+	
+	/** the view control of this world presenter */
+	private ControlAnnotation viewControl;
+	
+	/** the status annotation of this world presenter */
+	private ScreenAnnotation statusAnnotation;
 	
 	/** the world model of this world presenter */
 	@Inject
@@ -220,6 +288,9 @@ public class WorldPresenter implements Initializable {
 	
 	/** the obstacles layer of this world presenter */
 	private final RenderableLayer obstaclesLayer = new RenderableLayer();
+	
+	/** the track layer of this world presenter */
+	private final MarkerLayer trackLayer = new MarkerLayer();
 	
 	/** the symbol factory of this world presenter */
 	private final MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
@@ -251,8 +322,11 @@ public class WorldPresenter implements Initializable {
 	/** the obstacles change listener of this world presenter */
 	private final ObstaclesChangeListener obstaclesCl = new ObstaclesChangeListener();
 	
-	/** the executor of this world presenter */
-	private final Executor executor = Executors.newSingleThreadScheduledExecutor();
+	/** the track change listener of this world presenter */
+	private final TrackChangeListener trackCl = new TrackChangeListener();
+	
+	/** the sequential executor of this world presenter */
+	private final Executor executor = Executors.newSingleThreadExecutor();
 	
 	/**
 	 * Initializes this world presenter.
@@ -279,6 +353,8 @@ public class WorldPresenter implements Initializable {
 		this.initEnvironment();
 		this.initObstacles();
 		this.initPlan();
+		this.initTrack();
+		this.initView();
 	}
 	
 	/**
@@ -366,22 +442,175 @@ public class WorldPresenter implements Initializable {
 	}
 	
 	/**
-	 * Sets the world mode of this world presenter.
-	 * 
-	 * @param mode the world mode to be set
+	 * Initializes the track of this world presenter.
 	 */
-	private void setMode(WorldMode mode) {
-		this.worldModel.setMode(mode);
-		this.displayStatus(mode.toString());
+	public void initTrack() {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				ArrayList<Marker> markers = new ArrayList<>();
+				for (TrackPoint trackPoint : scenario.getDatalink().getAircraftTrack()) {
+					markers.add(trackPoint);
+				}
+				trackLayer.setMarkers(markers);
+				wwd.redraw();
+			}
+		});
 	}
+	
+	/**
+	 * Initializes the view of this world presenter.
+	 */
+	public void initView() {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				ViewMode viewMode = getViewMode();
+				if (!viewMode.equals(ViewMode.FIX)) {
+					View view = wwd.getView();
+					
+					if (view instanceof BasicOrbitView) {
+						BasicOrbitView basicOrbitView = (BasicOrbitView) view;
+						if (viewMode.equals(ViewMode.PLANNED_ABOVE)) {
+							if (scenario.hasAircraft()) {
+								basicOrbitView.setCenterPosition(
+										scenario.getAircraft().getReferencePosition());
+								// TODO: plan does not contain attitude (airdata, heading)
+							} else {
+								view(false);
+							}
+						} else if (viewMode.equals(ViewMode.ACTUAL_ABOVE)) {
+							TrackPoint last = scenario.getDatalink().getLastTrackPoint();
+							if (null != last) {
+								basicOrbitView.setCenterPosition(last.getPosition());
+								basicOrbitView.setHeading(last.getHeading());
+							} else {
+								view(false);
+							}
+						}
+					} else if (view instanceof BasicFlyView) {
+						BasicFlyView basicFlyView = (BasicFlyView) view;
+						if (viewMode.equals(ViewMode.PLANNED_CHASE)) {
+							if (scenario.hasAircraft()) {
+								// TODO: plan does not contain attitude (airdata, heading)
+							} else {
+								view(false);
+							}
+						} else if (viewMode.equals(ViewMode.PLANNED_FPV)) {
+							if (scenario.hasAircraft()) {
+								// TODO: plan does not contain attitude (airdata, heading)
+							} else {
+								view(false);
+							}
+						} else if (viewMode.equals(ViewMode.ACTUAL_CHASE)) {
+							//TrackPoint previous = scenario.getDatalink().getPreviousTrackPoint(5);
+							TrackPoint previous = scenario.getDatalink().getFirstTrackPoint();
+							if (null != previous) {
+								basicFlyView.setEyePosition(previous.getPosition());
+								basicFlyView.setHeading(previous.getHeading());
+								basicFlyView.setPitch(previous.getPitch().add(Angle.POS90));
+								basicFlyView.setRoll(previous.getRoll());
+							} else {
+								view(false);
+							}
+						} else if (viewMode.equals(ViewMode.ACTUAL_FPV)) {
+							TrackPoint last = scenario.getDatalink().getLastTrackPoint();
+							if (null != last) {
+								basicFlyView.setEyePosition(last.getPosition());
+								basicFlyView.setHeading(last.getHeading());
+								basicFlyView.setPitch(last.getPitch().add(Angle.POS90));
+								basicFlyView.setRoll(last.getRoll());
+							} else {
+								view(false);
+							}
+						}
+					}
+				}
+			}
+		});
+	}
+	
+	// TODO: review moding, synchronization, busy cycle and possible actions carefully
 	
 	/**
 	 * Gets the world mode of this world presenter.
 	 * 
 	 * @return the world mode of this world presenter
 	 */
-	private WorldMode getMode() {
-		return this.worldModel.getMode();
+	private WorldMode getWorldMode() {
+		return this.worldModel.getWorldMode();
+	}
+	
+	/**
+	 * Sets the world mode of this world presenter.
+	 * 
+	 * @param worldMode the world mode to be set
+	 */
+	private void setWorldMode(WorldMode worldMode) {
+		this.worldModel.setWorldMode(worldMode);
+			
+		// display status according to world mode
+		this.displayStatus(worldMode.toString());
+		
+		// frame controls according to world mode
+		this.frameControl(this.aircraftControl, false);
+		this.frameControl(this.environmentControl, false);
+		this.frameControl(this.landControl, false);
+		this.frameControl(this.takeoffControl, false);
+		this.frameControl(this.plannerControl, false);
+		this.frameControl(this.uploadControl, false);
+		this.frameControl(this.poiControl, false);
+		
+		switch (worldMode) {
+		case AIRCRAFT:
+			this.frameControl(this.aircraftControl, true);
+			break;
+		case ENVIRONMENT:
+			this.frameControl(this.environmentControl, true);
+			break;
+		case LANDING:
+			this.frameControl(this.landControl, true);
+			break;
+		case LAUNCHING:
+			this.frameControl(this.takeoffControl, true);
+			break;
+		case PLANNING:
+			this.frameControl(this.plannerControl, true);
+			break;
+		case UPLOADING:
+			this.frameControl(this.uploadControl, true);
+			break;
+		case WAYPOINT:
+			this.frameControl(this.poiControl, true);
+			break;
+		default:
+			this.frameControl(this.aircraftControl, false);
+			this.frameControl(this.environmentControl, false);
+			this.frameControl(this.landControl, false);
+			this.frameControl(this.takeoffControl, false);
+			this.frameControl(this.plannerControl, false);
+			this.frameControl(this.uploadControl, false);
+			this.frameControl(this.poiControl, false);
+			break;
+		}
+	}
+	
+	/**
+	 * Gets the view mode of this world presenter.
+	 * 
+	 * @return the view mode of this world presenter
+	 */
+	private ViewMode getViewMode() {
+		return this.worldModel.getViewMode();
+	}
+	
+	/**
+	 * Sets the view mode of this world presenter.
+	 * 
+	 * @param viewMode the view mode to be set
+	 */
+	private void setViewMode(ViewMode viewMode) {
+		this.worldModel.setViewMode(viewMode);
 	}
 	
 	/**
@@ -390,7 +619,68 @@ public class WorldPresenter implements Initializable {
 	 * @param status the status to be displayed
 	 */
 	private void displayStatus(String status) {
-		statusLayer.getAnnotations().iterator().next().setText(status);
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				statusAnnotation.setText(status);
+				wwd.redraw();
+			}
+		});
+	}
+	
+	/**
+	 * Frames a control annotation of this world presenter.
+	 * 
+	 * @param control the control annotation
+	 * @param frame the frame status to be realized
+	 */
+	private void frameControl(ControlAnnotation control, boolean frame) {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				if (frame) {
+					control.frame();
+				} else {
+					control.unframe();
+				}
+				wwd.redraw();
+			}
+		});
+	}
+	
+	/**
+	 * Opens a planner alert with a specified alert type, title, header and
+	 * content. A result can be passed for synchronization.
+	 * 
+	 * @param type the type of the planner alert
+	 * @param title the title of the planner alert
+	 * @param header the header of the planner alert
+	 * @param content the content of the planner alert
+	 * @param result the result to be notified for synchronization
+	 * 
+	 * @see PlannerAlert
+	 */
+	private void alert(
+			AlertType type,
+			String title, String header, String content,
+			PlannerAlertResult result) {
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				PlannerAlert alert = new PlannerAlert(type);
+				alert.setTitle(title);
+				alert.setHeaderText(header);
+				alert.setContentText(content);
+				Optional<ButtonType> optButtonType = alert.showAndWait();
+				if (null != result) {
+					if (optButtonType.isPresent()) {
+						result.setOk(optButtonType.get().equals(ButtonType.OK));
+					} else {
+						result.setOk(false);
+					}
+				}
+			}
+		});
 	}
 	
 	/**
@@ -405,115 +695,458 @@ public class WorldPresenter implements Initializable {
 				SetupDialog setupDialog = new SetupDialog(SetupDialog.TITLE_SETUP, SetupDialog.HEADER_SETUP, setupIcon, setupModel);
 				setupDialog.selectTab(tabIndex);
 				setupDialog.showAndWait();
-			}			
+			}
 		});
 	}
 	
 	/**
-	 * Opens a file dialog and loads a SWIM file asynchronously.
-	 * 
-	 * @param title the title of the file dialog
-	 * @param extensions the extension filter of the file dialog
+	 * Enables the environment creation mode.
 	 */
-	private void load(String title, ExtensionFilter[] extensions) {
-		Platform.runLater(new Runnable() {
+	private void environment() {
+		this.executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				FileChooser fileChooser = new FileChooser();
-				fileChooser.setTitle(title);
-				fileChooser.getExtensionFilters().addAll(extensions);
-				File file = fileChooser.showOpenDialog(null);
-				
-				if (null != file) {
-					executor.execute(new Runnable() {
-						@Override
-						public void run() {
-							try {
-								// TODO: generic SWIM loader
-								IwxxmLoader loader = new IwxxmLoader();
-								Set<Obstacle> obstacles = loader.load(new InputSource(new FileInputStream(file)));
-								for (Obstacle obstacle : obstacles) {
-									scenario.addObstacle(obstacle);
-								}
-								setMode(WorldMode.VIEW);
-							} catch (Exception e) {
-								e.printStackTrace();
-							}
-						}
-					});
+				if ((WorldMode.VIEW == getWorldMode())
+						|| (WorldMode.AIRCRAFT == getWorldMode())
+						|| (WorldMode.WAYPOINT == getWorldMode())) {
+					setWorldMode(WorldMode.ENVIRONMENT);
+					sectorSelector.enable();
 				}
 			}
 		});
 	}
 	
 	/**
-	 * Opens a planner alert with a specified alert type, title, header and
-	 * content.
-	 * 
-	 * @param type the type of the planner alert
-	 * @param title the title of the planner alert
-	 * @param header the header of the planner alert
-	 * @param content the content of the planner alert
-	 * 
-	 * @see PlannerAlert
+	 * Creates a new environment based on a selected sector.
 	 */
-	private void alert(AlertType type, String title, String header, String content) {
-		Platform.runLater(new Runnable() {
+	private void createEnvironment() {
+		this.executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				PlannerAlert alert = new PlannerAlert(type);
-				alert.setTitle(title);
-				alert.setHeaderText(header);
-				alert.setContentText(content);
-				alert.showAndWait();
+				if (WorldMode.ENVIRONMENT == getWorldMode()) {
+					Sector envSector = sectorSelector.getSector();
+					if (null != envSector) {
+						Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+						session.getActiveScenario().setSector(envSector);
+						Specification<Environment> envSpec = session.getSetup().getEnvironmentSpecification();
+						session.getEnvironmentFactory().setSpecification(envSpec);
+						Environment env = session.getEnvironmentFactory().createInstance();
+						session.getActiveScenario().setEnvironment(env);
+						initEnvironment();
+					}
+					sectorSelector.disable();
+					setWorldMode(WorldMode.VIEW);
+				}
+			}
+		});
+	} 
+	
+	/**
+	 * Enables the aircraft creation mode.
+	 */
+	private void aircraft() {
+		this.executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				if ((WorldMode.VIEW == getWorldMode())
+						|| (WorldMode.ENVIRONMENT == getWorldMode())
+						|| (WorldMode.WAYPOINT == getWorldMode())) {
+					setWorldMode(WorldMode.AIRCRAFT);
+				}
 			}
 		});
 	}
 	
 	/**
-	 * Plans a trajectory along the waypoints of the active scenario
-	 * asynchronously.
+	 * Creates a new aircraft at the clicked position.
+	 * 
+	 * @param amh the aircraft mouse handler to execute
+	 */
+	private void aircraft(AircraftMouseHandler amh) {
+		this.executor.execute(amh);
+	}
+	
+	/**
+	 * Enables the point of interest creation mode.
+	 */
+	private void waypoint() {
+		this.executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				if ((WorldMode.VIEW == getWorldMode())
+						|| (WorldMode.AIRCRAFT == getWorldMode())
+						|| (WorldMode.ENVIRONMENT == getWorldMode())) {
+					setWorldMode(WorldMode.WAYPOINT);
+				}
+			}
+		});
+	}
+	
+	/**
+	 * Creates a new waypoint at the clicked position.
+	 * 
+	 * @param wmh the waypoint mouse handler to execute
+	 */
+	private void waypoint(WaypointMouseHandler wmh) {
+		this.executor.execute(wmh);
+	}
+	
+	/**
+	 * Plans a trajectory along the waypoints of the active scenario.
 	 */
 	private void plan() {
-		executor.execute(new Runnable() {
+		if (WorldMode.PLANNING == getWorldMode()) {
+			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+			Planner planner = session.getActiveScenario().getPlanner();
+			
+			// terminate running dynamic planner
+			if (planner instanceof DynamicPlanner) {
+				((DynamicPlanner) planner).terminate();
+			}
+		} else {
+			this.executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					if ((WorldMode.VIEW == getWorldMode())
+							|| (WorldMode.ENVIRONMENT == getWorldMode())
+							|| (WorldMode.AIRCRAFT == getWorldMode())
+							|| (WorldMode.WAYPOINT == getWorldMode())) {
+					
+						Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+						Planner planner = session.getActiveScenario().getPlanner();
+						
+						if (!planner.matches(session.getSetup().getPlannerSpecification())
+								|| (planner.getAircraft() != session.getActiveScenario().getAircraft())
+								|| (planner.getEnvironment() != session.getActiveScenario().getEnvironment())) {
+							// create new planner
+							Specification<Planner> plannerSpec = session.getSetup().getPlannerSpecification();
+							session.getPlannerFactory().setSpecification(plannerSpec);
+							planner = session.getPlannerFactory().createInstance();
+							session.getActiveScenario().setPlanner(planner);
+						} else if (planner instanceof DynamicPlanner) {
+							// recycle terminated dynamic planner
+							((DynamicPlanner) planner).recycle();
+						}
+						
+						Position origin = null;
+						Position destination = null;
+						List<Position> waypoints = new ArrayList<Position>();
+						waypoints.addAll(session.getActiveScenario().getWaypoints());
+						
+						if (planner.supports(planner.getAircraft()) &&
+							planner.supports(planner.getEnvironment()) &&
+							planner.supports(waypoints) &&
+							1 < waypoints.size()) {
+							
+							origin = waypoints.remove(0);
+							destination = waypoints.remove(waypoints.size() - 1);
+							
+							// listen for plan revisions
+							planner.addPlanRevisionListener(new PlanRevisionListener() {
+								@Override
+								public void revisePlan(Trajectory trajectory) {
+									// TODO: clearing trajectory versus uploading empty trajectory
+									//if (!trajectory.isEmpty()) {
+										styleTrajectory(trajectory);
+										session.getActiveScenario().setTrajectory(trajectory);
+										// TODO: consider automatic data uplink if connected
+										// TODO: anytime, dyanmic and online planners
+										System.out.println("revising plan...");
+										Thread.yield();
+									//}
+								}
+							});
+							
+							// TODO: consider asynchronous planning
+							setWorldMode(WorldMode.PLANNING);
+							if (waypoints.isEmpty()) {
+								planner.plan(origin, destination, session.getActiveScenario().getTime());
+							} else {
+								planner.plan(origin, destination, waypoints, session.getActiveScenario().getTime());
+							}
+							setWorldMode(WorldMode.VIEW);
+							
+						} else {
+							alert(
+								AlertType.ERROR,
+								PlannerAlert.ALERT_TITLE_PLANNER_INVALID,
+								PlannerAlert.ALERT_HEADER_PLANNER_INVALID,
+								PlannerAlert.ALERT_CONTENT_PLANNER_INVALID,
+								null);
+						}
+					}
+				}
+			});
+		}
+	}
+	
+	/**
+	 * Establishes a SWIM connection.
+	 */
+	private void swim() {
+		this.executor.execute(new Runnable() {
 			@Override
 			public void run() {
 				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-				Specification<Planner> plannerSpec = session.getSetup().getPlannerSpecification();
-				Planner planner = session.getPlannerFactory().createInstance(plannerSpec);
-				Position origin = null;
-				Position destination = null;
-				List<Position> waypoints = new ArrayList<Position>();
-				waypoints.addAll(session.getActiveScenario().getWaypoints());
+				SwimConnection swimConnection = session.getActiveScenario().getSwimConnection();
 				
-				if (planner.supports(planner.getAircraft()) &&
-					planner.supports(planner.getEnvironment()) &&
-					planner.supports(waypoints) &&
-					1 < waypoints.size()) {
-					
-					origin = waypoints.remove(0);
-					destination = waypoints.remove(waypoints.size() - 1);
-				
-					Trajectory trajectory = null;
-					
-					if (waypoints.isEmpty()) {
-						trajectory = planner.plan(origin, destination, session.getActiveScenario().getTime());
-					} else {
-						trajectory = planner.plan(origin, destination, waypoints, session.getActiveScenario().getTime());
-					}
-					
-					styleTrajectory(trajectory);
-					session.getActiveScenario().setTrajectory(trajectory);
-				
+				if (swimConnection.isConnected()) {
+					// disconnect current SWIM connection
+					swimConnection.disconnect();
 				} else {
-					alert(
-						AlertType.ERROR,
-						PlannerAlert.ALERT_TITLE_PLANNER_INVALID,
-						PlannerAlert.ALERT_HEADER_PLANNER_INVALID,
-						PlannerAlert.ALERT_CONTENT_PLANNER_INVALID);
+					if (!swimConnection.matches(session.getSetup().getSwimConnectionSpecification())) {
+						// create new SWIM connection
+						Specification<SwimConnection> swimConnectionSpec = session.getSetup().getSwimConnectionSpecification();
+						session.getSwimConnectionFactory().setSpecification(swimConnectionSpec);
+						swimConnection = session.getSwimConnectionFactory().createInstance();
+						session.getActiveScenario().setSwimConnection(swimConnection);
+						session.getActiveScenario().getSwimConnection().setObstacleManager(session.getActiveScenario());
+					}
+					// connect current SWIM connection
+					swimConnection.connect();
+					
+					if (!swimConnection.isConnected()) {
+						alert(
+							AlertType.ERROR,
+							PlannerAlert.ALERT_TITLE_SWIM_INVALID,
+							PlannerAlert.ALERT_HEADER_SWIM_INVALID,
+							PlannerAlert.ALERT_CONTENT_SWIM_INVALID,
+							null);
+					}
 				}
 				
-				setMode(WorldMode.VIEW);
+				frameControl(swimControl, swimConnection.isConnected());
+			}
+		});
+	}
+	
+	/**
+	 * Establishes a datalink connection.
+	 */
+	private void datalink() {
+		this.executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+				Datalink datalink = session.getActiveScenario().getDatalink();
+				
+				if (datalink.isConnected()) {
+					if (datalink.isMonitoring()) {
+						// disable monitoring
+						datalink.stopMonitoring();
+						datalink.removePropertyChangeListener(trackCl);
+					}
+					// disconnect current datlink
+					datalink.disconnect();
+				} else {
+					if (!datalink.matches(session.getSetup().getDatalinkSpecification())) {
+						// create new datalink
+						Specification<Datalink> datalinkSpec = session.getSetup().getDatalinkSpecification();
+						session.getDatalinkFactory().setSpecification(datalinkSpec);
+						datalink = session.getDatalinkFactory().createInstance();
+						session.getActiveScenario().setDatalink(datalink);
+					}
+					// connect current datalink
+					datalink.connect();
+					
+					if (datalink.isConnected()) {
+						// enable monitoring
+						datalink.addTrackChangeListener(trackCl);
+						datalink.startMonitoring();
+					} else {
+						alert(
+							AlertType.ERROR,
+							PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
+							PlannerAlert.ALERT_HEADER_DATALINK_INVALID,
+							PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
+							null);
+					}
+				}
+				
+				frameControl(datalinkControl, datalink.isConnected());
+			}
+		});
+	}
+	
+	/**
+	 * Uploads a trajectory via the datalink of the active scenario.
+	 */
+	private void upload() {
+		this.executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				if ((WorldMode.VIEW == getWorldMode())
+						|| (WorldMode.ENVIRONMENT == getWorldMode())
+						|| (WorldMode.AIRCRAFT == getWorldMode())
+						|| (WorldMode.WAYPOINT == getWorldMode())) {
+					
+					
+					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+					Datalink datalink = session.getActiveScenario().getDatalink();
+					
+					if (datalink.isConnected() && session.getActiveScenario().hasTrajectory()) {
+						setWorldMode(WorldMode.UPLOADING);
+						Trajectory trajectory = session.getActiveScenario().getTrajectory();
+						datalink.uploadFlightPath(trajectory);
+						setWorldMode(WorldMode.VIEW);
+					} else {
+						alert(
+							AlertType.ERROR,
+							PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
+							PlannerAlert.ALERT_HEADER_DATALINK_INVALID,
+							PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
+							null);
+					}
+				}
+			}
+		});
+	}
+	
+	/**
+	 * Issues a take-off command via the datalink of the active scenario.
+	 */
+	private void takeoff() {
+		this.executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				if ((WorldMode.VIEW == getWorldMode())
+						|| (WorldMode.ENVIRONMENT == getWorldMode())
+						|| (WorldMode.AIRCRAFT == getWorldMode())
+						|| (WorldMode.WAYPOINT == getWorldMode())) {
+					
+					PlannerAlertResult clearance = new PlannerAlertResult();
+					alert(
+						AlertType.CONFIRMATION,
+						PlannerAlert.ALERT_TITLE_TAKEOFF_CONFIRM,
+						PlannerAlert.ALERT_HEADER_TAKEOFF_CONFIRM,
+						PlannerAlert.ALERT_CONTENT_TAKEOFF_CONFIRM,
+						clearance);
+					
+					if (clearance.isOk()) {
+						Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+						Datalink datalink = session.getActiveScenario().getDatalink();
+						
+						if (datalink.isConnected() && session.getActiveScenario().hasTrajectory()) {
+							setWorldMode(WorldMode.LAUNCHING);
+							//datalink.disableAircraftSafety();
+							//datalink.armAircraft();
+							datalink.takeOff(); // TODO: flight (envelope) setup
+							setWorldMode(WorldMode.VIEW);
+						} else {
+							alert(
+								AlertType.ERROR,
+								PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
+								PlannerAlert.ALERT_HEADER_DATALINK_INVALID,
+								PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
+								null);
+						}
+					}
+				}
+			}
+		});
+	}
+	
+	/**
+	 * Issues a land command via the datalink of the active scenario.
+	 * 
+	 * @param returnToLaunch indicates whether or not the landing shall be
+	 *                       performed at the launch position
+	 */
+	private void land(boolean returnToLaunch) {
+		this.executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				if ((WorldMode.VIEW == getWorldMode())
+						|| (WorldMode.ENVIRONMENT == getWorldMode())
+						|| (WorldMode.AIRCRAFT == getWorldMode())
+						|| (WorldMode.WAYPOINT == getWorldMode())) {
+				
+					PlannerAlertResult clearance = new PlannerAlertResult();
+					alert(
+						AlertType.CONFIRMATION,
+						PlannerAlert.ALERT_TITLE_LAND_CONFIRM,
+						PlannerAlert.ALERT_HEADER_LAND_CONFIRM,
+						PlannerAlert.ALERT_CONTENT_LAND_CONFIRM,
+						clearance);
+					
+					if (clearance.isOk()) {
+						Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+						Datalink datalink = session.getActiveScenario().getDatalink();
+						
+						if (datalink.isConnected()) {
+							setWorldMode(WorldMode.LANDING);
+							if (returnToLaunch) {
+								datalink.returnToLaunch();
+							} else {
+								datalink.land();
+							}
+							setWorldMode(WorldMode.VIEW);
+						} else {
+							alert(
+								AlertType.ERROR,
+								PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
+								PlannerAlert.ALERT_HEADER_DATALINK_INVALID,
+								PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
+								null);
+						}
+					}
+				}
+			}
+		});
+	}
+	
+	/**
+	 * Cycles or resets the view mode of the world view.
+	 * 
+	 * @param cycle indicates whether to cycle or otherwise
+	 *              reset the world view
+	 */
+	private void view(boolean cycle) {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				BasicOrbitView basicOrbitView;
+				
+				if (cycle) {
+					switch (getViewMode()) {
+					case FIX:
+						basicOrbitView = new BasicOrbitView();
+						basicOrbitView.setZoom(10000);
+						wwd.setView(basicOrbitView);
+						setViewMode(ViewMode.PLANNED_ABOVE);
+						break;
+					case PLANNED_ABOVE:
+					case PLANNED_CHASE:
+					case PLANNED_FPV:
+						basicOrbitView = new BasicOrbitView();
+						basicOrbitView.setZoom(10000);
+						wwd.setView(basicOrbitView);
+						setViewMode(ViewMode.ACTUAL_ABOVE);
+						break;
+					case ACTUAL_ABOVE:
+						wwd.setView(new BasicFlyView());
+						setViewMode(ViewMode.ACTUAL_CHASE);
+						break;
+					case ACTUAL_CHASE:
+						wwd.setView(new BasicFlyView());
+						setViewMode(ViewMode.ACTUAL_FPV);
+						break;
+					case ACTUAL_FPV:
+					default:
+						basicOrbitView = new BasicOrbitView();
+						basicOrbitView.setCenterPosition(wwd.getView().getCurrentEyePosition());
+						basicOrbitView.setZoom(10000);
+						wwd.setView(basicOrbitView);
+						setViewMode(ViewMode.FIX);
+						break;
+					}
+				} else {
+					basicOrbitView = new BasicOrbitView();
+					basicOrbitView.setCenterPosition(wwd.getView().getCurrentEyePosition());
+					basicOrbitView.setZoom(10000);
+					wwd.setView(basicOrbitView);
+					setViewMode(ViewMode.FIX);
+				}
 			}
 		});
 	}
@@ -558,8 +1191,9 @@ public class WorldPresenter implements Initializable {
 			
 			// initialize world window
 			wwd.setModel(new BasicModel());
-			// TODO: load higher quality bing maps
-			// possibly configurable (street or bing) and per session
+			// TODO: load higher quality maps, possibly configurable and per session
+			// TODO: higher DTED levels (worldwind.xml)
+			wwd.getModel().getLayers().getLayerByName("Bing Imagery").setEnabled(true);
 			
 			// add view controls
 			ViewControlsLayer viewControlsLayer = new ViewControlsLayer();
@@ -571,68 +1205,93 @@ public class WorldPresenter implements Initializable {
 			wwd.getModel().getLayers().add(environmentLayer);
 			wwd.getModel().getLayers().add(waypointLayer);
 			wwd.getModel().getLayers().add(obstaclesLayer);
+			wwd.getModel().getLayers().add(trackLayer);
 			
 			// add planner controls
-			ControlAnnotation aircraftControl = new ControlAnnotation(aircraftIcon);
-			aircraftControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 200, 25));
-			aircraftControl.setPrimaryActionCommand(WorldPresenter.ACTION_AICRAFT_SET);
-			aircraftControl.setSecondaryActionCommand(WorldPresenter.ACTION_AIRCAFT_SETUP);
-			aircraftControl.addActionListener(new AircraftControlListener());
-			
-			ControlAnnotation swimControl = new ControlAnnotation(swimIcon);
-			swimControl.getAttributes().setDrawOffset((new Point((wwd.getWidth() / 2) - 125, 25)));
-			swimControl.setPrimaryActionCommand(WorldPresenter.ACTION_SWIM_LOAD);
-			swimControl.setSecondaryActionCommand(WorldPresenter.ACTION_SWIM_SETUP);
-			swimControl.addActionListener(new SwimControlListener());
-			
-			ControlAnnotation environmentControl = new ControlAnnotation(environmentIcon);
-			environmentControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 50, 25));
+			environmentControl = new ControlAnnotation(environmentIcon);
+			environmentControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 325, 25));
 			environmentControl.setPrimaryActionCommand(WorldPresenter.ACTION_ENVIRONMENT_ENCLOSE);
 			environmentControl.setSecondaryActionCommand(ACTION_ENVIRONMENT_SETUP);
 			environmentControl.addActionListener(new EnvironmentControlListener());
 			
-			ControlAnnotation poiControl = new ControlAnnotation(poiIcon);
-			poiControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 25, 25));
+			aircraftControl = new ControlAnnotation(aircraftIcon);
+			aircraftControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 250, 25));
+			aircraftControl.setPrimaryActionCommand(WorldPresenter.ACTION_AICRAFT_SET);
+			aircraftControl.setSecondaryActionCommand(WorldPresenter.ACTION_AIRCAFT_SETUP);
+			aircraftControl.addActionListener(new AircraftControlListener());
+			
+			poiControl = new ControlAnnotation(poiIcon);
+			poiControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 175, 25));
 			poiControl.setPrimaryActionCommand(WorldPresenter.ACTION_WAYPOINT_EDIT);
 			poiControl.setSecondaryActionCommand(WorldPresenter.ACTION_WAYPOINT_SETUP);
 			poiControl.addActionListener(new WaypointsControlListener());
 			
-			ControlAnnotation plannerControl = new ControlAnnotation(plannerIcon);
-			plannerControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 100, 25));
+			plannerControl = new ControlAnnotation(plannerIcon);
+			plannerControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) -100, 25));
 			plannerControl.setPrimaryActionCommand(WorldPresenter.ACTION_PLANNER_PLAN);
 			plannerControl.setSecondaryActionCommand(WorldPresenter.ACTION_PLANNER_SETUP);
 			plannerControl.addActionListener(new PlannerControlListener());
 			
-			ControlAnnotation takeoffControl = new ControlAnnotation(takeoffIcon);
-			takeoffControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 175, 25));
-			takeoffControl.setPrimaryActionCommand(WorldPresenter.ACTION_TAKEOFF);
-			takeoffControl.setSecondaryActionCommand(WorldPresenter.ACTION_NONE);
+			swimControl = new ControlAnnotation(swimIcon);
+			swimControl.getAttributes().setDrawOffset((new Point((wwd.getWidth() / 2) - 25, 25)));
+			swimControl.setPrimaryActionCommand(WorldPresenter.ACTION_SWIM_CONNECT);
+			swimControl.setSecondaryActionCommand(WorldPresenter.ACTION_SWIM_SETUP);
+			swimControl.addActionListener(new SwimControlListener());
+			
+			datalinkControl = new ControlAnnotation(datalinkIcon);
+			datalinkControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 50, 25));
+			datalinkControl.setPrimaryActionCommand(WorldPresenter.ACTION_DATALINK_CONNECT);
+			datalinkControl.setSecondaryActionCommand(WorldPresenter.ACTION_DATALINK_SETUP);
+			datalinkControl.addActionListener(new DatalinkControlListener());
+			
+			uploadControl = new ControlAnnotation(uploadIcon);
+			uploadControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 125, 25));
+			uploadControl.setPrimaryActionCommand(WorldPresenter.ACTION_TRANSFER_UPLOAD);
+			uploadControl.setSecondaryActionCommand(WorldPresenter.ACTION_NONE);
+			uploadControl.addActionListener(new UploadControlListener());
+			
+			takeoffControl = new ControlAnnotation(takeoffIcon);
+			takeoffControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 200, 25));
+			takeoffControl.setPrimaryActionCommand(WorldPresenter.ACTION_FLIGHT_TAKEOFF);
+			takeoffControl.setSecondaryActionCommand(WorldPresenter.ACTION_FLIGHT_SETUP);
 			takeoffControl.addActionListener(new TakeOffControlListener());
 			
-			ControlAnnotation landControl = new ControlAnnotation(landIcon);
-			landControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 250, 25));
-			landControl.setPrimaryActionCommand(WorldPresenter.ACTION_LAND);
-			landControl.setSecondaryActionCommand(WorldPresenter.ACTION_NONE);
+			landControl = new ControlAnnotation(landIcon);
+			landControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 275, 25));
+			landControl.setPrimaryActionCommand(WorldPresenter.ACTION_FLIGHT_LAND);
+			landControl.setSecondaryActionCommand(WorldPresenter.ACTION_FLIGHT_RETURN);
 			landControl.addActionListener(new LandControlListener());
 			
-			controlLayer.addAnnotation(aircraftControl);
-			wwd.addSelectListener(aircraftControl);
-			controlLayer.addAnnotation(swimControl);
-			wwd.addSelectListener(swimControl);
+			viewControl = new ControlAnnotation(viewIcon);
+			viewControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 350, 25));
+			viewControl.setPrimaryActionCommand(WorldPresenter.ACTION_VIEW_CYCLE);
+			viewControl.setSecondaryActionCommand(WorldPresenter.ACTION_VIEW_RESET);
+			viewControl.addActionListener(new ViewControlListener());
+			
 			controlLayer.addAnnotation(environmentControl);
 			wwd.addSelectListener(environmentControl);
+			controlLayer.addAnnotation(aircraftControl);
+			wwd.addSelectListener(aircraftControl);
 			controlLayer.addAnnotation(poiControl);
 			wwd.addSelectListener(poiControl);
 			controlLayer.addAnnotation(plannerControl);
 			wwd.addSelectListener(plannerControl);
+			controlLayer.addAnnotation(swimControl);
+			wwd.addSelectListener(swimControl);
+			controlLayer.addAnnotation(datalinkControl);
+			wwd.addSelectListener(datalinkControl);
+			controlLayer.addAnnotation(uploadControl);
+			wwd.addSelectListener(uploadControl);
 			controlLayer.addAnnotation(takeoffControl);
 			wwd.addSelectListener(takeoffControl);
 			controlLayer.addAnnotation(landControl);
 			wwd.addSelectListener(landControl);
+			controlLayer.addAnnotation(viewControl);
+			wwd.addSelectListener(viewControl);
 			wwd.getModel().getLayers().add(controlLayer);
 			
 			// add on-screen status
-			ScreenAnnotation statusAnnotation = new ScreenAnnotation("----------",
+			statusAnnotation = new ScreenAnnotation("----------",
 					new Point(wwd.getWidth() / 2, wwd.getHeight() - 75));
 			statusAnnotation.setAlwaysOnTop(true);
 			statusAnnotation.getAttributes().setAdjustWidthToText("----------");
@@ -642,6 +1301,7 @@ public class WorldPresenter implements Initializable {
 			statusAnnotation.getAttributes().setBorderColor(Color.BLACK);
 			statusAnnotation.getAttributes().setOpacity(0.5d);
 			statusAnnotation.setText(WorldMode.VIEW.toString());
+			
 			statusLayer.addAnnotation(statusAnnotation);
 			wwd.getModel().getLayers().add(statusLayer);
 			
@@ -649,13 +1309,16 @@ public class WorldPresenter implements Initializable {
 			wwd.addComponentListener(new ComponentAdapter() {
 				@Override
 				public void componentResized(ComponentEvent event) {
-					aircraftControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 200, 25));
-					swimControl.getAttributes().setDrawOffset((new Point((wwd.getWidth() / 2) - 125, 25)));
-					environmentControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 50, 25));
-					poiControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 25, 25));
-					plannerControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 100, 25));
-					takeoffControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 175, 25));
-					landControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 250, 25));
+					environmentControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 325, 25));
+					aircraftControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 250, 25));
+					poiControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 175, 25));
+					plannerControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) - 100, 25));
+					swimControl.getAttributes().setDrawOffset((new Point((wwd.getWidth() / 2) - 25, 25)));
+					datalinkControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 50, 25));
+					uploadControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 125, 25));
+					takeoffControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 200, 25));
+					landControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 275, 25));
+					viewControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 350, 25));
 					statusAnnotation.setScreenPoint(new Point(wwd.getWidth() / 2, wwd.getHeight() - 75));
 				}
 			});
@@ -692,13 +1355,17 @@ public class WorldPresenter implements Initializable {
 		 * @see MouseAdapter#mouseClicked(MouseEvent)
 		 */
 		@Override
-		public void mouseClicked(MouseEvent e) {
-			// TODO: swing thread maybe not necessary
-			if (getMode().equals(WorldMode.AIRCRAFT)) {
-				SwingUtilities.invokeLater(new AircraftMouseHandler());
-			} else if (getMode().equals(WorldMode.WAYPOINT)) {
-				SwingUtilities.invokeLater(new WaypointMouseHandler());
-			}
+		public void mouseClicked(MouseEvent e)  {
+			executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					if (WorldMode.AIRCRAFT == getWorldMode()) {
+						aircraft(new AircraftMouseHandler());
+					} else if (WorldMode.WAYPOINT == getWorldMode()) {
+						waypoint(new WaypointMouseHandler());
+					}
+				}
+			});
 			// TODO: pickable support ...
 		}
 	}
@@ -721,19 +1388,8 @@ public class WorldPresenter implements Initializable {
 		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			if (getMode().equals(WorldMode.ENVIRONMENT)) {
-				if (null == evt.getNewValue()) {
-					Sector envSector = sectorSelector.getSector();
-					if (null != envSector) {
-						Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-						session.getActiveScenario().setSector(envSector);
-						Specification<Environment> envSpec = session.getSetup().getEnvironmentSpecification();
-						Environment env = session.getEnvironmentFactory().createInstance(envSpec);
-						session.getActiveScenario().setEnvironment(env);
-						initEnvironment();
-					}
-					sectorSelector.disable();
-				}
+			if (null == evt.getNewValue()) {
+				createEnvironment();
 			}
 		}
 	}
@@ -767,16 +1423,22 @@ public class WorldPresenter implements Initializable {
 				
 				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 				Specification<Aircraft> aircraftSpec = session.getSetup().getAircraftSpecification();
-				Aircraft aircraft = session.getAircraftFactory().createInstance(aircraftSpec);
+				Aircraft aircraft = scenario.getAircraft();
+				
+				if (!scenario.hasAircraft() || !scenario.getAircraft().matches(aircraftSpec)) {
+					session.getAircraftFactory().setSpecification(aircraftSpec);
+					aircraft = session.getAircraftFactory().createInstance();
+					aircraft.setCostInterval(new CostInterval(
+	        				aircraftSpec.getId(),
+	        				ZonedDateTime.now(ZoneId.of("UTC")).minusYears(10),
+	        				ZonedDateTime.now(ZoneId.of("UTC")).plusYears(10),
+	        				100d));
+				}
+				
 				aircraft.moveTo(waypoint);
-				aircraft.setCostInterval(new CostInterval(
-        				aircraftSpec.getId(),
-        				ZonedDateTime.now(ZoneId.of("UTC")).minusYears(10),
-        				ZonedDateTime.now(ZoneId.of("UTC")).plusYears(10),
-        				100d));
 				scenario.setAircraft(aircraft);
 				
-				setMode(WorldMode.VIEW);
+				setWorldMode(WorldMode.VIEW);
 			}
 		}
 	}
@@ -873,6 +1535,7 @@ public class WorldPresenter implements Initializable {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initAircraft();
+			initView();
 		}
 	}
 	
@@ -961,6 +1624,28 @@ public class WorldPresenter implements Initializable {
 	}
 	
 	/**
+	 * Realizes a track change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
+	private class TrackChangeListener implements PropertyChangeListener {
+		
+		/**
+		 * Initializes the track if it changes.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+		 */
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			initTrack();
+			initView();
+		}
+	}
+	
+	/**
 	 * Realizes an active scenario change listener.
 	 * 
 	 * @author Stephan Heinemann
@@ -983,6 +1668,8 @@ public class WorldPresenter implements Initializable {
 			initEnvironment();
 			initObstacles();
 			initPlan();
+			initTrack();
+			initView();
 		}
 	}
 	
@@ -1005,44 +1692,10 @@ public class WorldPresenter implements Initializable {
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_AICRAFT_SET:
-				setMode(WorldMode.AIRCRAFT);
+				aircraft();
 				break;
 			case WorldPresenter.ACTION_AIRCAFT_SETUP:
-				setMode(WorldMode.VIEW);
 				setup(SetupDialog.AIRCRAFT_TAB_INDEX);
-				break;
-			}
-		}
-	}
-	
-	/**
-	 * Realizes a SWIM control listener.
-	 * 
-	 * @author Stephan Heinemann
-	 *
-	 */
-	private class SwimControlListener implements ActionListener {
-		
-		/**
-		 * Performs the SWIM control action.
-		 * 
-		 * @param e the action event associated with the SWIM control action
-		 * 
-		 * @see ActionListener#actionPerformed(ActionEvent)
-		 */
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			switch (e.getActionCommand()) {
-			case WorldPresenter.ACTION_SWIM_LOAD:
-				setMode(WorldMode.LOADING);
-				load(WorldPresenter.FILE_CHOOSER_TITLE_SWIM,
-					new ExtensionFilter[] { new ExtensionFilter(
-						WorldPresenter.FILE_CHOOSER_SWIM,
-						WorldPresenter.FILE_CHOOSER_EXTENSION_SWIM)});
-				break;
-			case WorldPresenter.ACTION_SWIM_SETUP:
-				setMode(WorldMode.VIEW);
-				setup(SetupDialog.SWIM_TAB_INDEX);
 				break;
 			}
 		}
@@ -1067,11 +1720,9 @@ public class WorldPresenter implements Initializable {
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_ENVIRONMENT_ENCLOSE:
-				setMode(WorldMode.ENVIRONMENT);
-				sectorSelector.enable();
+				environment();
 				break;
 			case WorldPresenter.ACTION_ENVIRONMENT_SETUP:
-				setMode(WorldMode.VIEW);
 				setup(SetupDialog.ENVIRONMENT_TAB_INDEX);
 				break;
 			}
@@ -1097,11 +1748,10 @@ public class WorldPresenter implements Initializable {
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_WAYPOINT_EDIT:
-				setMode(WorldMode.WAYPOINT);
+				waypoint();
 				break;
 			case WorldPresenter.ACTION_WAYPOINT_SETUP:
 				// TODO: waypoint setup (types of waypoint graphics: POI, RWP, ...)
-				setMode(WorldMode.VIEW);
 				break;
 			}
 		}
@@ -1126,12 +1776,94 @@ public class WorldPresenter implements Initializable {
 		public void actionPerformed(ActionEvent e) {
 			switch (e.getActionCommand()) {
 			case WorldPresenter.ACTION_PLANNER_PLAN:
-				setMode(WorldMode.PLANNING);
 				plan();
 				break;
 			case WorldPresenter.ACTION_PLANNER_SETUP:
-				setMode(WorldMode.VIEW);
 				setup(SetupDialog.PLANNER_TAB_INDEX);
+				break;
+			}
+		}
+	}
+	
+	/**
+	 * Realizes a SWIM control listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
+	private class SwimControlListener implements ActionListener {
+		
+		/**
+		 * Performs the SWIM control action.
+		 * 
+		 * @param e the action event associated with the SWIM control action
+		 * 
+		 * @see ActionListener#actionPerformed(ActionEvent)
+		 */
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			switch (e.getActionCommand()) {
+			case WorldPresenter.ACTION_SWIM_CONNECT:
+				swim();
+				break;
+			case WorldPresenter.ACTION_SWIM_SETUP:
+				setup(SetupDialog.SWIM_TAB_INDEX);
+				break;
+			}
+		}
+	}
+	
+	/**
+	 * Realizes an datalink control listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
+	private class DatalinkControlListener implements ActionListener {
+		
+		/**
+		 * Performs the datalink control action.
+		 * 
+		 * @param e the action event associated with the datalink control action
+		 * 
+		 * @see ActionListener#actionPerformed(ActionEvent)
+		 */
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			switch (e.getActionCommand()) {
+			case WorldPresenter.ACTION_DATALINK_CONNECT:
+				datalink();
+				break;
+			case WorldPresenter.ACTION_DATALINK_SETUP:
+				setup(SetupDialog.DATALINK_TAB_INDEX);
+				break;
+			}
+		}
+	}
+	
+	/**
+	 * Realizes an upload control listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
+	private class UploadControlListener implements ActionListener {
+		
+		/**
+		 * Performs the upload control action.
+		 * 
+		 * @param e the action event associated with the upload control action
+		 * 
+		 * @see ActionListener#actionPerformed(ActionEvent)
+		 */
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			switch (e.getActionCommand()) {
+			case WorldPresenter.ACTION_TRANSFER_UPLOAD:
+				upload();
+				break;
+			case WorldPresenter.ACTION_NONE:
+				// TODO: possibly download flight-log, TransferControlListener
 				break;
 			}
 		}
@@ -1154,7 +1886,14 @@ public class WorldPresenter implements Initializable {
 		 */
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			System.out.println("pressed...." + e.getActionCommand());
+			switch (e.getActionCommand()) {
+			case WorldPresenter.ACTION_FLIGHT_TAKEOFF:
+				takeoff();
+				break;
+			case WorldPresenter.ACTION_FLIGHT_SETUP:
+				// TODO: setup(SetupDialog.FLIGHT_TAB_INDEX);
+				break;
+			}
 		}
 	}
 	
@@ -1175,7 +1914,42 @@ public class WorldPresenter implements Initializable {
 		 */
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			System.out.println("pressed...." + e.getActionCommand());
+			switch (e.getActionCommand()) {
+			case WorldPresenter.ACTION_FLIGHT_LAND:
+				land(false);
+				break;
+			case WorldPresenter.ACTION_FLIGHT_RETURN:
+				land(true);
+				break;
+			}
+		}
+	}
+	
+	/**
+	 * Realizes a view control listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
+	private class ViewControlListener implements ActionListener {
+		
+		/**
+		 * Performs the view control action.
+		 * 
+		 * @param e the action event associated with the view control action
+		 * 
+		 * @see ActionListener#actionPerformed(ActionEvent)
+		 */
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			switch (e.getActionCommand()) {
+			case WorldPresenter.ACTION_VIEW_CYCLE:
+				view(true);
+				break;
+			case WorldPresenter.ACTION_VIEW_RESET:
+				view(false);
+				break;
+			}
 		}
 	}
 	

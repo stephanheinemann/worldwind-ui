@@ -33,10 +33,10 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.uvic-cfar.swim</groupId>
 	<artifactId>worldwind-ui</artifactId>
-	<version>1.0.0-alpha1</version>
+	<version>1.0.0-alpha2</version>
 	<packaging>bundle</packaging>
 	<name>SWIM Worldwind UI</name>
-	<description>NASA Worldwind User Interface for SWIM-based planning, decision-making and support.</description>
+	<description>NASA Worldwind User Interface for SWIM-based Planning, Decision-Making and Support</description>
 
 	<inceptionYear>2016</inceptionYear>
 	<licenses>
@@ -46,19 +46,19 @@
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
-	<url>http://rigi-lab-03.cs.uvic.ca/safcs/worldwind-ui</url>
+	<url>http://cfarcis/safcs/worldwind-ui</url>
 
 	<organization>
 		<name>UVic Center for Aerospace Research</name>
-		<url>http://www.uvic-cfar.com</url>
+		<url>https://cfar.engr.uvic.ca</url>
 	</organization>
 
 	<developers>
 		<developer>
 			<organization>UVic Center for Aerospace Research</organization>
-			<organizationUrl>http://www.uvic-cfar.com</organizationUrl>
+			<organizationUrl>https://cfar.engr.uvic.ca</organizationUrl>
 			<name>Stephan Heinemann</name>
-			<email>stephan@rigiresearch.com</email>
+			<email>stephan.cfar@gmail.com</email>
 		</developer>
 	</developers>
 
@@ -74,7 +74,7 @@
 	</issueManagement>
 
 	<ciManagement>
-		<url>http://rigi-lab-03.cs.uvic.ca:8008</url>
+		<url>http://cfarcis:8080</url>
 		<system>Jenkins</system>
 		<notifiers>
 			<notifier>
@@ -83,7 +83,7 @@
 				<sendOnSuccess>false</sendOnSuccess>
 				<sendOnWarning>false</sendOnWarning>
 				<configuration>
-					<address>stephan@rigiresearch.com</address>
+					<address>stephan.cfar@gmail.com</address>
 				</configuration>
 			</notifier>
 		</notifiers>
@@ -98,15 +98,15 @@
 			<distributionManagement>
 				<repository>
 					<id>maven-releases</id>
-					<url>http://rigi-lab-03.cs.uvic.ca:8081/repository/maven-releases</url>
+					<url>http://cfarcis:8081/repository/maven-releases</url>
 				</repository>
 				<snapshotRepository>
 					<id>maven-snapshots</id>
-					<url>http://rigi-lab-03.cs.uvic.ca:8081/repository/maven-snapshots</url>
+					<url>http://cfarcis:8081/repository/maven-snapshots</url>
 				</snapshotRepository>
 				<site>
 					<id>maven-site</id>
-					<url>scp://rigi-lab-03.cs.uvic.ca/var/www/html/safcs/worldwind-ui</url>
+					<url>scp://cfarcis/var/www/html/safcs/worldwind-ui</url>
 				</site>
 			</distributionManagement>
 		</profile>
@@ -143,8 +143,8 @@
 				<directory>src/main/resources</directory>
 				<includes>
 					<include>icons/**/*</include>
-                    <include>logos/**/*</include>
-                    <include>symbols/**/*</include>
+					<include>logos/**/*</include>
+					<include>symbols/**/*</include>
 				</includes>
 			</resource>
 		</resources>
@@ -152,32 +152,33 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-resources-plugin</artifactId>
-				<version>2.7</version>
+				<version>3.2.0</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-clean-plugin</artifactId>
-				<version>3.0.0</version>
+				<version>3.1.0</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.5.1</version>
+				<version>3.8.1</version>
 				<configuration>
-					<compilerVersion>1.8</compilerVersion>
-					<source>1.8</source>
-					<target>1.8</target>
+					<compilerVersion>11</compilerVersion>
+					<source>11</source>
+					<target>11</target>
+					<release>11</release>
 				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.19.1</version>
+				<version>3.0.0-M5</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>3.0.1</version>
+				<version>3.2.1</version>
 				<configuration>
 					<archive>
 						<manifest>
@@ -193,7 +194,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.10.4</version>
+				<version>3.2.0</version>
 				<configuration>
 					<archive>
 						<manifest>
@@ -210,7 +211,7 @@
 			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>maven-bundle-plugin</artifactId>
-				<version>3.0.1</version>
+				<version>5.1.1</version>
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
@@ -226,19 +227,19 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
-				<version>3.5.1</version>
+				<version>3.9.1</version>
 				<dependencies>
 					<dependency>
 						<groupId>org.apache.maven.wagon</groupId>
 						<artifactId>wagon-ssh</artifactId>
-						<version>2.10</version>
+						<version>3.4.2</version>
 					</dependency>
 				</dependencies>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-project-info-reports-plugin</artifactId>
-				<version>2.9</version>
+				<version>3.1.1</version>
 			</plugin>
 			<plugin>
 				<groupId>com.mycila</groupId>
@@ -286,17 +287,17 @@
 		<dependency>
 			<groupId>com.uvic-cfar.swim</groupId>
 			<artifactId>worldwind</artifactId>
-			<version>1.0.0-alpha2</version>
+			<version>1.0.0-alpha3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.controlsfx</groupId>
 			<artifactId>controlsfx</artifactId>
-			<version>8.40.12</version>
+			<version>11.0.3</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.12</version>
+			<version>4.13.2</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

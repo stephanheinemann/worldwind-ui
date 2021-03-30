@@ -47,11 +47,50 @@ public class PlannerAlert extends Alert {
 	public static final String ALERT_TITLE_PLANNER_INVALID = "Planner Invalid";
 	
 	/** the header of an invalid planner setup alert */
-	public static final String ALERT_HEADER_PLANNER_INVALID = "The planner is invalid";
+	public static final String ALERT_HEADER_PLANNER_INVALID = "The planner is invalid.";
 	
 	/** the content of an invalid planner setup alert */
 	public static final String ALERT_CONTENT_PLANNER_INVALID =
 			"Please check if the aircraft, environment and waypoints are supported.";
+	
+	/** the title of an invalid SWIM setup alert */
+	public static final String ALERT_TITLE_SWIM_INVALID = "SWIM Invalid";
+	
+	/** the header of an invalid SWIM setup alert */
+	public static final String ALERT_HEADER_SWIM_INVALID = "The SWIM connection is invalid.";
+	
+	/** the content of an invalid SWIM setup alert */
+	public static final String ALERT_CONTENT_SWIM_INVALID = "Please check the SWIM connection setup.";
+	
+	/** the title of an invalid datalink setup alert */
+	public static final String ALERT_TITLE_DATALINK_INVALID = "Datalink Invalid";
+	
+	/** the header of an invalid datalink setup alert */
+	public static final String ALERT_HEADER_DATALINK_INVALID = "The datalink or trajectory are invalid.";
+	
+	/** the content of an invalid datalink setup alert */
+	public static final String ALERT_CONTENT_DATALINK_INVALID =
+			"Please check the datalink setup and the computed trajectory.";
+	
+	/** the title of a take-off confirmation alert */
+	public static final String ALERT_TITLE_TAKEOFF_CONFIRM = "Confirm Take-Off";
+	
+	/** the header of a take-off confirmation alert */
+	public static final String ALERT_HEADER_TAKEOFF_CONFIRM = "Confirm the take-off clearance.";
+	
+	/** the content of a take-off confirmation alert */
+	public static final String ALERT_CONTENT_TAKEOFF_CONFIRM =
+			"Please confirm the take-off clearance. The aircraft is about to take-off.";
+	
+	/** the title of a land confirmation alert */
+	public static final String ALERT_TITLE_LAND_CONFIRM = "Confirm Landing";
+	
+	/** the header of a land confirmation alert */
+	public static final String ALERT_HEADER_LAND_CONFIRM = "Confirm the landing clearance.";
+	
+	/** the content of a land confirmation alert */
+	public static final String ALERT_CONTENT_LAND_CONFIRM =
+			"Please confirm the landing clearance. The aircraft is about to land.";
 	
 	/**
 	 * Constructs a new planner alert with a specified alert type.
