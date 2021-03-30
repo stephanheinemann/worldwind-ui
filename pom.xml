@@ -46,19 +46,19 @@
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
-	<url>http://rigi-lab-03.cs.uvic.ca/safcs/worldwind-ui</url>
+	<url>http://cfarcis/safcs/worldwind-ui</url>
 
 	<organization>
 		<name>UVic Center for Aerospace Research</name>
-		<url>http://www.uvic-cfar.com</url>
+		<url>https://cfar.engr.uvic.ca</url>
 	</organization>
 
 	<developers>
 		<developer>
 			<organization>UVic Center for Aerospace Research</organization>
-			<organizationUrl>http://www.uvic-cfar.com</organizationUrl>
+			<organizationUrl>https://cfar.engr.uvic.ca</organizationUrl>
 			<name>Stephan Heinemann</name>
-			<email>stephan@rigiresearch.com</email>
+			<email>stephan.cfar@gmail.com</email>
 		</developer>
 	</developers>
 
@@ -74,7 +74,7 @@
 	</issueManagement>
 
 	<ciManagement>
-		<url>http://rigi-lab-03.cs.uvic.ca:8008</url>
+		<url>http://cfarcis:8080</url>
 		<system>Jenkins</system>
 		<notifiers>
 			<notifier>
@@ -83,7 +83,7 @@
 				<sendOnSuccess>false</sendOnSuccess>
 				<sendOnWarning>false</sendOnWarning>
 				<configuration>
-					<address>stephan@rigiresearch.com</address>
+					<address>stephan.cfar@gmail.com</address>
 				</configuration>
 			</notifier>
 		</notifiers>
@@ -98,15 +98,15 @@
 			<distributionManagement>
 				<repository>
 					<id>maven-releases</id>
-					<url>http://rigi-lab-03.cs.uvic.ca:8081/repository/maven-releases</url>
+					<url>http://cfarcis:8081/repository/maven-releases</url>
 				</repository>
 				<snapshotRepository>
 					<id>maven-snapshots</id>
-					<url>http://rigi-lab-03.cs.uvic.ca:8081/repository/maven-snapshots</url>
+					<url>http://cfarcis:8081/repository/maven-snapshots</url>
 				</snapshotRepository>
 				<site>
 					<id>maven-site</id>
-					<url>scp://rigi-lab-03.cs.uvic.ca/var/www/html/safcs/worldwind-ui</url>
+					<url>scp://cfarcis/var/www/html/safcs/worldwind-ui</url>
 				</site>
 			</distributionManagement>
 		</profile>
@@ -287,7 +287,7 @@
 		<dependency>
 			<groupId>com.uvic-cfar.swim</groupId>
 			<artifactId>worldwind</artifactId>
-			<version>1.0.0-alpha3-SNAPSHOT</version><!-- 1.0.0-alpha3 -->
+			<version>1.0.0-alpha3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.controlsfx</groupId>
