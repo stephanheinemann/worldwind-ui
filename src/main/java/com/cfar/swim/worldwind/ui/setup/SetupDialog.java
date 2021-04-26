@@ -43,6 +43,8 @@ import com.cfar.swim.worldwind.ui.WorldwindPlanner;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 
 /**
  * Realizes a setup dialog to setup a planning session with
@@ -101,6 +103,14 @@ public class SetupDialog extends Dialog<Setup> {
 		this.setupView = new SetupView();
 		this.getDialogPane().setContent(this.setupView.getView());
 		this.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+		
+		// add enter key event handler
+		this.getDialogPane().addEventHandler(KeyEvent.KEY_PRESSED, event -> {
+			if (KeyCode.ENTER == event.getCode()) {
+				// focus properties pane to commit all changed properties
+				this.getDialogPane().getContent().requestFocus();
+			}
+		});
 		
 		this.setResultConverter(dialogButton -> {
 			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
