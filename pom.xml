@@ -38,7 +38,7 @@
 	<name>SWIM Worldwind UI</name>
 	<description>NASA Worldwind User Interface for SWIM-based Planning, Decision-Making and Support</description>
 
-	<inceptionYear>2016</inceptionYear>
+	<inceptionYear>2021</inceptionYear>
 	<licenses>
 		<license>
 			<name>The BSD 3-Clause License</name>
@@ -287,12 +287,12 @@
 		<dependency>
 			<groupId>com.uvic-cfar.swim</groupId>
 			<artifactId>worldwind</artifactId>
-			<version>1.0.0-alpha3</version>
+			<version>1.0.0-alpha4-SNAPSHOT</version><!-- 1.0.0-alpha4 -->
 		</dependency>
 		<dependency>
 			<groupId>org.controlsfx</groupId>
 			<artifactId>controlsfx</artifactId>
-			<version>11.0.3</version>
+			<version>11.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

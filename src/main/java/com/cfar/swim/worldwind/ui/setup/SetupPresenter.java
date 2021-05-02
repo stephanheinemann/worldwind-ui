@@ -53,6 +53,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 
 /**
@@ -103,6 +104,26 @@ public class SetupPresenter implements Initializable {
 	@FXML
 	private ComboBox<String> swimConnection;
 	
+	/** the aircraft description label of the setup view */
+	@FXML
+	private Label aircraftDescription;
+	
+	/** the environment description label of the setup view */
+	@FXML
+	private Label environmentDescription;
+	
+	/** the planner description label of the setup view */
+	@FXML
+	private Label plannerDescription;
+	
+	/** the SWIM description label of the setup view */
+	@FXML
+	private Label swimDescription;
+	
+	/** the datalink description label of the setup view */
+	@FXML
+	private Label datalinkDescription;
+	
 	/** the setup model to be modified in the setup view */
 	@Inject
 	private SetupModel setupModel;
@@ -138,8 +159,11 @@ public class SetupPresenter implements Initializable {
 				
 				Specification<Aircraft> aircraftSpec = session.getSetup().getAircraftSpecification();
 				aircraft.getSelectionModel().select(aircraftSpec.getId());
+				aircraftDescription.setText(aircraftSpec.getDescription());
 				setupModel.setAircraftProperties(aircraftSpec.getProperties().clone());
 				PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getAircraftProperties()));
+				propertySheet.setMode(PropertySheet.Mode.CATEGORY);
+				propertySheet.setPrefWidth(aircraftPropertiesPane.getWidth());
 				aircraftPropertiesPane.setContent(propertySheet);
 				aircraft.valueProperty().addListener(new AircraftChangeListener());
 				aircraft.layout();
@@ -161,8 +185,11 @@ public class SetupPresenter implements Initializable {
 				
 				Specification<Environment> envSpec = session.getSetup().getEnvironmentSpecification();
 				environment.getSelectionModel().select(envSpec.getId());
+				environmentDescription.setText(envSpec.getDescription());
 				setupModel.setEnvironmentProperties(envSpec.getProperties().clone());
 				PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getEnvironmentProperties()));
+				propertySheet.setMode(PropertySheet.Mode.CATEGORY);
+				propertySheet.setPrefWidth(envPropertiesPane.getWidth());
 				envPropertiesPane.setContent(propertySheet);
 				environment.valueProperty().addListener(new EnvironmentChangeListener());
 				environment.layout();
@@ -184,8 +211,11 @@ public class SetupPresenter implements Initializable {
 				
 				Specification<Planner> plannerSpec = session.getSetup().getPlannerSpecification();
 				planner.getSelectionModel().select(plannerSpec.getId());
+				plannerDescription.setText(plannerSpec.getDescription());
 				setupModel.setPlannerProperties(plannerSpec.getProperties().clone());
 				PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getPlannerProperties()));
+				propertySheet.setMode(PropertySheet.Mode.CATEGORY);
+				propertySheet.setPrefWidth(plannerPropertiesPane.getWidth());
 				plannerPropertiesPane.setContent(propertySheet);
 				planner.valueProperty().addListener(new PlannerChangeListener());
 				planner.layout();
@@ -207,8 +237,11 @@ public class SetupPresenter implements Initializable {
 				
 				Specification<Datalink> datalinkSpec = session.getSetup().getDatalinkSpecification();
 				datalink.getSelectionModel().select(datalinkSpec.getId());
+				datalinkDescription.setText(datalinkSpec.getDescription());
 				setupModel.setDatalinkProperties(datalinkSpec.getProperties().clone());
 				PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getDatalinkProperties()));
+				propertySheet.setMode(PropertySheet.Mode.CATEGORY);
+				propertySheet.setPrefWidth(datalinkPropertiesPane.getWidth());
 				datalinkPropertiesPane.setContent(propertySheet);
 				datalink.valueProperty().addListener(new DatalinkChangeListener());
 				datalink.layout();
@@ -230,8 +263,11 @@ public class SetupPresenter implements Initializable {
 				
 				Specification<SwimConnection> swimConnectionSpec = session.getSetup().getSwimConnectionSpecification();
 				swimConnection.getSelectionModel().select(swimConnectionSpec.getId());
+				swimDescription.setText(swimConnectionSpec.getDescription());
 				setupModel.setSwimConnectionProperties(swimConnectionSpec.getProperties().clone());
 				PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getSwimConnectionProperties()));
+				propertySheet.setMode(PropertySheet.Mode.CATEGORY);
+				propertySheet.setPrefWidth(swimConnectionPropertiesPane.getWidth());
 				swimConnectionPropertiesPane.setContent(propertySheet);
 				swimConnection.valueProperty().addListener(new SwimConnectionChangeListener());
 				swimConnection.layout();
@@ -263,8 +299,11 @@ public class SetupPresenter implements Initializable {
 				public void run() {
 					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 					Specification<Aircraft> aircraftSpec = session.getAircraftSpecification(newAircraftId);
+					aircraftDescription.setText(aircraftSpec.getDescription());
 					setupModel.setAircraftProperties(aircraftSpec.getProperties().clone());
 					PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getAircraftProperties()));
+					propertySheet.setMode(PropertySheet.Mode.CATEGORY);
+					propertySheet.setPrefWidth(aircraftPropertiesPane.getWidth());
 					aircraftPropertiesPane.setContent(propertySheet);
 					aircraftPropertiesPane.layout();
 				}
@@ -296,8 +335,11 @@ public class SetupPresenter implements Initializable {
 				public void run() {
 					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 					Specification<Environment> envSpec = session.getEnvironmentSpecification(newEnvId);
+					environmentDescription.setText(envSpec.getDescription());
 					setupModel.setEnvironmentProperties(envSpec.getProperties().clone());
 					PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getEnvironmentProperties()));
+					propertySheet.setMode(PropertySheet.Mode.CATEGORY);
+					propertySheet.setPrefWidth(envPropertiesPane.getWidth());
 					envPropertiesPane.setContent(propertySheet);
 					envPropertiesPane.layout();
 				}
@@ -329,8 +371,11 @@ public class SetupPresenter implements Initializable {
 				public void run() {
 					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 					Specification<Planner> plannerSpec = session.getPlannerSpecification(newPlannerId);
+					plannerDescription.setText(plannerSpec.getDescription());
 					setupModel.setPlannerProperties(plannerSpec.getProperties().clone());
 					PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getPlannerProperties()));
+					propertySheet.setMode(PropertySheet.Mode.CATEGORY);
+					propertySheet.setPrefWidth(plannerPropertiesPane.getWidth());
 					plannerPropertiesPane.setContent(propertySheet);
 					plannerPropertiesPane.layout();
 				}
@@ -362,8 +407,11 @@ public class SetupPresenter implements Initializable {
 				public void run() {
 					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 					Specification<Datalink> datalinkSpec = session.getDatalinkSpecification(newDatalinkId);
+					datalinkDescription.setText(datalinkSpec.getDescription());
 					setupModel.setDatalinkProperties(datalinkSpec.getProperties().clone());
 					PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getDatalinkProperties()));
+					propertySheet.setMode(PropertySheet.Mode.CATEGORY);
+					propertySheet.setPrefWidth(datalinkPropertiesPane.getWidth());
 					datalinkPropertiesPane.setContent(propertySheet);
 					datalinkPropertiesPane.layout();
 				}
@@ -395,8 +443,11 @@ public class SetupPresenter implements Initializable {
 				public void run() {
 					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 					Specification<SwimConnection> swimConnectionSpec = session.getSwimConnectionSpecification(newSwimConnectionId);
+					swimDescription.setText(swimConnectionSpec.getDescription());
 					setupModel.setSwimConnectionProperties(swimConnectionSpec.getProperties().clone());
 					PropertySheet propertySheet = new PropertySheet(BeanPropertyUtils.getProperties(setupModel.getSwimConnectionProperties()));
+					propertySheet.setMode(PropertySheet.Mode.CATEGORY);
+					propertySheet.setPrefWidth(swimConnectionPropertiesPane.getWidth());
 					swimConnectionPropertiesPane.setContent(propertySheet);
 					swimConnectionPropertiesPane.layout();
 				}
