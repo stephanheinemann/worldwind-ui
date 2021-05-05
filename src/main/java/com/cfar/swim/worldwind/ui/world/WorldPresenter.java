@@ -62,7 +62,7 @@ import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.connections.SwimConnection;
 import com.cfar.swim.worldwind.planning.CostInterval;
 import com.cfar.swim.worldwind.planning.Environment;
-import com.cfar.swim.worldwind.planning.TrackPoint;
+import com.cfar.swim.worldwind.planning.AircraftTrackPoint;
 import com.cfar.swim.worldwind.planning.Trajectory;
 import com.cfar.swim.worldwind.planning.Waypoint;
 import com.cfar.swim.worldwind.registries.Specification;
@@ -449,7 +449,7 @@ public class WorldPresenter implements Initializable {
 			@Override
 			public void run() {
 				ArrayList<Marker> markers = new ArrayList<>();
-				for (TrackPoint trackPoint : scenario.getDatalink().getAircraftTrack()) {
+				for (AircraftTrackPoint trackPoint : scenario.getDatalink().getAircraftTrack()) {
 					markers.add(trackPoint);
 				}
 				trackLayer.setMarkers(markers);
@@ -480,7 +480,7 @@ public class WorldPresenter implements Initializable {
 								view(false);
 							}
 						} else if (viewMode.equals(ViewMode.ACTUAL_ABOVE)) {
-							TrackPoint last = scenario.getDatalink().getLastTrackPoint();
+							AircraftTrackPoint last = scenario.getDatalink().getAircraftTrack().getLastTrackPoint();
 							if (null != last) {
 								basicOrbitView.setCenterPosition(last.getPosition());
 								basicOrbitView.setHeading(last.getHeading());
@@ -503,8 +503,8 @@ public class WorldPresenter implements Initializable {
 								view(false);
 							}
 						} else if (viewMode.equals(ViewMode.ACTUAL_CHASE)) {
-							//TrackPoint previous = scenario.getDatalink().getPreviousTrackPoint(5);
-							TrackPoint previous = scenario.getDatalink().getFirstTrackPoint();
+							//AircraftTrackPoint previous = scenario.getDatalink().getPreviousTrackPoint(5);
+							AircraftTrackPoint previous = scenario.getDatalink().getAircraftTrack().getFirstTrackPoint();
 							if (null != previous) {
 								basicFlyView.setEyePosition(previous.getPosition());
 								basicFlyView.setHeading(previous.getHeading());
@@ -514,7 +514,7 @@ public class WorldPresenter implements Initializable {
 								view(false);
 							}
 						} else if (viewMode.equals(ViewMode.ACTUAL_FPV)) {
-							TrackPoint last = scenario.getDatalink().getLastTrackPoint();
+							AircraftTrackPoint last = scenario.getDatalink().getAircraftTrack().getLastTrackPoint();
 							if (null != last) {
 								basicFlyView.setEyePosition(last.getPosition());
 								basicFlyView.setHeading(last.getHeading());
@@ -987,7 +987,7 @@ public class WorldPresenter implements Initializable {
 					if (datalink.isConnected() && session.getActiveScenario().hasTrajectory()) {
 						setWorldMode(WorldMode.UPLOADING);
 						Trajectory trajectory = session.getActiveScenario().getTrajectory();
-						datalink.uploadFlightPath(trajectory);
+						datalink.uploadMission(trajectory);
 						setWorldMode(WorldMode.VIEW);
 					} else {
 						alert(
