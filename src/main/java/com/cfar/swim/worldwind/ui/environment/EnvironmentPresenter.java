@@ -34,7 +34,7 @@ import java.beans.PropertyChangeListener;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import com.cfar.swim.worldwind.planning.Environment;
+import com.cfar.swim.worldwind.environments.Environment;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;

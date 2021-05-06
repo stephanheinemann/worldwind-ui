@@ -29,11 +29,11 @@
  */
 package com.cfar.swim.worldwind.ui.setup;
 
-import com.cfar.swim.worldwind.ai.Planner;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
 import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.connections.SwimConnection;
-import com.cfar.swim.worldwind.planning.Environment;
+import com.cfar.swim.worldwind.environments.Environment;
+import com.cfar.swim.worldwind.planners.Planner;
 import com.cfar.swim.worldwind.registries.Properties;
 
 /**
