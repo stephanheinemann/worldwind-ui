@@ -33,8 +33,11 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import com.cfar.swim.worldwind.environments.Environment;
+import com.cfar.swim.worldwind.environments.MultiResolutionEnvironment;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
@@ -66,6 +69,8 @@ public class EnvironmentPresenter implements Initializable {
 	/** the environment change listener of this environment presenter */
 	private final EnvironmentChangeListener ecl = new EnvironmentChangeListener();
 	
+	/** the sequential executor of this environment presenter */
+	private final Executor executor = Executors.newSingleThreadExecutor();
 	
 	/**
 	 * Initializes this environment presenter.
@@ -123,11 +128,14 @@ public class EnvironmentPresenter implements Initializable {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				if (parentItem.getValue().isRefined()) {
-					for (Environment child : parentItem.getValue().getRefinements()) {
-						TreeItem<Environment> childItem = new TreeItem<>(child);
-						parentItem.getChildren().add(childItem);
-						initEnvironment(childItem);
+				if (parentItem.getValue() instanceof MultiResolutionEnvironment) {
+					MultiResolutionEnvironment environment = (MultiResolutionEnvironment) parentItem.getValue();
+					if (environment.isRefined()) {
+						for (Environment child : environment.getRefinements()) {
+							TreeItem<Environment> childItem = new TreeItem<>(child);
+							parentItem.getChildren().add(childItem);
+							initEnvironment(childItem);
+						}
 					}
 				}
 			}
@@ -139,12 +147,17 @@ public class EnvironmentPresenter implements Initializable {
 	 * resolution environment.
 	 */
 	public void refineEnvironment() {
-		Environment selectedEnv = this.environment.getSelectionModel().getSelectedItem().getValue();
-		if (!selectedEnv.isRefined()) {
-			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-			selectedEnv.refine(2);
-			session.getActiveScenario().notifyEnvironmentChange();
-		}
+		this.executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				Environment selectedEnv = environment.getSelectionModel().getSelectedItem().getValue();
+				if (selectedEnv instanceof MultiResolutionEnvironment) {
+					if (!((MultiResolutionEnvironment) selectedEnv).isRefined()) {
+						((MultiResolutionEnvironment) selectedEnv).refine(2);
+					}
+				}
+			}
+		});
 	}
 	
 	/**
@@ -152,12 +165,17 @@ public class EnvironmentPresenter implements Initializable {
 	 * resolution environment.
 	 */
 	public void coarsenEnvironment() {
-		Environment selectedEnv = this.environment.getSelectionModel().getSelectedItem().getValue();
-		if (selectedEnv.isRefined()) {
-			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-			selectedEnv.coarsen();
-			session.getActiveScenario().notifyEnvironmentChange();
-		}
+		this.executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				Environment selectedEnv = environment.getSelectionModel().getSelectedItem().getValue();
+				if (selectedEnv instanceof MultiResolutionEnvironment) {
+					if (((MultiResolutionEnvironment) selectedEnv).isRefined()) {
+						((MultiResolutionEnvironment) selectedEnv).coarsen();
+					}
+				}
+			}
+		});
 	}
 	
 	/**
@@ -179,13 +197,19 @@ public class EnvironmentPresenter implements Initializable {
 		 */
 		@Override
 		public String toString(Environment environment) {
-			return Integer.toString(environment.getRefinements().size());
+			int refinements = 0;
+			
+			if (environment instanceof MultiResolutionEnvironment) {
+				refinements = ((MultiResolutionEnvironment) environment).getRefinements().size();
+			}
+			
+			return Integer.toString(refinements);
 		}
 		
 		/**
 		 * Converts a string representation to an environment.
 		 * 
-		 * @param environment the string represenation of the environment
+		 * @param environment the string representation of the environment
 		 * 
 		 * @return null (read-only environment view)
 		 * 
