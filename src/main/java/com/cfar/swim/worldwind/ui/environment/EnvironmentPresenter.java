@@ -37,6 +37,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import com.cfar.swim.worldwind.environments.Environment;
+import com.cfar.swim.worldwind.environments.HierarchicalEnvironment;
 import com.cfar.swim.worldwind.environments.MultiResolutionEnvironment;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
@@ -128,10 +129,10 @@ public class EnvironmentPresenter implements Initializable {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				if (parentItem.getValue() instanceof MultiResolutionEnvironment) {
-					MultiResolutionEnvironment environment = (MultiResolutionEnvironment) parentItem.getValue();
-					if (environment.isRefined()) {
-						for (Environment child : environment.getRefinements()) {
+				if (parentItem.getValue() instanceof HierarchicalEnvironment) {
+					HierarchicalEnvironment environment = (HierarchicalEnvironment) parentItem.getValue();
+					if (environment.hasChildren()) {
+						for (Environment child : environment.getChildren()) {
 							TreeItem<Environment> childItem = new TreeItem<>(child);
 							parentItem.getChildren().add(childItem);
 							initEnvironment(childItem);
@@ -171,7 +172,7 @@ public class EnvironmentPresenter implements Initializable {
 				Environment selectedEnv = environment.getSelectionModel().getSelectedItem().getValue();
 				if (selectedEnv instanceof MultiResolutionEnvironment) {
 					if (((MultiResolutionEnvironment) selectedEnv).isRefined()) {
-						((MultiResolutionEnvironment) selectedEnv).coarsen();
+						((MultiResolutionEnvironment) selectedEnv).coarsen(2);
 					}
 				}
 			}
@@ -191,19 +192,19 @@ public class EnvironmentPresenter implements Initializable {
 		 * 
 		 * @param environment the environment
 		 * 
-		 * @return the refinement degree string representation of the environment
+		 * @return the string representation of the environment
 		 * 
 		 * @see StringConverter#toString()
 		 */
 		@Override
 		public String toString(Environment environment) {
-			int refinements = 0;
+			int size = 0;
 			
-			if (environment instanceof MultiResolutionEnvironment) {
-				refinements = ((MultiResolutionEnvironment) environment).getRefinements().size();
+			if (environment instanceof HierarchicalEnvironment) {
+				size = ((HierarchicalEnvironment) environment).getChildren().size();
 			}
 			
-			return Integer.toString(refinements);
+			return Integer.toString(size);
 		}
 		
 		/**
