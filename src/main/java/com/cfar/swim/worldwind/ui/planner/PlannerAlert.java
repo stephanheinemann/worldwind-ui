@@ -42,7 +42,18 @@ import javafx.stage.StageStyle;
  *
  */
 public class PlannerAlert extends Alert {
-
+	
+	// TODO: obtain UI text from dictionary resource bundle
+	
+	/** the title of an invalid properties setup alert */
+	public static final String ALERT_TITLE_PROPERTIES_INVALID = "Setup Properties Invalid";
+	
+	/** the header of an invalid properties setup alert */
+	public static final String ALERT_HEADER_PROPERTIES_INVALID = "The setup properties are invalid.";
+	
+	/** the content of an invalid properties setup alert */
+	public static final String ALERT_CONTENT_PROPERTIES_INVALID = "Please check the following properties:";
+	
 	/** the title of an invalid planner setup alert */
 	public static final String ALERT_TITLE_PLANNER_INVALID = "Planner Invalid";
 	

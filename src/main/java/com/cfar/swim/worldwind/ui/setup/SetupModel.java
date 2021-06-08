@@ -29,6 +29,8 @@
  */
 package com.cfar.swim.worldwind.ui.setup;
 
+import javax.validation.Valid;
+
 import com.cfar.swim.worldwind.aircraft.Aircraft;
 import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.connections.SwimConnection;
@@ -48,18 +50,23 @@ import com.cfar.swim.worldwind.registries.Properties;
 public class SetupModel {
 	
 	/** the aircraft properties of this setup model */
+	@Valid
 	private Properties<Aircraft> aircraftProperties = null;
 	
 	/** the environment properties of this setup model */
+	@Valid
 	private Properties<Environment> environmentProperties = null;
 	
 	/** the planner properties of this setup model */
+	@Valid
 	private Properties<Planner> plannerProperties = null;
 	
 	/** the SWIM connection properties of this setup model */
+	@Valid
 	private Properties<SwimConnection> swimConnectionProperties = null;
 	
 	/** the datalink properties of this setup model */
+	@Valid
 	private Properties<Datalink> datalinkProperties = null;
 	
 	/**
