@@ -58,7 +58,7 @@ import com.cfar.swim.worldwind.aircraft.Aircraft;
 import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.connections.SwimConnection;
 import com.cfar.swim.worldwind.environments.Environment;
-import com.cfar.swim.worldwind.planners.DynamicPlanner;
+import com.cfar.swim.worldwind.planners.LifelongPlanner;
 import com.cfar.swim.worldwind.planners.PlanRevisionListener;
 import com.cfar.swim.worldwind.planners.Planner;
 import com.cfar.swim.worldwind.planning.CostInterval;
@@ -799,9 +799,9 @@ public class WorldPresenter implements Initializable {
 			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 			Planner planner = session.getActiveScenario().getPlanner();
 			
-			// terminate running dynamic planner
-			if (planner instanceof DynamicPlanner) {
-				((DynamicPlanner) planner).terminate();
+			// terminate running lifelong planner
+			if (planner instanceof LifelongPlanner) {
+				((LifelongPlanner) planner).terminate();
 			}
 		} else {
 			this.executor.execute(new Runnable() {
@@ -823,9 +823,9 @@ public class WorldPresenter implements Initializable {
 							session.getPlannerFactory().setSpecification(plannerSpec);
 							planner = session.getPlannerFactory().createInstance();
 							session.getActiveScenario().setPlanner(planner);
-						} else if (planner instanceof DynamicPlanner) {
-							// recycle terminated dynamic planner
-							((DynamicPlanner) planner).recycle();
+						} else if (planner instanceof LifelongPlanner) {
+							// recycle terminated lifelong planner
+							((LifelongPlanner) planner).recycle();
 						}
 						
 						Position origin = null;
