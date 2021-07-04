@@ -55,10 +55,12 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import com.cfar.swim.worldwind.aircraft.Aircraft;
+import com.cfar.swim.worldwind.connections.Communication;
 import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.connections.SwimConnection;
 import com.cfar.swim.worldwind.environments.Environment;
 import com.cfar.swim.worldwind.planners.LifelongPlanner;
+import com.cfar.swim.worldwind.planners.OnlinePlanner;
 import com.cfar.swim.worldwind.planners.PlanRevisionListener;
 import com.cfar.swim.worldwind.planners.Planner;
 import com.cfar.swim.worldwind.planning.CostInterval;
@@ -74,6 +76,7 @@ import com.cfar.swim.worldwind.tracks.AircraftTrackPoint;
 import com.cfar.swim.worldwind.ui.WorldwindPlanner;
 import com.cfar.swim.worldwind.ui.planner.PlannerAlert;
 import com.cfar.swim.worldwind.ui.planner.PlannerAlertResult;
+import com.cfar.swim.worldwind.ui.planner.PlannerCountdownAlert;
 import com.cfar.swim.worldwind.ui.setup.SetupDialog;
 import com.cfar.swim.worldwind.ui.setup.SetupModel;
 import com.cfar.swim.worldwind.util.Depiction;
@@ -684,6 +687,42 @@ public class WorldPresenter implements Initializable {
 	}
 	
 	/**
+	 * Opens a planner countdown alert with a specified alert type, title,
+	 * header and countdown limits. A result can be passed for synchronization.
+	 * 
+	 * @param type the type of the planner countdown alert
+	 * @param title the title of the planner countdown alert
+	 * @param header the header of the planner countdown alert
+	 * @param start the start of the countdown
+	 * @param stop the stop of the countdown
+	 * @param result the result to be notified for synchronization
+	 * 
+	 * @see PlannerCountdownAlert
+	 */
+	private void countdownAlert(
+			AlertType type,
+			String title, String header,
+			long start, long stop,
+			PlannerAlertResult result) {
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				PlannerCountdownAlert alert = new PlannerCountdownAlert(type, start, stop);
+				alert.setTitle(title);
+				alert.setHeaderText(header);
+				Optional<ButtonType> optButtonType = alert.showAndWait();
+				if (null != result) {
+					if (optButtonType.isPresent()) {
+						result.setOk(optButtonType.get().equals(ButtonType.OK));
+					} else {
+						result.setOk(false);
+					}
+				}
+			}
+		});
+	}
+	
+	/**
 	 * Opens the setup dialog with a specified tab.
 	 * 
 	 * @param tabIndex the tab index of the tab to be opened
@@ -815,9 +854,7 @@ public class WorldPresenter implements Initializable {
 						Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 						Planner planner = session.getActiveScenario().getPlanner();
 						
-						if (!planner.matches(session.getSetup().getPlannerSpecification())
-								|| (planner.getAircraft() != session.getActiveScenario().getAircraft())
-								|| (planner.getEnvironment() != session.getActiveScenario().getEnvironment())) {
+						if (!planner.matches(session.getSetup().getPlannerSpecification())) {
 							// create new planner
 							Specification<Planner> plannerSpec = session.getSetup().getPlannerSpecification();
 							session.getPlannerFactory().setSpecification(plannerSpec);
@@ -826,6 +863,85 @@ public class WorldPresenter implements Initializable {
 						} else if (planner instanceof LifelongPlanner) {
 							// recycle terminated lifelong planner
 							((LifelongPlanner) planner).recycle();
+						}
+						
+						if (planner instanceof OnlinePlanner) {
+							OnlinePlanner onlinePlanner = (OnlinePlanner) planner;
+							
+							// take-off datalink communication
+							onlinePlanner.setTakeOff(
+									new Communication<Datalink>(onlinePlanner.getDatalink()) {
+										private boolean performed = false;
+										
+										@Override
+										public void perform() {
+											if (this.getConnection().isConnected() && !performed) {
+												long timingError = onlinePlanner.getMaxTrackError()
+														.getTimingError().getSeconds();
+												PlannerAlertResult clearance = new PlannerAlertResult();
+												countdownAlert(
+														AlertType.CONFIRMATION,
+														PlannerAlert.ALERT_TITLE_TAKEOFF_CONFIRM,
+														PlannerAlert.ALERT_HEADER_TAKEOFF_CONFIRM,
+														(timingError / 2),
+														-(timingError / 2),
+														clearance);
+												if (clearance.isOk()) {
+													// TODO: proper sequence
+													this.getConnection().takeOff();
+												}
+												performed = true;
+											}
+										}
+									});
+							
+							// landing datalink communication
+							onlinePlanner.setLanding(
+									new Communication<Datalink>(onlinePlanner.getDatalink()) {
+										private boolean performed = false;
+										
+										@Override
+										public void perform() {
+											if (this.getConnection().isConnected() && !performed) {
+												PlannerAlertResult clearance = new PlannerAlertResult();
+												alert(
+													AlertType.CONFIRMATION,
+													PlannerAlert.ALERT_TITLE_LAND_CONFIRM,
+													PlannerAlert.ALERT_HEADER_LAND_CONFIRM,
+													PlannerAlert.ALERT_CONTENT_LAND_CONFIRM,
+													clearance);
+												if (clearance.isOk()) {
+													// TODO: proper sequence
+													this.getConnection().land();
+												}
+												performed = true;
+											}
+										}
+									});
+							
+							// unplanned landing datalink communication
+							onlinePlanner.setUnplannedLanding(
+									new Communication<Datalink>(onlinePlanner.getDatalink()) {
+										private boolean performed = false;
+										
+										@Override
+										public void perform() {
+											if (this.getConnection().isConnected() && !performed) {
+												PlannerAlertResult clearance = new PlannerAlertResult();
+												alert(
+													AlertType.WARNING,
+													PlannerAlert.ALERT_TITLE_LAND_CONFIRM,
+													PlannerAlert.ALERT_HEADER_LAND_CONFIRM,
+													PlannerAlert.ALERT_CONTENT_LAND_CONFIRM,
+													clearance);
+												if (clearance.isOk()) {
+													// TODO: proper sequence
+													this.getConnection().land();
+												}
+											}
+											performed = true;
+										}
+									});
 						}
 						
 						Position origin = null;
