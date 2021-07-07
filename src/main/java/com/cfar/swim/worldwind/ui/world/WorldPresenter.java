@@ -866,82 +866,7 @@ public class WorldPresenter implements Initializable {
 						}
 						
 						if (planner instanceof OnlinePlanner) {
-							OnlinePlanner onlinePlanner = (OnlinePlanner) planner;
-							
-							// take-off datalink communication
-							onlinePlanner.setTakeOff(
-									new Communication<Datalink>(onlinePlanner.getDatalink()) {
-										private boolean performed = false;
-										
-										@Override
-										public void perform() {
-											if (this.getConnection().isConnected() && !performed) {
-												long timingError = onlinePlanner.getMaxTrackError()
-														.getTimingError().getSeconds();
-												PlannerAlertResult clearance = new PlannerAlertResult();
-												countdownAlert(
-														AlertType.CONFIRMATION,
-														PlannerAlert.ALERT_TITLE_TAKEOFF_CONFIRM,
-														PlannerAlert.ALERT_HEADER_TAKEOFF_CONFIRM,
-														(timingError / 2),
-														-(timingError / 2),
-														clearance);
-												if (clearance.isOk()) {
-													// TODO: proper sequence
-													this.getConnection().takeOff();
-												}
-												performed = true;
-											}
-										}
-									});
-							
-							// landing datalink communication
-							onlinePlanner.setLanding(
-									new Communication<Datalink>(onlinePlanner.getDatalink()) {
-										private boolean performed = false;
-										
-										@Override
-										public void perform() {
-											if (this.getConnection().isConnected() && !performed) {
-												PlannerAlertResult clearance = new PlannerAlertResult();
-												alert(
-													AlertType.CONFIRMATION,
-													PlannerAlert.ALERT_TITLE_LAND_CONFIRM,
-													PlannerAlert.ALERT_HEADER_LAND_CONFIRM,
-													PlannerAlert.ALERT_CONTENT_LAND_CONFIRM,
-													clearance);
-												if (clearance.isOk()) {
-													// TODO: proper sequence
-													this.getConnection().land();
-												}
-												performed = true;
-											}
-										}
-									});
-							
-							// unplanned landing datalink communication
-							onlinePlanner.setUnplannedLanding(
-									new Communication<Datalink>(onlinePlanner.getDatalink()) {
-										private boolean performed = false;
-										
-										@Override
-										public void perform() {
-											if (this.getConnection().isConnected() && !performed) {
-												PlannerAlertResult clearance = new PlannerAlertResult();
-												alert(
-													AlertType.WARNING,
-													PlannerAlert.ALERT_TITLE_LAND_CONFIRM,
-													PlannerAlert.ALERT_HEADER_LAND_CONFIRM,
-													PlannerAlert.ALERT_CONTENT_LAND_CONFIRM,
-													clearance);
-												if (clearance.isOk()) {
-													// TODO: proper sequence
-													this.getConnection().land();
-												}
-											}
-											performed = true;
-										}
-									});
+							setCommunications((OnlinePlanner) planner);
 						}
 						
 						Position origin = null;
@@ -1453,6 +1378,117 @@ public class WorldPresenter implements Initializable {
     		
     		wwd.addMouseListener(new WorldMouseListener());
 		}
+	}
+	
+	/**
+	 * Sets the communications of an online planner.
+	 * 
+	 * @param onlinePlanner the online planner
+	 */
+	private void setCommunications(OnlinePlanner onlinePlanner) {
+		// take-off datalink communication
+		onlinePlanner.setTakeOff(
+				new Communication<Datalink>(onlinePlanner.getDatalink()) {
+					private boolean performed = false;
+					
+					@Override
+					public void perform() {
+						if (this.getConnection().isConnected() && !performed) {
+							long timingError = onlinePlanner.getMaxTrackError()
+									.getTimingError().getSeconds();
+							PlannerAlertResult clearance = new PlannerAlertResult();
+							countdownAlert(
+									AlertType.CONFIRMATION,
+									PlannerAlert.ALERT_TITLE_TAKEOFF_CONFIRM,
+									PlannerAlert.ALERT_HEADER_TAKEOFF_CONFIRM,
+									(timingError / 2),
+									-(timingError / 2),
+									clearance);
+							if (clearance.isOk()) {
+								// TODO: proper sequence
+								this.getConnection().takeOff();
+							}
+							performed = true;
+						}
+					}
+				});
+		
+		// landing datalink communication
+		onlinePlanner.setLanding(
+				new Communication<Datalink>(onlinePlanner.getDatalink()) {
+					private boolean performed = false;
+					
+					@Override
+					public void perform() {
+						if (this.getConnection().isConnected() && !performed) {
+							PlannerAlertResult clearance = new PlannerAlertResult();
+							alert(
+								AlertType.CONFIRMATION,
+								PlannerAlert.ALERT_TITLE_LAND_CONFIRM,
+								PlannerAlert.ALERT_HEADER_LAND_CONFIRM,
+								PlannerAlert.ALERT_CONTENT_LAND_CONFIRM,
+								clearance);
+							if (clearance.isOk()) {
+								// TODO: proper sequence
+								this.getConnection().land();
+							}
+							performed = true;
+						}
+					}
+				});
+		
+		// unplanned landing datalink communication
+		onlinePlanner.setUnplannedLanding(
+				new Communication<Datalink>(onlinePlanner.getDatalink()) {
+					private boolean performed = false;
+					
+					@Override
+					public void perform() {
+						if (this.getConnection().isConnected() && !performed) {
+							PlannerAlertResult clearance = new PlannerAlertResult();
+							alert(
+								AlertType.WARNING,
+								PlannerAlert.ALERT_TITLE_LAND_CONFIRM,
+								PlannerAlert.ALERT_HEADER_LAND_CONFIRM,
+								PlannerAlert.ALERT_CONTENT_LAND_CONFIRM,
+								clearance);
+							if (clearance.isOk()) {
+								// TODO: proper sequence
+								this.getConnection().land();
+							}
+						}
+						performed = true;
+					}
+				});
+		
+		// establish datalink communication
+		onlinePlanner.setEstablishDatalink(
+				new Communication<Datalink>(onlinePlanner.getDatalink()) {
+
+					@Override
+					public void perform() {
+						if (!this.getConnection().isConnected()
+								|| !this.getConnection().isMonitoring()) {
+							PlannerAlertResult establish = new PlannerAlertResult();
+							alert(
+								AlertType.WARNING,
+								PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
+								PlannerAlert.ALERT_HEADER_DATALINK_INVALID,
+								PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
+								establish);
+							if (establish.isOk()) {
+								// TODO: proper sequence
+								if (!this.getConnection().isConnected()) {
+									this.getConnection().connect();
+								}
+								if (this.getConnection().isConnected()) {
+									this.getConnection().startMonitoring();
+								}
+							}
+						}
+					}
+					
+				});
 	}
 	
 	/**
