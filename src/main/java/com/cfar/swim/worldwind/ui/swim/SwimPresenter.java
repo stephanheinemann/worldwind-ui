@@ -163,9 +163,7 @@ public class SwimPresenter implements Initializable {
 								// TODO: generic SWIM loader
 								IwxxmLoader loader = new IwxxmLoader();
 								Set<Obstacle> obstacles = loader.load(new InputSource(new FileInputStream(file)));
-								for (Obstacle obstacle : obstacles) {
-									scenario.addObstacle(obstacle);
-								}
+								scenario.submitAddObstacles(obstacles);
 								//setWorldMode(WorldMode.VIEW);
 							} catch (Exception e) {
 								e.printStackTrace();
@@ -183,7 +181,10 @@ public class SwimPresenter implements Initializable {
 	public void removeSwimItem() {
 		String swimId = swimList.getSelectionModel().getSelectedItem();
 		if (null != swimId) {
-			scenario.removeObstacles(swimId);
+			Set<Obstacle> obstacles = scenario.getObstacles().stream()
+					.filter(o -> o.getCostInterval().getId().equals(swimId))
+					.collect(Collectors.toSet());
+			scenario.submitRemoveObstacles(obstacles);
 			swimList.getItems().remove(swimId);
 			swimList.refresh();
 		}
@@ -193,7 +194,7 @@ public class SwimPresenter implements Initializable {
 	 * Removes all swim items from the swim view.
 	 */
 	public void clearSwimItems() {
-		scenario.clearObstacles();
+		scenario.submitClearObstacles();
 		swimList.getItems().clear();
 		swimList.refresh();
 	}
@@ -204,7 +205,10 @@ public class SwimPresenter implements Initializable {
 	public void enableSwimItem() {
 		String swimId = swimList.getSelectionModel().getSelectedItem();
 		if (null != swimId) {
-			scenario.enableObstacles(swimId);
+			Set<Obstacle> obstacles = scenario.getObstacles().stream()
+					.filter(o -> o.getCostInterval().getId().equals(swimId))
+					.collect(Collectors.toSet());
+			scenario.submitEnableObstacles(obstacles);
 		}
 	}
 	
@@ -214,7 +218,10 @@ public class SwimPresenter implements Initializable {
 	public void disableSwimItem() {
 		String swimId = swimList.getSelectionModel().getSelectedItem();
 		if (null != swimId) {
-			scenario.disableObstacles(swimId);
+			Set<Obstacle> obstacles = scenario.getObstacles().stream()
+					.filter(o -> o.getCostInterval().getId().equals(swimId))
+					.collect(Collectors.toSet());
+			scenario.submitDisableObstacles(obstacles);
 		}
 	}
 	
