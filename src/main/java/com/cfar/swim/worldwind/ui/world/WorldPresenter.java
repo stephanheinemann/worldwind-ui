@@ -890,9 +890,6 @@ public class WorldPresenter implements Initializable {
 									//if (!trajectory.isEmpty()) {
 										styleTrajectory(trajectory);
 										session.getActiveScenario().setTrajectory(trajectory);
-										// TODO: consider automatic data uplink if connected
-										// TODO: anytime, dyanmic and online planners
-										System.out.println("revising plan...");
 										Thread.yield();
 									//}
 								}
@@ -1394,15 +1391,14 @@ public class WorldPresenter implements Initializable {
 					@Override
 					public void perform() {
 						if (this.getConnection().isConnected() && !performed) {
-							long timingError = onlinePlanner.getMaxTrackError()
+							long timingError = onlinePlanner.getMaxTakeOffError()
 									.getTimingError().getSeconds();
 							PlannerAlertResult clearance = new PlannerAlertResult();
 							countdownAlert(
 									AlertType.CONFIRMATION,
 									PlannerAlert.ALERT_TITLE_TAKEOFF_CONFIRM,
 									PlannerAlert.ALERT_HEADER_TAKEOFF_CONFIRM,
-									(timingError / 2),
-									-(timingError / 2),
+									timingError, -timingError,
 									clearance);
 							if (clearance.isOk()) {
 								// TODO: proper sequence
