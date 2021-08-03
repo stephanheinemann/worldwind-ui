@@ -43,6 +43,7 @@ import com.cfar.swim.worldwind.aircraft.Aircraft;
 import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.connections.SwimConnection;
 import com.cfar.swim.worldwind.environments.Environment;
+import com.cfar.swim.worldwind.managers.AutonomicManager;
 import com.cfar.swim.worldwind.planners.Planner;
 import com.cfar.swim.worldwind.registries.Properties;
 import com.cfar.swim.worldwind.registries.Specification;
@@ -92,6 +93,9 @@ public class SetupDialog extends Dialog<Setup> {
 	
 	/** the datalink tab index of a setup dialog */
 	public static final int DATALINK_TAB_INDEX = 4;
+	
+	/** the manager tab index of a setup dialog */
+	public static final int MANAGER_TAB_INDEX = 5;
 	
 	/** the setup view populated in this setup dialog */
 	private SetupView setupView = null;
@@ -194,6 +198,11 @@ public class SetupDialog extends Dialog<Setup> {
 				Specification<SwimConnection> swimConnectionSpec = session.getSwimConnectionSpecification(swimConnectionId);
 				swimConnectionSpec.setProperties(setupModel.getSwimConnectionProperties());
 				setup.setSwimConnectionSpecification(swimConnectionSpec);
+				
+				String managerId = this.setupView.getManager().getValue();
+				Specification<AutonomicManager> managerSpec = session.getManagerSpecification(managerId);
+				managerSpec.setProperties(setupModel.getManagerProperties());
+				setup.setManagerSpecification(managerSpec);
 			}
 			
 			return setup;

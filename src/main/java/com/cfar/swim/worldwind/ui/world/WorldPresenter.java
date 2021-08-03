@@ -151,6 +151,9 @@ public class WorldPresenter implements Initializable {
 	/** the setup icon of the world view */
 	@Inject private String setupIcon;
 	
+	/** the manager icon of the world view */
+	@Inject private String managerIcon;
+	
 	/** the no action command */
 	public static final String ACTION_NONE = "WorldPresenter.ActionCommand.None";
 	
@@ -211,6 +214,12 @@ public class WorldPresenter implements Initializable {
 	/** the reset view action command */
 	public static final String ACTION_VIEW_RESET = "WorldPresenter.ActionCommand.ViewReset";
 	
+	/** the manage action command */
+	public static final String ACTION_MANAGER_MANAGE = "WorldPresenter.ActionCommand.ManagerManage";
+	
+	/** the setup manager action command */
+	public static final String ACTION_MANAGER_SETUP = "WorldPresenter.ActionCommand.ManagerSetup";
+	
 	// TODO: consider to move all visible UI text into properties files
 	
 	/** the file chooser open swim file title */
@@ -259,6 +268,9 @@ public class WorldPresenter implements Initializable {
 	
 	/** the view control of this world presenter */
 	private ControlAnnotation viewControl;
+	
+	/** the manager control of this world presenter */
+	private ControlAnnotation managerControl;
 	
 	/** the status annotation of this world presenter */
 	private ScreenAnnotation statusAnnotation;
@@ -563,6 +575,7 @@ public class WorldPresenter implements Initializable {
 		this.frameControl(this.plannerControl, false);
 		this.frameControl(this.uploadControl, false);
 		this.frameControl(this.poiControl, false);
+		this.frameControl(this.managerControl, false);
 		
 		switch (worldMode) {
 		case AIRCRAFT:
@@ -586,6 +599,9 @@ public class WorldPresenter implements Initializable {
 		case WAYPOINT:
 			this.frameControl(this.poiControl, true);
 			break;
+		case MANAGING:
+			this.frameControl(this.managerControl, true);
+			break;
 		default:
 			this.frameControl(this.aircraftControl, false);
 			this.frameControl(this.environmentControl, false);
@@ -594,6 +610,7 @@ public class WorldPresenter implements Initializable {
 			this.frameControl(this.plannerControl, false);
 			this.frameControl(this.uploadControl, false);
 			this.frameControl(this.poiControl, false);
+			this.frameControl(this.managerControl, false);
 			break;
 		}
 	}
@@ -1190,6 +1207,31 @@ public class WorldPresenter implements Initializable {
 	}
 	
 	/**
+	 * Manages a planning session autonomously.
+	 */
+	protected void manage() {
+		if (WorldMode.MANAGING == getWorldMode()) {
+			// TODO: implement termination
+			setWorldMode(WorldMode.VIEW);
+		} else {
+			this.executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					if ((WorldMode.VIEW == getWorldMode())
+							|| (WorldMode.ENVIRONMENT == getWorldMode())
+							|| (WorldMode.AIRCRAFT == getWorldMode())
+							|| (WorldMode.WAYPOINT == getWorldMode())) {
+						
+						setWorldMode(WorldMode.MANAGING);
+						// TODO: implement initialization
+						//setWorldMode(WorldMode.VIEW);
+					}
+				}
+			});
+		}
+	}
+	
+	/**
 	 * Styles a computed trajectory for display.
 	 * 
 	 * @param trajectory the trajectory to be styled
@@ -1306,6 +1348,12 @@ public class WorldPresenter implements Initializable {
 			viewControl.setSecondaryActionCommand(WorldPresenter.ACTION_VIEW_RESET);
 			viewControl.addActionListener(new ViewControlListener());
 			
+			managerControl = new ControlAnnotation(managerIcon);
+			managerControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 425, 25));
+			managerControl.setPrimaryActionCommand(WorldPresenter.ACTION_MANAGER_MANAGE);
+			managerControl.setSecondaryActionCommand(WorldPresenter.ACTION_MANAGER_SETUP);
+			managerControl.addActionListener(new ManagerControlListener());
+			
 			controlLayer.addAnnotation(environmentControl);
 			wwd.addSelectListener(environmentControl);
 			controlLayer.addAnnotation(aircraftControl);
@@ -1326,6 +1374,8 @@ public class WorldPresenter implements Initializable {
 			wwd.addSelectListener(landControl);
 			controlLayer.addAnnotation(viewControl);
 			wwd.addSelectListener(viewControl);
+			controlLayer.addAnnotation(managerControl);
+			wwd.addSelectListener(managerControl);
 			wwd.getModel().getLayers().add(controlLayer);
 			
 			// add on-screen status
@@ -1357,6 +1407,7 @@ public class WorldPresenter implements Initializable {
 					takeoffControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 200, 25));
 					landControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 275, 25));
 					viewControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 350, 25));
+					managerControl.getAttributes().setDrawOffset(new Point((wwd.getWidth() / 2) + 425, 25));
 					statusAnnotation.setScreenPoint(new Point(wwd.getWidth() / 2, wwd.getHeight() - 75));
 				}
 			});
@@ -1899,7 +1950,7 @@ public class WorldPresenter implements Initializable {
 				waypoint();
 				break;
 			case WorldPresenter.ACTION_WAYPOINT_SETUP:
-				// TODO: waypoint setup (types of waypoint graphics: POI, RWP, ...)
+				// TODO: waypoint setup (types of waypoint graphics: POI, RWP, alternates...)
 				break;
 			}
 		}
@@ -2096,6 +2147,34 @@ public class WorldPresenter implements Initializable {
 				break;
 			case WorldPresenter.ACTION_VIEW_RESET:
 				view(false);
+				break;
+			}
+		}
+	}
+	
+	/**
+	 * Realizes a manager control listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
+	private class ManagerControlListener implements ActionListener {
+		
+		/**
+		 * Performs the manager control action.
+		 * 
+		 * @param e the action event associated with the manager control action
+		 * 
+		 * @see ActionListener#actionPerformed(ActionEvent)
+		 */
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			switch (e.getActionCommand()) {
+			case WorldPresenter.ACTION_MANAGER_MANAGE:
+				manage();
+				break;
+			case WorldPresenter.ACTION_MANAGER_SETUP:
+				setup(SetupDialog.MANAGER_TAB_INDEX);
 				break;
 			}
 		}

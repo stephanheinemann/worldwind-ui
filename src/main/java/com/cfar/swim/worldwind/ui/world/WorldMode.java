@@ -44,5 +44,6 @@ public enum WorldMode {
 	LOADING,
 	UPLOADING,
 	LAUNCHING,
-	LANDING
+	LANDING,
+	MANAGING
 }

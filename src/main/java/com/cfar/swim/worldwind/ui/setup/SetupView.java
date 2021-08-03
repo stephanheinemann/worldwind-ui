@@ -104,4 +104,14 @@ public class SetupView extends FXMLView {
 		return (ComboBox<String>) this.getView().lookup("#swimConnection");
 	}
 	
+	/**
+	 * Gets the manager selector of this setup view.
+	 * 
+	 * @return the manager selector of this setup view
+	 */
+	@SuppressWarnings("unchecked")
+	public ComboBox<String> getManager() {
+		return (ComboBox<String>) this.getView().lookup("#manager");
+	}
+	
 }

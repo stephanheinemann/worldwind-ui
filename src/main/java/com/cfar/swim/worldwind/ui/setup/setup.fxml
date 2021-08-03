@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <!--
 
     Copyright (c) 2021, Stephan Heinemann (UVic Center for Aerospace Research)
@@ -30,6 +31,7 @@
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 -->
+
 <?import javafx.geometry.*?>
 <?import java.lang.*?>
 <?import javafx.scene.control.*?>
@@ -149,6 +151,29 @@
                      </VBox.margin>
                   </Label>
                   <ScrollPane fx:id="datalinkPropertiesPane" prefHeight="400.0" prefWidth="600.0" />
+               </children>
+            </VBox>
+        </content>
+      </Tab>
+      <Tab text="Manager">
+        <content>
+            <VBox prefHeight="400.0" prefWidth="600.0">
+               <children>
+                  <HBox prefHeight="30.0" prefWidth="580.0">
+                     <children>
+                        <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="25.0" prefWidth="180.0" text="Manager" />
+                        <ComboBox fx:id="manager" prefHeight="25.0" prefWidth="400.0" />
+                     </children>
+                     <VBox.margin>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                     </VBox.margin>
+                  </HBox>
+                  <Label fx:id="managerDescription" alignment="CENTER" prefHeight="200.0" prefWidth="600.0" text="Manager Description" wrapText="true">
+                     <VBox.margin>
+                        <Insets bottom="10.0" left="10.0" right="10.0" />
+                     </VBox.margin>
+                  </Label>
+                  <ScrollPane fx:id="managerPropertiesPane" prefHeight="400.0" prefWidth="600.0" />
                </children>
             </VBox>
         </content>

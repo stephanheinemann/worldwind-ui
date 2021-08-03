@@ -49,7 +49,7 @@ import javafx.stage.Stage;
 public class WorldwindPlanner extends Application {
 
 	/** the title (and session identifier) of this application */
-	public static final String APPLICATION_TITLE = "Worldwind Planner";
+	public static final String APPLICATION_TITLE = "Smart Autoflight Control System";
 	
 	/**
 	 * Starts this planner application.

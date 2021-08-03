@@ -195,6 +195,7 @@ public class PlannerPresenter implements Initializable {
 					case UPLOADING:
 					case LAUNCHING:
 					case LANDING:
+					case MANAGING:
 						progressBar.setProgress(-1d);
 						progressIndicator.toFront();
 						progressIndicator.setVisible(true);
