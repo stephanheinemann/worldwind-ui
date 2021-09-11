@@ -59,6 +59,7 @@ import com.cfar.swim.worldwind.connections.Communication;
 import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.connections.SwimConnection;
 import com.cfar.swim.worldwind.environments.Environment;
+import com.cfar.swim.worldwind.managers.AutonomicManager;
 import com.cfar.swim.worldwind.planners.LifelongPlanner;
 import com.cfar.swim.worldwind.planners.OnlinePlanner;
 import com.cfar.swim.worldwind.planners.PlanRevisionListener;
@@ -1211,8 +1212,8 @@ public class WorldPresenter implements Initializable {
 	 */
 	protected void manage() {
 		if (WorldMode.MANAGING == getWorldMode()) {
-			// TODO: implement termination
-			setWorldMode(WorldMode.VIEW);
+			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+			session.getManager().terminate();
 		} else {
 			this.executor.execute(new Runnable() {
 				@Override
@@ -1222,9 +1223,20 @@ public class WorldPresenter implements Initializable {
 							|| (WorldMode.AIRCRAFT == getWorldMode())
 							|| (WorldMode.WAYPOINT == getWorldMode())) {
 						
+						Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+						AutonomicManager manager = session.getManager();
+						
+						if (!session.hasManager() || !manager.matches(session.getSetup().getManagerSpecification())) {
+							// create autonomic manager
+							Specification<AutonomicManager> managerSpec = session.getSetup().getManagerSpecification();
+							session.getManagerFactory().setSpecification(managerSpec);
+							manager = session.getManagerFactory().createInstance();
+							session.setManager(manager);
+						}
+						
 						setWorldMode(WorldMode.MANAGING);
-						// TODO: implement initialization
-						//setWorldMode(WorldMode.VIEW);
+						manager.manage(session);
+						setWorldMode(WorldMode.VIEW);
 					}
 				}
 			});

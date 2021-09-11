@@ -56,6 +56,8 @@ import javafx.util.StringConverter;
  */
 public class ScenarioPresenter implements Initializable {
 	
+	// TODO: include new scenario id into dictionary
+	
 	/** the list of scenarios of the scenario view */
 	@FXML
 	private ListView<Scenario> scenarios;
