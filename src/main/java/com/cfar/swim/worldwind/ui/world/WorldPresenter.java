@@ -1543,6 +1543,7 @@ public class WorldPresenter implements Initializable {
 								if (this.getConnection().isConnected()) {
 									this.getConnection().startMonitoring();
 								}
+								frameControl(datalinkControl, this.getConnection().isConnected());
 							}
 						}
 					}
