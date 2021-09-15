@@ -36,7 +36,7 @@ import java.io.FileInputStream;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
@@ -86,7 +86,7 @@ public class SwimPresenter implements Initializable {
 	private ObstaclesChangeListener ocl = new ObstaclesChangeListener();
 	
 	/** the executor of this swim presenter */
-	private final Executor executor = Executors.newSingleThreadScheduledExecutor();
+	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 	
 	/**
 	 * Initializes this swim presenter.
@@ -179,50 +179,70 @@ public class SwimPresenter implements Initializable {
 	 * Removes a swim item from the swim view.
 	 */
 	public void removeSwimItem() {
-		String swimId = swimList.getSelectionModel().getSelectedItem();
-		if (null != swimId) {
-			Set<Obstacle> obstacles = scenario.getObstacles().stream()
-					.filter(o -> o.getCostInterval().getId().equals(swimId))
-					.collect(Collectors.toSet());
-			scenario.submitRemoveObstacles(obstacles);
-			swimList.getItems().remove(swimId);
-			swimList.refresh();
-		}
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				String swimId = swimList.getSelectionModel().getSelectedItem();
+				if (null != swimId) {
+					Set<Obstacle> obstacles = scenario.getObstacles().stream()
+							.filter(o -> o.getCostInterval().getId().equals(swimId))
+							.collect(Collectors.toSet());
+					scenario.submitRemoveObstacles(obstacles);
+					swimList.getItems().remove(swimId);
+					swimList.refresh();
+				}
+			}
+		});
 	}
 	
 	/**
 	 * Removes all swim items from the swim view.
 	 */
 	public void clearSwimItems() {
-		scenario.submitClearObstacles();
-		swimList.getItems().clear();
-		swimList.refresh();
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				scenario.submitClearObstacles();
+				swimList.getItems().clear();
+				swimList.refresh();
+			}
+		});
 	}
 	
 	/**
 	 * Enables a selected swim item of the swim view.
 	 */
 	public void enableSwimItem() {
-		String swimId = swimList.getSelectionModel().getSelectedItem();
-		if (null != swimId) {
-			Set<Obstacle> obstacles = scenario.getObstacles().stream()
-					.filter(o -> o.getCostInterval().getId().equals(swimId))
-					.collect(Collectors.toSet());
-			scenario.submitEnableObstacles(obstacles);
-		}
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				String swimId = swimList.getSelectionModel().getSelectedItem();
+				if (null != swimId) {
+					Set<Obstacle> obstacles = scenario.getObstacles().stream()
+							.filter(o -> o.getCostInterval().getId().equals(swimId))
+							.collect(Collectors.toSet());
+					scenario.submitEnableObstacles(obstacles);
+				}
+			}
+		});
 	}
 	
 	/**
 	 * Disables a selected swim item of the swim view.
 	 */
 	public void disableSwimItem() {
-		String swimId = swimList.getSelectionModel().getSelectedItem();
-		if (null != swimId) {
-			Set<Obstacle> obstacles = scenario.getObstacles().stream()
-					.filter(o -> o.getCostInterval().getId().equals(swimId))
-					.collect(Collectors.toSet());
-			scenario.submitDisableObstacles(obstacles);
-		}
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				String swimId = swimList.getSelectionModel().getSelectedItem();
+				if (null != swimId) {
+					Set<Obstacle> obstacles = scenario.getObstacles().stream()
+							.filter(o -> o.getCostInterval().getId().equals(swimId))
+							.collect(Collectors.toSet());
+					scenario.submitDisableObstacles(obstacles);
+				}
+			}
+		});
 	}
 	
 	/**

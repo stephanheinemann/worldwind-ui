@@ -47,7 +47,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
@@ -342,7 +342,7 @@ public class WorldPresenter implements Initializable {
 	private final TrackChangeListener trackCl = new TrackChangeListener();
 	
 	/** the sequential executor of this world presenter */
-	private final Executor executor = Executors.newSingleThreadExecutor();
+	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 	
 	/**
 	 * Initializes this world presenter.
