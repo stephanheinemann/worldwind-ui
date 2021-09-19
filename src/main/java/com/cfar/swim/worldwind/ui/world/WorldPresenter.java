@@ -57,6 +57,7 @@ import javax.swing.SwingUtilities;
 import com.cfar.swim.worldwind.aircraft.Aircraft;
 import com.cfar.swim.worldwind.connections.Communication;
 import com.cfar.swim.worldwind.connections.Datalink;
+import com.cfar.swim.worldwind.connections.DatalinkTracker;
 import com.cfar.swim.worldwind.connections.SwimConnection;
 import com.cfar.swim.worldwind.environments.Environment;
 import com.cfar.swim.worldwind.managers.AutonomicManager;
@@ -1231,6 +1232,7 @@ public class WorldPresenter implements Initializable {
 							Specification<AutonomicManager> managerSpec = session.getSetup().getManagerSpecification();
 							session.getManagerFactory().setSpecification(managerSpec);
 							manager = session.getManagerFactory().createInstance();
+							setCommunications(manager);
 							session.setManager(manager);
 						}
 						
@@ -1441,20 +1443,20 @@ public class WorldPresenter implements Initializable {
 	}
 	
 	/**
-	 * Sets the communications of an online planner.
+	 * Sets the communications of a datalink tracker.
 	 * 
-	 * @param onlinePlanner the online planner
+	 * @param tracker the datalink tracker
 	 */
-	private void setCommunications(OnlinePlanner onlinePlanner) {
+	private void setCommunications(DatalinkTracker tracker) {
 		// take-off datalink communication
-		onlinePlanner.setTakeOff(
-				new Communication<Datalink>(onlinePlanner.getDatalink()) {
+		tracker.setTakeOff(
+				new Communication<Datalink>(tracker.getDatalink()) {
 					private boolean performed = false;
 					
 					@Override
 					public void perform() {
 						if (this.getConnection().isConnected() && !performed) {
-							long timingError = onlinePlanner.getMaxTakeOffError()
+							long timingError = tracker.getMaxTakeOffError()
 									.getTimingError().getSeconds();
 							PlannerAlertResult clearance = new PlannerAlertResult();
 							countdownAlert(
@@ -1473,8 +1475,8 @@ public class WorldPresenter implements Initializable {
 				});
 		
 		// landing datalink communication
-		onlinePlanner.setLanding(
-				new Communication<Datalink>(onlinePlanner.getDatalink()) {
+		tracker.setLanding(
+				new Communication<Datalink>(tracker.getDatalink()) {
 					private boolean performed = false;
 					
 					@Override
@@ -1497,8 +1499,8 @@ public class WorldPresenter implements Initializable {
 				});
 		
 		// unplanned landing datalink communication
-		onlinePlanner.setUnplannedLanding(
-				new Communication<Datalink>(onlinePlanner.getDatalink()) {
+		tracker.setUnplannedLanding(
+				new Communication<Datalink>(tracker.getDatalink()) {
 					private boolean performed = false;
 					
 					@Override
@@ -1521,8 +1523,8 @@ public class WorldPresenter implements Initializable {
 				});
 		
 		// establish datalink communication
-		onlinePlanner.setEstablishDatalink(
-				new Communication<Datalink>(onlinePlanner.getDatalink()) {
+		tracker.setEstablishDatalink(
+				new Communication<Datalink>(tracker.getDatalink()) {
 
 					@Override
 					public void perform() {
