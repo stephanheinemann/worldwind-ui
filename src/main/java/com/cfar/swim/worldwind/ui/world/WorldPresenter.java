@@ -1232,11 +1232,11 @@ public class WorldPresenter implements Initializable {
 							Specification<AutonomicManager> managerSpec = session.getSetup().getManagerSpecification();
 							session.getManagerFactory().setSpecification(managerSpec);
 							manager = session.getManagerFactory().createInstance();
-							setCommunications(manager);
 							session.setManager(manager);
 						}
 						
 						setWorldMode(WorldMode.MANAGING);
+						setCommunications(manager);
 						manager.manage(session);
 						setWorldMode(WorldMode.VIEW);
 					}
@@ -1454,7 +1454,7 @@ public class WorldPresenter implements Initializable {
 					private boolean performed = false;
 					
 					@Override
-					public void perform() {
+					public synchronized void perform() {
 						if (this.getConnection().isConnected() && !performed) {
 							long timingError = tracker.getMaxTakeOffError()
 									.getTimingError().getSeconds();
@@ -1480,7 +1480,7 @@ public class WorldPresenter implements Initializable {
 					private boolean performed = false;
 					
 					@Override
-					public void perform() {
+					public synchronized void perform() {
 						if (this.getConnection().isConnected() && !performed) {
 							PlannerAlertResult clearance = new PlannerAlertResult();
 							alert(
@@ -1504,7 +1504,7 @@ public class WorldPresenter implements Initializable {
 					private boolean performed = false;
 					
 					@Override
-					public void perform() {
+					public synchronized void perform() {
 						if (this.getConnection().isConnected() && !performed) {
 							PlannerAlertResult clearance = new PlannerAlertResult();
 							alert(
@@ -1527,7 +1527,7 @@ public class WorldPresenter implements Initializable {
 				new Communication<Datalink>(tracker.getDatalink()) {
 
 					@Override
-					public void perform() {
+					public synchronized void perform() {
 						if (!this.getConnection().isConnected()
 								|| !this.getConnection().isMonitoring()) {
 							PlannerAlertResult establish = new PlannerAlertResult();
@@ -1543,6 +1543,7 @@ public class WorldPresenter implements Initializable {
 									this.getConnection().connect();
 								}
 								if (this.getConnection().isConnected()) {
+									this.getConnection().addTrackChangeListener(trackCl);
 									this.getConnection().startMonitoring();
 								}
 								frameControl(datalinkControl, this.getConnection().isConnected());
