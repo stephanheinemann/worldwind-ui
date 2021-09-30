@@ -35,6 +35,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.cfar.swim.worldwind.environments.Environment;
 import com.cfar.swim.worldwind.environments.HierarchicalEnvironment;
@@ -64,8 +65,14 @@ public class EnvironmentPresenter implements Initializable {
 	@FXML
 	private TreeView<Environment> environment;
 	
+	/** indicates whether or not the environment tree is being updated */
+	private AtomicBoolean isUpdating = new AtomicBoolean(false);
+	
+	/** indicates whether or not the environment tree requires an update */
+	private AtomicBoolean requiresUpdate = new AtomicBoolean(false);
+	
 	/** the active planning scenario (model) of this environment presenter */
-	Scenario scenario = null;
+	private Scenario scenario = null;
 	
 	/** the environment change listener of this environment presenter */
 	private final EnvironmentChangeListener ecl = new EnvironmentChangeListener();
@@ -111,10 +118,13 @@ public class EnvironmentPresenter implements Initializable {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				Environment activeEnvironment = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario().getEnvironment();
-				environment.setRoot(new TreeItem<Environment>(activeEnvironment));
-				environment.getRoot().setExpanded(false);
-				initEnvironment(environment.getRoot());
+				while (requiresUpdate.getAndSet(false)) {
+					Environment activeEnvironment = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario().getEnvironment();
+					environment.setRoot(new TreeItem<Environment>(activeEnvironment));
+					environment.getRoot().setExpanded(false);
+					initEnvironment(environment.getRoot());
+				}
+				isUpdating.set(false);
 			}
 		});
 	}
@@ -125,22 +135,17 @@ public class EnvironmentPresenter implements Initializable {
 	 * 
 	 * @param parentItem the parent environment item to be populated
 	 */
-	public void initEnvironment(TreeItem<Environment> parentItem) {
-		Platform.runLater(new Runnable() {
-			@Override
-			public void run() {
-				if (parentItem.getValue() instanceof HierarchicalEnvironment) {
-					HierarchicalEnvironment environment = (HierarchicalEnvironment) parentItem.getValue();
-					if (environment.hasChildren()) {
-						for (Environment child : environment.getChildren()) {
-							TreeItem<Environment> childItem = new TreeItem<>(child);
-							parentItem.getChildren().add(childItem);
-							initEnvironment(childItem);
-						}
-					}
+	private void initEnvironment(TreeItem<Environment> parentItem) {
+		if (parentItem.getValue() instanceof HierarchicalEnvironment) {
+			HierarchicalEnvironment environment = (HierarchicalEnvironment) parentItem.getValue();
+			if (environment.hasChildren()) {
+				for (Environment child : environment.getChildren()) {
+					TreeItem<Environment> childItem = new TreeItem<>(child);
+					parentItem.getChildren().add(childItem);
+					initEnvironment(childItem);
 				}
 			}
-		});
+		}
 	}
 	
 	/**
@@ -261,7 +266,13 @@ public class EnvironmentPresenter implements Initializable {
 		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			initEnvironment();
+			// restrict updates to avoid structural changes (edge creation) in
+			// a planning continuum to cause invoke-later overflow and rapid
+			// heap increase potentially leading to an out-of-memory error
+			requiresUpdate.set(true);
+			if (!isUpdating.getAndSet(true)) {
+				initEnvironment();
+			}
 		}
 	}
 
