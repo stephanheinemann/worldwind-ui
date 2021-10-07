@@ -61,6 +61,7 @@ import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.connections.DatalinkTracker;
 import com.cfar.swim.worldwind.connections.SwimConnection;
 import com.cfar.swim.worldwind.environments.Environment;
+import com.cfar.swim.worldwind.javafx.TrajectoryStylist;
 import com.cfar.swim.worldwind.managers.AutonomicManager;
 import com.cfar.swim.worldwind.planners.LifelongPlanner;
 import com.cfar.swim.worldwind.planners.OnlinePlanner;
@@ -71,7 +72,6 @@ import com.cfar.swim.worldwind.planning.Trajectory;
 import com.cfar.swim.worldwind.planning.Waypoint;
 import com.cfar.swim.worldwind.registries.Specification;
 import com.cfar.swim.worldwind.render.annotations.ControlAnnotation;
-import com.cfar.swim.worldwind.render.annotations.DepictionAnnotation;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
@@ -96,8 +96,6 @@ import gov.nasa.worldwind.layers.MarkerLayer;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import gov.nasa.worldwind.layers.ViewControlsLayer;
 import gov.nasa.worldwind.layers.ViewControlsSelectListener;
-import gov.nasa.worldwind.render.BasicShapeAttributes;
-import gov.nasa.worldwind.render.Material;
 import gov.nasa.worldwind.render.ScreenAnnotation;
 import gov.nasa.worldwind.render.markers.Marker;
 import gov.nasa.worldwind.symbology.milstd2525.MilStd2525GraphicFactory;
@@ -911,7 +909,7 @@ public class WorldPresenter implements Initializable {
 								public void revisePlan(Trajectory trajectory) {
 									// TODO: clearing trajectory versus uploading empty trajectory
 									//if (!trajectory.isEmpty()) {
-										styleTrajectory(trajectory);
+										TrajectoryStylist.styleTrajectory(trajectory);
 										session.getActiveScenario().setTrajectory(trajectory);
 										Thread.yield();
 									//}
@@ -1246,27 +1244,6 @@ public class WorldPresenter implements Initializable {
 					}
 				}
 			});
-		}
-	}
-	
-	/**
-	 * Styles a computed trajectory for display.
-	 * 
-	 * @param trajectory the trajectory to be styled
-	 */
-	private void styleTrajectory(Trajectory trajectory) {
-		trajectory.setVisible(true);
-		trajectory.setShowPositions(true);
-		trajectory.setDrawVerticals(true);
-		trajectory.setAttributes(new BasicShapeAttributes());
-		trajectory.getAttributes().setOutlineMaterial(Material.MAGENTA);
-		trajectory.getAttributes().setOutlineWidth(5d);
-		trajectory.getAttributes().setOutlineOpacity(0.5d);
-		for (Waypoint waypoint : trajectory.getWaypoints()) {
-			Depiction depiction = new Depiction(symbolFactory.createPoint(Waypoint.SICD_NAV_WAYPOINT_ROUTE, waypoint, null));
-			depiction.setAnnotation(new DepictionAnnotation(waypoint.getEto().toString(), waypoint));
-			depiction.setVisible(true);
-			waypoint.setDepiction(depiction);
 		}
 	}
 	
