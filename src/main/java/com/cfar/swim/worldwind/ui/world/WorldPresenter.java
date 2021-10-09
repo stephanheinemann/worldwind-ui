@@ -49,7 +49,6 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 import javax.swing.JPanel;
@@ -420,12 +419,9 @@ public class WorldPresenter implements Initializable {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				while (requiresUpdate.getAndSet(false)) {
-					environmentLayer.removeAllRenderables();
-					environmentLayer.addRenderable(scenario.getEnvironment());
-					wwd.redraw();
-				}
-				isUpdating.set(false);
+				environmentLayer.removeAllRenderables();
+				environmentLayer.addRenderable(scenario.getEnvironment());
+				wwd.redraw();
 			}
 		});
 	}
@@ -1735,12 +1731,6 @@ public class WorldPresenter implements Initializable {
 		}
 	}
 	
-	/** indicates whether or not the environment is being updated */
-	private AtomicBoolean isUpdating = new AtomicBoolean(false);
-	
-	/** indicates whether or not the environment requires an update */
-	private AtomicBoolean requiresUpdate = new AtomicBoolean(false);
-	
 	/**
 	 * Realizes an environment change listener.
 	 * 
@@ -1758,10 +1748,7 @@ public class WorldPresenter implements Initializable {
 		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			requiresUpdate.set(true);
-			if (!isUpdating.getAndSet(true)) {
-				initEnvironment();
-			}
+			initEnvironment();
 		}
 	}
 	
