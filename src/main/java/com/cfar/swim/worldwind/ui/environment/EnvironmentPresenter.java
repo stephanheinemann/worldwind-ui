@@ -245,7 +245,10 @@ public class EnvironmentPresenter implements Initializable {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initScenario();
-			initEnvironment();
+			requiresUpdate.set(true);
+			if (!isUpdating.getAndSet(true)) {
+				initEnvironment();
+			}
 		}
 	}
 	
