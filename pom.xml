@@ -300,6 +300,11 @@
 			<version>1.0.0-alpha4-SNAPSHOT</version><!-- 1.0.0-alpha4 -->
 		</dependency>
 		<dependency>
+			<groupId>com.uvic-cfar.swim</groupId>
+			<artifactId>worldwind-jaxb</artifactId>
+			<version>1.0.0-alpha1-SNAPSHOT</version><!-- 1.0.0-alpha1 -->
+		</dependency>
+		<dependency>
 			<groupId>org.controlsfx</groupId>
 			<artifactId>controlsfx</artifactId>
 			<version>11.1.0</version>

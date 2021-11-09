@@ -31,9 +31,14 @@ package com.cfar.swim.worldwind.ui.scenario;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import com.cfar.swim.worldwind.jaxb.ScenarioMarshaller;
+import com.cfar.swim.worldwind.jaxb.ScenarioUnmarshaller;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
@@ -46,6 +51,8 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.util.StringConverter;
 
 /**
@@ -57,10 +64,23 @@ import javafx.util.StringConverter;
 public class ScenarioPresenter implements Initializable {
 	
 	// TODO: include new scenario id into dictionary
+	// TODO: move all visible UI text into properties files
+	
+	/** the file chooser open scenario file title */
+	public static final String FILE_CHOOSER_TITLE_SCENARIO = "Open Scenario File";
+	
+	/** the file chooser scenario file description */
+	public static final String FILE_CHOOSER_SCENARIO = "Scenario Files";
+	
+	/** the file chooser scenario file extension */
+	public static final String FILE_CHOOSER_EXTENSION_SCENARIO = "*.xml";
 	
 	/** the list of scenarios of the scenario view */
 	@FXML
 	private ListView<Scenario> scenarios;
+	
+	/** the executor of this scenario presenter */
+	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 	
 	/**
 	 * Initializes this scenario presenter.
@@ -123,6 +143,80 @@ public class ScenarioPresenter implements Initializable {
 	public void clearScenarios() {
 		if (!this.scenarios.isEditable()) {
 			SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).clearScenarios();
+		}
+	}
+	
+	/**
+	 * Loads a scenario.
+	 */
+	public void loadScenario() {
+		if (!this.scenarios.isEditable()) {
+			Platform.runLater(new Runnable() {
+				@Override
+				public void run() {
+					FileChooser fileChooser = new FileChooser();
+					fileChooser.setTitle(ScenarioPresenter.FILE_CHOOSER_TITLE_SCENARIO);
+					fileChooser.getExtensionFilters().addAll(
+							new ExtensionFilter[] { new ExtensionFilter(
+									ScenarioPresenter.FILE_CHOOSER_SCENARIO,
+									ScenarioPresenter.FILE_CHOOSER_EXTENSION_SCENARIO)});
+					File file = fileChooser.showOpenDialog(null);
+					
+					if (null != file) {
+						executor.execute(new Runnable() {
+							@Override
+							public void run() {
+								try {
+									ScenarioUnmarshaller marshaller = new ScenarioUnmarshaller();
+									Scenario scenario = marshaller.unmarshalScenario(file);
+									if ((null != scenario)) {
+										SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).addScenario(scenario);
+									}
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+							}
+						});
+					}
+				}
+			});
+		}
+	}
+	
+	/**
+	 * Saves a scenario.
+	 */
+	public void saveScenario() {
+		if (!this.scenarios.isEditable()) {
+			Scenario scenario = this.scenarios.getSelectionModel().getSelectedItem();
+			if (null != scenario) {
+				Platform.runLater(new Runnable() {
+					@Override
+					public void run() {
+						FileChooser fileChooser = new FileChooser();
+						fileChooser.setTitle(ScenarioPresenter.FILE_CHOOSER_TITLE_SCENARIO);
+						fileChooser.getExtensionFilters().addAll(
+								new ExtensionFilter[] { new ExtensionFilter(
+										ScenarioPresenter.FILE_CHOOSER_SCENARIO,
+										ScenarioPresenter.FILE_CHOOSER_EXTENSION_SCENARIO)});
+						File file = fileChooser.showSaveDialog(null);
+						
+						if (null != file) {
+							executor.execute(new Runnable() {
+								@Override
+								public void run() {
+									try {
+										ScenarioMarshaller marshaller = new ScenarioMarshaller();
+										marshaller.marshalScenario(scenario, file);
+									} catch (Exception e) {
+										e.printStackTrace();
+									}
+								}
+							});
+						}
+					}
+				});
+			}
 		}
 	}
 	
