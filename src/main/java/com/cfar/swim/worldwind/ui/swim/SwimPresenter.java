@@ -32,7 +32,6 @@ package com.cfar.swim.worldwind.ui.swim;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
-import java.io.FileInputStream;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -40,9 +39,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-import org.xml.sax.InputSource;
-
-import com.cfar.swim.worldwind.iwxxm.IwxxmLoader;
+import com.cfar.swim.worldwind.data.SwimLoader;
+import com.cfar.swim.worldwind.data.SwimResource;
 import com.cfar.swim.worldwind.render.Obstacle;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
@@ -160,9 +158,9 @@ public class SwimPresenter implements Initializable {
 						public void run() {
 							try {
 								//setWorldMode(WorldMode.LOADING);
-								// TODO: generic SWIM loader
-								IwxxmLoader loader = new IwxxmLoader();
-								Set<Obstacle> obstacles = loader.load(new InputSource(new FileInputStream(file)));
+								SwimResource resource = new SwimResource(file.toURI());
+								SwimLoader loader = new SwimLoader();
+								Set<Obstacle> obstacles = loader.load(resource);
 								scenario.submitAddObstacles(obstacles);
 								//setWorldMode(WorldMode.VIEW);
 							} catch (Exception e) {
