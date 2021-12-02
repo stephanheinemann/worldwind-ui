@@ -115,11 +115,12 @@ public class EnvironmentPresenter implements Initializable {
 	 * the environment view according to the active scenario.
 	 */
 	public void initEnvironment() {
+		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+		Environment activeEnvironment = session.getActiveScenario().getEnvironment();
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				while (requiresUpdate.getAndSet(false)) {
-					Environment activeEnvironment = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario().getEnvironment();
+				while (requiresUpdate.getAndSet(false)) {					
 					environment.setRoot(new TreeItem<Environment>(activeEnvironment));
 					environment.getRoot().setExpanded(false);
 					initEnvironment(environment.getRoot());
@@ -153,10 +154,10 @@ public class EnvironmentPresenter implements Initializable {
 	 * resolution environment.
 	 */
 	public void refineEnvironment() {
+		Environment selectedEnv = environment.getSelectionModel().getSelectedItem().getValue();
 		this.executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				Environment selectedEnv = environment.getSelectionModel().getSelectedItem().getValue();
 				if (selectedEnv instanceof MultiResolutionEnvironment) {
 					if (!((MultiResolutionEnvironment) selectedEnv).isRefined()) {
 						((MultiResolutionEnvironment) selectedEnv).refine(2);
@@ -171,10 +172,10 @@ public class EnvironmentPresenter implements Initializable {
 	 * resolution environment.
 	 */
 	public void coarsenEnvironment() {
+		Environment selectedEnv = environment.getSelectionModel().getSelectedItem().getValue();
 		this.executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				Environment selectedEnv = environment.getSelectionModel().getSelectedItem().getValue();
 				if (selectedEnv instanceof MultiResolutionEnvironment) {
 					if (((MultiResolutionEnvironment) selectedEnv).isRefined()) {
 						((MultiResolutionEnvironment) selectedEnv).coarsen(2);

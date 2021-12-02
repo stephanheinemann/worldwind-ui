@@ -31,6 +31,8 @@ package com.cfar.swim.worldwind.ui.threshold;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
@@ -53,6 +55,9 @@ public class ThresholdPresenter implements Initializable {
 	/** the threshold cost slider of the threshold view */
 	@FXML
 	private Slider thresholdSlider;
+	
+	/** the executor of this threshold presenter */
+	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 	
 	/**
 	 * Initializes this threshold presenter.
@@ -86,8 +91,13 @@ public class ThresholdPresenter implements Initializable {
 		 */
 		@Override
 		public void handle(InputEvent event) {
-			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-			session.getActiveScenario().setThreshold(thresholdSlider.getValue());
+			executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+					session.getActiveScenario().setThreshold(thresholdSlider.getValue());
+				}
+			});
 		}
 	}
 	

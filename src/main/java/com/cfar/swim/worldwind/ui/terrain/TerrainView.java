@@ -27,25 +27,30 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.cfar.swim.worldwind.ui.world;
+package com.cfar.swim.worldwind.ui.terrain;
+
+import com.airhacks.afterburner.views.FXMLView;
+
+import javafx.scene.control.TitledPane;
 
 /**
- * Enumerates the world modes.
+ * Realizes a terrain view.
  * 
  * @author Stephan Heinemann
  *
  */
-public enum WorldMode {
-	VIEW,
-	AIRCRAFT,
-	ENVIRONMENT,
-	WAYPOINT,
-	PLANNING,
-	UPLOADING,
-	LAUNCHING,
-	LANDING,
-	MANAGING,
-	TERMINATING,
-	LOADING,
-	SAVING
+public class TerrainView extends FXMLView {
+	
+	/**
+	 * Gets the view of this terrain view.
+	 * 
+	 * @return the view of this terrain view
+	 * 
+	 * @see FXMLView#getView()
+	 */
+	@Override
+	public TitledPane getView() {
+		return (TitledPane) super.getView();
+	}
+
 }

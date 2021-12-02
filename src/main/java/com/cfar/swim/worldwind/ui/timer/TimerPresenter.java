@@ -33,6 +33,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
@@ -61,6 +63,9 @@ public class TimerPresenter implements Initializable {
 	
 	/** the active scenario of this timer presenter */
 	private Scenario scenario = null;
+	
+	/** the executor of this timer presenter */
+	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 	
 	/**
 	 * Initializes this timer presenter.
@@ -106,35 +111,60 @@ public class TimerPresenter implements Initializable {
 	 * Rewinds the time of the active scenario of this timer presenter.
 	 */
 	public void rewind() {
-		this.scenario.rewindTime();
+		this.executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				scenario.rewindTime();
+			}
+		});
 	}
 	
 	/**
 	 * Stops the time of the active scenario of this timer presenter.
 	 */
 	public void stop() {
-		this.scenario.stopTime();
+		this.executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				scenario.stopTime();
+			}
+		});
 	}
 	
 	/**
 	 * Tracks the time of the active scenario of this timer presenter.
 	 */
 	public void track() {
-		this.scenario.trackTime();
+		this.executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				scenario.trackTime();
+			}
+		});
 	}
 	
 	/**
 	 * Plays the time of the active scenario of this timer presenter.
 	 */
 	public void play() {
-		this.scenario.playTime();
+		this.executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				scenario.playTime();
+			}
+		});
 	}
 	
 	/**
 	 * Fast forwards the time of the active scenario of this timer presenter.
 	 */
 	public void fastForward() {
-		this.scenario.fastForwardTime();
+		this.executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				scenario.fastForwardTime();
+			}
+		});
 	}
 	
 	/**

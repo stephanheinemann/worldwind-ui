@@ -32,9 +32,15 @@ package com.cfar.swim.worldwind.ui.plan;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.TreeMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
@@ -123,6 +129,9 @@ public class PlanPresenter implements Initializable {
 	/** the military symbol factory of this plan presenter */
 	private final MilStd2525GraphicFactory symbolFactory = new MilStd2525GraphicFactory();
 	
+	/** the executor of this plan presenter */
+	private final ExecutorService executor = Executors.newSingleThreadExecutor();
+	
 	/**
 	 * Initializes this plan presenter.
 	 * 
@@ -181,27 +190,36 @@ public class PlanPresenter implements Initializable {
 	 * according to the active scenario.
 	 */
 	public void initPlan() {
+		Iterator<Waypoint> waypointIterator = scenario.getWaypoints().iterator();
+		TreeMap<Waypoint, List<Waypoint>> legs = new TreeMap<>(new Comparator<Waypoint>() {
+			@Override
+			public int compare(Waypoint w1, Waypoint w2) {
+				return w1.getDesignator().compareTo(w2.getDesignator());
+			}
+		});
+		
+		if (waypointIterator.hasNext()) {
+			Waypoint current = waypointIterator.next();
+			while (waypointIterator.hasNext()) {
+				Waypoint next = waypointIterator.next();
+				legs.put(current, scenario.getTrajectoryLeg(current, next));
+				current = next;
+			}
+			legs.put(current, Collections.emptyList());
+		}
+		
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
 				plan.getRoot().getChildren().clear();
 				
-				Iterator<Waypoint> waypointIterator = scenario.getWaypoints().iterator();
-				
-				if (waypointIterator.hasNext()) {
-					Waypoint current = waypointIterator.next();
-					TreeItem<Waypoint> waypointItem = new TreeItem<Waypoint>(current);
+				for (Waypoint waypoint : legs.keySet()) {
+					TreeItem<Waypoint> waypointItem = new TreeItem<Waypoint>(waypoint);
 					plan.getRoot().getChildren().add(waypointItem);
 					
-					while (waypointIterator.hasNext()) {
-						Waypoint next = waypointIterator.next();
-						for (Waypoint legWaypoint : scenario.getTrajectoryLeg(current, next)) {
-							TreeItem<Waypoint> legWaypointItem = new TreeItem<Waypoint>(legWaypoint);
-							waypointItem.getChildren().add(legWaypointItem);
-						}
-						current = next;
-						waypointItem = new TreeItem<Waypoint>(current);
-						plan.getRoot().getChildren().add(waypointItem);
+					for (Waypoint legWaypoint : legs.get(waypoint)) {
+						TreeItem<Waypoint> legWaypointItem = new TreeItem<Waypoint>(legWaypoint);
+						waypointItem.getChildren().add(legWaypointItem);
 					}
 				}
 				
@@ -221,9 +239,14 @@ public class PlanPresenter implements Initializable {
 			waypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, waypoint, null)));
 			waypoint.getDepiction().setAnnotation(new DepictionAnnotation(this.waypointSymbol, "?", waypoint));
 			waypoint.getDepiction().setVisible(true);
-			this.scenario.addWaypoint(waypoint);
+			
+			this.executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					scenario.addWaypoint(waypoint);
+				}
+			});
 		}
-		// TODO: check out ControlsFX (central repository)
 	}
 	
 	/**
@@ -242,13 +265,20 @@ public class PlanPresenter implements Initializable {
 				editedWaypoint.setDepiction(new Depiction(symbolFactory.createPoint(Waypoint.SIDC_NAV_WAYPOINT_POI, editedWaypoint, null)));
 				editedWaypoint.getDepiction().setAnnotation(new DepictionAnnotation(this.waypointSymbol, editedWaypoint.getDesignator(), editedWaypoint));
 				editedWaypoint.getDepiction().setVisible(true);
-				this.scenario.clearTrajectory();
-				this.scenario.updateWaypoint(waypoint, editedWaypoint);
+				boolean firstSelected = this.plan.getSelectionModel().isSelected(0);
 				
-				// the first waypoint can be the aircraft which has to be moved accordingly
-				if (this.plan.getSelectionModel().isSelected(0) && this.scenario.hasAircraft()) {
-					this.scenario.moveAircraft(editedWaypoint);
-				}
+				this.executor.execute(new Runnable() {
+					@Override
+					public void run() {
+						scenario.clearTrajectory();
+						scenario.updateWaypoint(waypoint, editedWaypoint);
+						
+						// the first waypoint can be the aircraft which has to be moved accordingly
+						if (firstSelected && scenario.hasAircraft()) {
+							scenario.moveAircraft(editedWaypoint);
+						}
+					}
+				});
 			}
 		}
 	}
@@ -261,13 +291,20 @@ public class PlanPresenter implements Initializable {
 		TreeItem<Waypoint> waypointItem = this.plan.getSelectionModel().getSelectedItem();
 		if (null != waypointItem) {
 			Waypoint waypoint = waypointItem.getValue();
-			this.scenario.clearTrajectory();
-			this.scenario.removeWaypoint(waypoint);
+			boolean firstSelected = this.plan.getSelectionModel().isSelected(0);
 			
-			// the first waypoint can be the aircraft which has to be removed accordingly
-			if (this.plan.getSelectionModel().isSelected(0) && this.scenario.hasAircraft()) {
-				this.scenario.removeAircraft();
-			}
+			this.executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					scenario.clearTrajectory();
+					scenario.removeWaypoint(waypoint);
+					
+					// the first waypoint can be the aircraft which has to be removed accordingly
+					if (firstSelected && scenario.hasAircraft()) {
+						scenario.removeAircraft();
+					}
+				}
+			});
 		}
 	}
 	
@@ -276,12 +313,17 @@ public class PlanPresenter implements Initializable {
 	 * Any previously computed trajectory is removed.
 	 */
 	public void clearWaypoints() {
-		this.scenario.clearTrajectory();
-		this.scenario.clearWaypoints();
-		
-		if (this.scenario.hasAircraft()) {
-			this.scenario.removeAircraft();
-		}
+		this.executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				scenario.clearTrajectory();
+				scenario.clearWaypoints();
+				
+				if (scenario.hasAircraft()) {
+					scenario.removeAircraft();
+				}
+			}
+		});
 	}
 	
 	/**

@@ -40,6 +40,7 @@ import com.cfar.swim.worldwind.ui.environment.EnvironmentView;
 import com.cfar.swim.worldwind.ui.plan.PlanView;
 import com.cfar.swim.worldwind.ui.scenario.ScenarioView;
 import com.cfar.swim.worldwind.ui.swim.SwimView;
+import com.cfar.swim.worldwind.ui.terrain.TerrainView;
 import com.cfar.swim.worldwind.ui.threshold.ThresholdView;
 import com.cfar.swim.worldwind.ui.time.TimeView;
 import com.cfar.swim.worldwind.ui.timer.TimerView;
@@ -88,7 +89,7 @@ public class PlannerPresenter implements Initializable {
 	@FXML
 	private ProgressIndicator progressIndicator;
 	
-	/** the world model of the world presenter */
+	/** the world model of this planner presenter */
 	@Inject
 	private WorldModel worldModel;
 	
@@ -134,6 +135,9 @@ public class PlannerPresenter implements Initializable {
 		
 		SwimView swimView = new SwimView();
 		this.swimAccordion.getPanes().add(swimView.getView());
+		
+		TerrainView terrainView = new TerrainView();
+		this.swimAccordion.getPanes().add(terrainView.getView());
 		
 		ScenarioView scenarioView = new ScenarioView();
 		this.plannerAccordion.getPanes().add(scenarioView.getView());
@@ -191,11 +195,13 @@ public class PlannerPresenter implements Initializable {
 				public void run() {
 					switch (worldModel.getWorldMode()) {
 					case PLANNING:
-					case LOADING:
 					case UPLOADING:
 					case LAUNCHING:
 					case LANDING:
 					case MANAGING:
+					case TERMINATING:
+					case LOADING:
+					case SAVING:
 						progressBar.setProgress(-1d);
 						progressIndicator.toFront();
 						progressIndicator.setVisible(true);

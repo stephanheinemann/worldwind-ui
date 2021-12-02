@@ -35,17 +35,15 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<TitledPane animated="false" text="SWIM" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.cfar.swim.worldwind.ui.swim.SwimPresenter">
+<TitledPane animated="false" text="Terrain" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.cfar.swim.worldwind.ui.terrain.TerrainPresenter">
   <content>
-      <ListView fx:id="swimList">
+      <ListView fx:id="terrainList">
          <contextMenu>
             <ContextMenu>
               <items>
-                  <MenuItem mnemonicParsing="false" onAction="#addSwimItem" text="Add" />
-                  <MenuItem mnemonicParsing="false" onAction="#removeSwimItem" text="Remove" />
-                  <MenuItem mnemonicParsing="false" onAction="#clearSwimItems" text="Clear" />
-                  <MenuItem mnemonicParsing="false" onAction="#enableSwimItem" text="Enable" />
-                  <MenuItem mnemonicParsing="false" onAction="#disableSwimItem" text="Disable" />
+                  <MenuItem mnemonicParsing="false" onAction="#addTerrainItem" text="Add" />
+                  <MenuItem mnemonicParsing="false" onAction="#removeTerrainItem" text="Remove" />
+                  <MenuItem mnemonicParsing="false" onAction="#clearTerrainItems" text="Clear" />
               </items>
             </ContextMenu>
          </contextMenu>

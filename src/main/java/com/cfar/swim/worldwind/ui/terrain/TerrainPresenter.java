@@ -27,7 +27,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.cfar.swim.worldwind.ui.swim;
+package com.cfar.swim.worldwind.ui.terrain;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -37,13 +37,9 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import com.cfar.swim.worldwind.data.SwimLoader;
-import com.cfar.swim.worldwind.data.SwimResource;
-import com.cfar.swim.worldwind.render.Obstacle;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
@@ -58,43 +54,43 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 
 /**
- * Realizes a presenter of a swim view.
+ * Realizes a presenter of a terrain view.
  * 
  * @author Stephan Heinemann
  *
  */
-public class SwimPresenter implements Initializable {
+public class TerrainPresenter implements Initializable {
 	
 	// TODO: consider to move all visible UI text into properties files
 	
-	/** the file chooser open swim file title */
-	public static final String FILE_CHOOSER_TITLE_SWIM = "Open SWIM File";
+	/** the file chooser open terrain file title */
+	public static final String FILE_CHOOSER_TITLE_TERRAIN = "Open Terrain File";
 	
-	/** the file chooser swim file description */
-	public static final String FILE_CHOOSER_SWIM = "SWIM Files";
+	/** the file chooser terrain file description */
+	public static final String FILE_CHOOSER_TERRAIN = "Terrain Files";
 	
-	/** the file chooser swim file extension */
-	public static final String FILE_CHOOSER_EXTENSION_SWIM = "*.xml";
+	/** the file chooser terrain file extension */
+	public static final String FILE_CHOOSER_EXTENSION_TERRAIN = "*.tif";
 	
-	/** the swim list of the swim view */
+	/** the terrain list of the terrain view */
 	@FXML
-	private ListView<String> swimList;
+	private ListView<String> terrainList;
 	
-	/** the world model of this swim presenter */
+	/** the world model of this terrain presenter */
 	@Inject
 	private WorldModel worldModel;
 	
-	/** the active scenario of this swim presenter */
+	/** the active scenario of this terrain presenter */
 	private Scenario scenario = null;
 	
-	/** the obstacle change listener of this swim presenter */
-	private ObstaclesChangeListener ocl = new ObstaclesChangeListener();
+	/** the terrain change listener of this terrain presenter */
+	private TerrainChangeListener tcl = new TerrainChangeListener();
 	
-	/** the executor of this swim presenter */
+	/** the executor of this terrain presenter */
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 	
 	/**
-	 * Initializes this swim presenter.
+	 * Initializes this terrain presenter.
 	 * 
 	 * @param location unused
 	 * @param resources unused
@@ -106,50 +102,47 @@ public class SwimPresenter implements Initializable {
 		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 		session.addActiveScenarioChangeListener(new ActiveScenarioChangeListener());
 		this.initScenario();
-		this.initObstacles();
+		this.initTerrain();
 	}
 	
 	/**
-	 * Initializes the scenario of this swim presenter.
+	 * Initializes the scenario of this terrain presenter.
 	 */
 	private void initScenario() {
 		if (null != this.scenario) {
-			this.scenario.removePropertyChangeListener(this.ocl);
+			this.scenario.removePropertyChangeListener(this.tcl);
 		}
 		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 		this.scenario = session.getActiveScenario();
-		this.scenario.addObstaclesChangeListener(this.ocl);
+		this.scenario.addTerrainChangeListener(this.tcl);
 	}
 	
 	/**
-	 * Initializes the obstacles of this swim presenter.
+	 * Initializes the terrain of this terrain presenter.
 	 */
-	private void initObstacles() {
+	private void initTerrain() {
 		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-		Set<Obstacle> obstacles = session.getActiveScenario().getObstacles();
+		Set<String> terrainNames = session.getActiveScenario().getTerrainNames();
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				swimList.getItems().clear();
-				swimList.getItems().addAll(obstacles.stream()
-						.map(o -> o.getCostInterval().getId())
-						.distinct()
-						.collect(Collectors.toSet()));
-				swimList.refresh();
+				terrainList.getItems().clear();
+				terrainList.getItems().addAll(terrainNames);
+				terrainList.refresh();
 			}
 		});
 	}
 	
 	/**
-	 * Adds a swim item to the swim view.
+	 * Adds a terrain item to the terrain view.
 	 */
-	public void addSwimItem() {
+	public void addTerrainItem() {
 		FileChooser fileChooser = new FileChooser();
-		fileChooser.setTitle(SwimPresenter.FILE_CHOOSER_TITLE_SWIM);
+		fileChooser.setTitle(TerrainPresenter.FILE_CHOOSER_TITLE_TERRAIN);
 		fileChooser.getExtensionFilters().addAll(
 				new ExtensionFilter[] { new ExtensionFilter(
-						SwimPresenter.FILE_CHOOSER_SWIM,
-						SwimPresenter.FILE_CHOOSER_EXTENSION_SWIM)});
+						TerrainPresenter.FILE_CHOOSER_TERRAIN,
+						TerrainPresenter.FILE_CHOOSER_EXTENSION_TERRAIN)});
 		File file = fileChooser.showOpenDialog(null);
 		
 		if (null != file) {
@@ -157,10 +150,7 @@ public class SwimPresenter implements Initializable {
 				@Override
 				public void run() {
 					if (worldModel.load()) {
-						SwimResource resource = new SwimResource(file.toURI());
-						SwimLoader loader = new SwimLoader();
-						Set<Obstacle> obstacles = loader.load(resource);
-						scenario.submitAddObstacles(obstacles);
+						scenario.addTerrain(file);
 						worldModel.loaded();
 					}
 				}
@@ -169,81 +159,42 @@ public class SwimPresenter implements Initializable {
 	}
 	
 	/**
-	 * Removes a swim item from the swim view.
+	 * Removes a terrain item from the terrain view.
 	 */
-	public void removeSwimItem() {
-		String swimId = swimList.getSelectionModel().getSelectedItem();
+	public void removeTerrainItem() {
+		String terrain = terrainList.getSelectionModel().getSelectedItem();
 		this.executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				if (null != swimId) {
-					Set<Obstacle> obstacles = scenario.getObstacles().stream()
-							.filter(o -> o.getCostInterval().getId().equals(swimId))
-							.collect(Collectors.toSet());
-					scenario.submitRemoveObstacles(obstacles);
+				if (null != terrain) {
+					scenario.removeTerrain(terrain);
 				}
 			}
 		});
 	}
 	
 	/**
-	 * Removes all swim items from the swim view.
+	 * Removes all terrain items from the terrain view.
 	 */
-	public void clearSwimItems() {
+	public void clearTerrainItems() {
 		this.executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				scenario.submitClearObstacles();
+				scenario.clearTerrain();
 			}
 		});
 	}
 	
 	/**
-	 * Enables a selected swim item of the swim view.
-	 */
-	public void enableSwimItem() {
-		String swimId = swimList.getSelectionModel().getSelectedItem();
-		this.executor.execute(new Runnable() {
-			@Override
-			public void run() {
-				if (null != swimId) {
-					Set<Obstacle> obstacles = scenario.getObstacles().stream()
-							.filter(o -> o.getCostInterval().getId().equals(swimId))
-							.collect(Collectors.toSet());
-					scenario.submitEnableObstacles(obstacles);
-				}
-			}
-		});
-	}
-	
-	/**
-	 * Disables a selected swim item of the swim view.
-	 */
-	public void disableSwimItem() {
-		String swimId = swimList.getSelectionModel().getSelectedItem();
-		this.executor.execute(new Runnable() {
-			@Override
-			public void run() {
-				if (null != swimId) {
-					Set<Obstacle> obstacles = scenario.getObstacles().stream()
-							.filter(o -> o.getCostInterval().getId().equals(swimId))
-							.collect(Collectors.toSet());
-					scenario.submitDisableObstacles(obstacles);
-				}
-			}
-		});
-	}
-	
-	/**
-	 * Realizes an obstacle change listener.
+	 * Realizes a terrain change listener.
 	 * 
 	 * @author Stephan Heinemann
 	 *
 	 */
-	private class ObstaclesChangeListener implements PropertyChangeListener {
+	private class TerrainChangeListener implements PropertyChangeListener {
 		
 		/**
-		 * Initializes the obstacles if they have changed.
+		 * Initializes the terrain if it has changed.
 		 * 
 		 * @param evt the property change event associated with the obstacle change
 		 * 
@@ -251,7 +202,7 @@ public class SwimPresenter implements Initializable {
 		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			initObstacles();
+			initTerrain();
 		}
 	}
 	
@@ -264,7 +215,7 @@ public class SwimPresenter implements Initializable {
 	private class ActiveScenarioChangeListener implements PropertyChangeListener {
 		
 		/**
-		 * Initializes the scenario and obstacles if the active scenario has changed.
+		 * Initializes the scenario and terrain if the active scenario has changed.
 		 * 
 		 * @param evt the property change event associate with the active scenario change
 		 * 
@@ -273,7 +224,7 @@ public class SwimPresenter implements Initializable {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initScenario();
-			initObstacles();
+			initTerrain();
 		}
 	}
 	

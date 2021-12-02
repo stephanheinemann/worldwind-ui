@@ -37,12 +37,15 @@ import java.util.ResourceBundle;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.inject.Inject;
+
 import com.cfar.swim.worldwind.jaxb.ScenarioMarshaller;
 import com.cfar.swim.worldwind.jaxb.ScenarioUnmarshaller;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.ui.WorldwindPlanner;
+import com.cfar.swim.worldwind.ui.world.WorldModel;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -79,6 +82,10 @@ public class ScenarioPresenter implements Initializable {
 	@FXML
 	private ListView<Scenario> scenarios;
 	
+	/** the world model of this scenario presenter */
+	@Inject
+	private WorldModel worldModel;
+	
 	/** the executor of this scenario presenter */
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 	
@@ -106,7 +113,13 @@ public class ScenarioPresenter implements Initializable {
 		if (!this.scenarios.isEditable()) {
 			Scenario scenario = this.scenarios.getSelectionModel().getSelectedItem();
 			if (null != scenario) {
-				SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).setActiveScenario(scenario);
+				this.executor.execute(new Runnable() {
+					@Override
+					public void run() {
+						SessionManager.getInstance().getSession(
+								WorldwindPlanner.APPLICATION_TITLE).setActiveScenario(scenario);
+					}
+				});
 			}
 		}
 	}
@@ -116,7 +129,7 @@ public class ScenarioPresenter implements Initializable {
 	 */
 	public void addScenario() {
 		if (!this.scenarios.isEditable()) {
-			Scenario scenario = new Scenario("New Scenario");
+			Scenario scenario = new Scenario(Scenario.NEW_SCENARIO_ID);
 			this.scenarios.getItems().add(scenario);
 			this.scenarios.layout(); // without layout, edit will not work
 			this.scenarios.setEditable(true);
@@ -132,7 +145,13 @@ public class ScenarioPresenter implements Initializable {
 		if (!this.scenarios.isEditable()) {
 			Scenario scenario = this.scenarios.getSelectionModel().getSelectedItem();
 			if (null != scenario) {
-				SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).removeScenario(scenario);
+				this.executor.execute(new Runnable() {
+					@Override
+					public void run() {
+						SessionManager.getInstance().getSession(
+								WorldwindPlanner.APPLICATION_TITLE).removeScenario(scenario);
+					}
+				});
 			}
 		}
 	}
@@ -142,7 +161,13 @@ public class ScenarioPresenter implements Initializable {
 	 */
 	public void clearScenarios() {
 		if (!this.scenarios.isEditable()) {
-			SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).clearScenarios();
+			this.executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					SessionManager.getInstance().getSession(
+							WorldwindPlanner.APPLICATION_TITLE).clearScenarios();
+				}
+			});
 		}
 	}
 	
@@ -151,35 +176,33 @@ public class ScenarioPresenter implements Initializable {
 	 */
 	public void loadScenario() {
 		if (!this.scenarios.isEditable()) {
-			Platform.runLater(new Runnable() {
-				@Override
-				public void run() {
-					FileChooser fileChooser = new FileChooser();
-					fileChooser.setTitle(ScenarioPresenter.FILE_CHOOSER_TITLE_SCENARIO);
-					fileChooser.getExtensionFilters().addAll(
-							new ExtensionFilter[] { new ExtensionFilter(
-									ScenarioPresenter.FILE_CHOOSER_SCENARIO,
-									ScenarioPresenter.FILE_CHOOSER_EXTENSION_SCENARIO)});
-					File file = fileChooser.showOpenDialog(null);
-					
-					if (null != file) {
-						executor.execute(new Runnable() {
-							@Override
-							public void run() {
-								try {
-									ScenarioUnmarshaller marshaller = new ScenarioUnmarshaller();
-									Scenario scenario = marshaller.unmarshalScenario(file);
-									if ((null != scenario)) {
-										SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).addScenario(scenario);
-									}
-								} catch (Exception e) {
-									e.printStackTrace();
+			FileChooser fileChooser = new FileChooser();
+			fileChooser.setTitle(ScenarioPresenter.FILE_CHOOSER_TITLE_SCENARIO);
+			fileChooser.getExtensionFilters().addAll(
+					new ExtensionFilter[] { new ExtensionFilter(
+							ScenarioPresenter.FILE_CHOOSER_SCENARIO,
+							ScenarioPresenter.FILE_CHOOSER_EXTENSION_SCENARIO)});
+			File file = fileChooser.showOpenDialog(null);
+			
+			if (null != file) {
+				executor.execute(new Runnable() {
+					@Override
+					public void run() {
+						if (worldModel.load()) {
+							try {
+								ScenarioUnmarshaller marshaller = new ScenarioUnmarshaller();
+								Scenario scenario = marshaller.unmarshalScenario(file);
+								if ((null != scenario)) {
+									SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).addScenario(scenario);
 								}
+							} catch (Exception e) {
+								e.printStackTrace();
 							}
-						});
+							worldModel.loaded();
+						}
 					}
-				}
-			});
+				});
+			}
 		}
 	}
 	
@@ -190,32 +213,30 @@ public class ScenarioPresenter implements Initializable {
 		if (!this.scenarios.isEditable()) {
 			Scenario scenario = this.scenarios.getSelectionModel().getSelectedItem();
 			if (null != scenario) {
-				Platform.runLater(new Runnable() {
-					@Override
-					public void run() {
-						FileChooser fileChooser = new FileChooser();
-						fileChooser.setTitle(ScenarioPresenter.FILE_CHOOSER_TITLE_SCENARIO);
-						fileChooser.getExtensionFilters().addAll(
-								new ExtensionFilter[] { new ExtensionFilter(
-										ScenarioPresenter.FILE_CHOOSER_SCENARIO,
-										ScenarioPresenter.FILE_CHOOSER_EXTENSION_SCENARIO)});
-						File file = fileChooser.showSaveDialog(null);
-						
-						if (null != file) {
-							executor.execute(new Runnable() {
-								@Override
-								public void run() {
-									try {
-										ScenarioMarshaller marshaller = new ScenarioMarshaller();
-										marshaller.marshalScenario(scenario, file);
-									} catch (Exception e) {
-										e.printStackTrace();
-									}
+				FileChooser fileChooser = new FileChooser();
+				fileChooser.setTitle(ScenarioPresenter.FILE_CHOOSER_TITLE_SCENARIO);
+				fileChooser.getExtensionFilters().addAll(
+						new ExtensionFilter[] { new ExtensionFilter(
+								ScenarioPresenter.FILE_CHOOSER_SCENARIO,
+								ScenarioPresenter.FILE_CHOOSER_EXTENSION_SCENARIO)});
+				File file = fileChooser.showSaveDialog(null);
+				
+				if (null != file) {
+					executor.execute(new Runnable() {
+						@Override
+						public void run() {
+							if (worldModel.save()) {
+								try {
+									ScenarioMarshaller marshaller = new ScenarioMarshaller();
+									marshaller.marshalScenario(scenario, file);
+								} catch (Exception e) {
+									e.printStackTrace();
 								}
-							});
+								worldModel.saved();
+							}
 						}
-					}
-				});
+					});
+				}
 			}
 		}
 	}
@@ -316,7 +337,13 @@ public class ScenarioPresenter implements Initializable {
 			if (!scenarios.getItems().contains(scenario) && !scenario.getId().trim().isEmpty()) {
 				super.commitEdit(scenario);
 				scenarios.setEditable(false);
-				SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).addScenario(scenario);
+				executor.execute(new Runnable() {
+					@Override
+					public void run() {
+						SessionManager.getInstance().getSession(
+								WorldwindPlanner.APPLICATION_TITLE).addScenario(scenario);
+					}
+				});
 			}
 		}
 		
