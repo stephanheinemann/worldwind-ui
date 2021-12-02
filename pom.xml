@@ -145,6 +145,7 @@
 					<include>icons/**/*</include>
 					<include>logos/**/*</include>
 					<include>symbols/**/*</include>
+					<include>com/cfar/swim/worldwind/ui/**/*.properties</include>
 				</includes>
 			</resource>
 		</resources>

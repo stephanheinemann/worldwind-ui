@@ -79,7 +79,8 @@ import javafx.util.Callback;
 public class PlanPresenter implements Initializable {
 	
 	/** the waypoint symbol of this plan presenter */
-	@Inject private String waypointSymbol;
+	@Inject
+	private String waypointSymbol;
 	
 	/** the plan tree table view of this plan presenter */
 	@FXML

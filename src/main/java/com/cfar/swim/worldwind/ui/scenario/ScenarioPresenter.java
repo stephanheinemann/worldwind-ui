@@ -45,6 +45,7 @@ import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.ui.WorldwindPlanner;
+import com.cfar.swim.worldwind.ui.util.ResourceBundleLoader;
 import com.cfar.swim.worldwind.ui.world.WorldModel;
 
 import javafx.application.Platform;
@@ -66,17 +67,19 @@ import javafx.util.StringConverter;
  */
 public class ScenarioPresenter implements Initializable {
 	
-	// TODO: include new scenario id into dictionary
-	// TODO: move all visible UI text into properties files
-	
 	/** the file chooser open scenario file title */
-	public static final String FILE_CHOOSER_TITLE_SCENARIO = "Open Scenario File";
+	public static final String FILE_CHOOSER_TITLE_SCENARIO =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("scenario.dialog.file.title");
 	
 	/** the file chooser scenario file description */
-	public static final String FILE_CHOOSER_SCENARIO = "Scenario Files";
+	public static final String FILE_CHOOSER_DESCRIPTION_SCENARIO =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("scenario.dialog.file.description");
 	
 	/** the file chooser scenario file extension */
-	public static final String FILE_CHOOSER_EXTENSION_SCENARIO = "*.xml";
+	@Inject
+	public static String scenarioFileExtension;
 	
 	/** the list of scenarios of the scenario view */
 	@FXML
@@ -180,8 +183,8 @@ public class ScenarioPresenter implements Initializable {
 			fileChooser.setTitle(ScenarioPresenter.FILE_CHOOSER_TITLE_SCENARIO);
 			fileChooser.getExtensionFilters().addAll(
 					new ExtensionFilter[] { new ExtensionFilter(
-							ScenarioPresenter.FILE_CHOOSER_SCENARIO,
-							ScenarioPresenter.FILE_CHOOSER_EXTENSION_SCENARIO)});
+							ScenarioPresenter.FILE_CHOOSER_DESCRIPTION_SCENARIO,
+							ScenarioPresenter.scenarioFileExtension)});
 			File file = fileChooser.showOpenDialog(null);
 			
 			if (null != file) {
@@ -217,8 +220,8 @@ public class ScenarioPresenter implements Initializable {
 				fileChooser.setTitle(ScenarioPresenter.FILE_CHOOSER_TITLE_SCENARIO);
 				fileChooser.getExtensionFilters().addAll(
 						new ExtensionFilter[] { new ExtensionFilter(
-								ScenarioPresenter.FILE_CHOOSER_SCENARIO,
-								ScenarioPresenter.FILE_CHOOSER_EXTENSION_SCENARIO)});
+								ScenarioPresenter.FILE_CHOOSER_DESCRIPTION_SCENARIO,
+								ScenarioPresenter.scenarioFileExtension)});
 				File file = fileChooser.showSaveDialog(null);
 				
 				if (null != file) {

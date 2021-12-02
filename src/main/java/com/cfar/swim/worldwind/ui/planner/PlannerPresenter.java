@@ -44,6 +44,7 @@ import com.cfar.swim.worldwind.ui.terrain.TerrainView;
 import com.cfar.swim.worldwind.ui.threshold.ThresholdView;
 import com.cfar.swim.worldwind.ui.time.TimeView;
 import com.cfar.swim.worldwind.ui.timer.TimerView;
+import com.cfar.swim.worldwind.ui.util.ResourceBundleLoader;
 import com.cfar.swim.worldwind.ui.world.WorldModel;
 import com.cfar.swim.worldwind.ui.world.WorldView;
 
@@ -94,16 +95,19 @@ public class PlannerPresenter implements Initializable {
 	private WorldModel worldModel;
 	
 	/** the title of the about dialog (planner alert) */
-	@Inject
-	private String aboutTitle;
+	private static final String ABOUT_TITLE =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("application.dialog.about.title");
 	
 	/** the header of the about dialog (planner alert) */ 
-	@Inject
-	private String aboutHeader;
+	private static final String ABOUT_HEADER =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("application.dialog.about.header");
 	
 	/** the content of the about dialog (planner alert) */
-	@Inject
-	private String aboutContent;
+	private static final String ABOUT_CONTENT =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("application.dialog.about.content");
 	
 	/**
 	 * Initializes this planner presenter.
@@ -166,9 +170,9 @@ public class PlannerPresenter implements Initializable {
 	 */
 	public void about() {
 		PlannerAlert about = new PlannerAlert(AlertType.INFORMATION);
-		about.setTitle(this.aboutTitle);
-		about.setHeaderText(this.aboutHeader);
-		about.setContentText(this.aboutContent);
+		about.setTitle(PlannerPresenter.ABOUT_TITLE);
+		about.setHeaderText(PlannerPresenter.ABOUT_HEADER);
+		about.setContentText(PlannerPresenter.ABOUT_CONTENT);
 		about.showAndWait();
 	}
 	

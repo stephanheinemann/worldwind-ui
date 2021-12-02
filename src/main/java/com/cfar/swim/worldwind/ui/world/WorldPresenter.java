@@ -221,17 +221,6 @@ public class WorldPresenter implements Initializable {
 	/** the setup manager action command */
 	public static final String ACTION_MANAGER_SETUP = "WorldPresenter.ActionCommand.ManagerSetup";
 	
-	// TODO: consider to move all visible UI text into properties files
-	
-	/** the file chooser open swim file title */
-	public static final String FILE_CHOOSER_TITLE_SWIM = "Open SWIM File";
-	
-	/** the file chooser swim file description */
-	public static final String FILE_CHOOSER_SWIM = "SWIM Files";
-	
-	/** the file chooser swim file extension */
-	public static final String FILE_CHOOSER_EXTENSION_SWIM = "*.xml";
-	
 	/** the world pane of the world view */
 	@FXML
 	private AnchorPane worldNodePane;
@@ -692,7 +681,10 @@ public class WorldPresenter implements Initializable {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				SetupDialog setupDialog = new SetupDialog(SetupDialog.TITLE_SETUP, SetupDialog.HEADER_SETUP, setupIcon, setupModel);
+				SetupDialog setupDialog = new SetupDialog(
+						SetupDialog.TITLE_SETUP,
+						SetupDialog.HEADER_SETUP,
+						setupIcon, setupModel);
 				setupDialog.selectTab(tabIndex);
 				setupDialog.showAndWait();
 			}

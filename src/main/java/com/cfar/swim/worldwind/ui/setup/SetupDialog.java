@@ -52,7 +52,7 @@ import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.session.Setup;
 import com.cfar.swim.worldwind.ui.WorldwindPlanner;
 import com.cfar.swim.worldwind.ui.planner.PlannerAlert;
-import com.cfar.swim.worldwind.util.ResourceBundleLoader;
+import com.cfar.swim.worldwind.ui.util.ResourceBundleLoader;
 
 import javafx.event.ActionEvent;
 import javafx.scene.control.Alert.AlertType;
@@ -71,13 +71,15 @@ import javafx.scene.input.KeyEvent;
  */
 public class SetupDialog extends Dialog<Setup> {
 	
-	// TODO: obtain UI text from dictionary resource bundle
-	
 	/** the title of a setup dialog */
-	public static final String TITLE_SETUP = "Setup Planner Session";
+	public static final String TITLE_SETUP =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("setup.dialog.title");
 	
 	/** the header of a setup dialog */
-	public static final String HEADER_SETUP = "Setup the Planning Session";
+	public static final String HEADER_SETUP =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("setup.dialog.header");
 	
 	/** the aircraft tab index of a setup dialog */
 	public static final int AIRCRAFT_TAB_INDEX = 0;
@@ -136,7 +138,8 @@ public class SetupDialog extends Dialog<Setup> {
 		// add setup validation event filter
 		this.getDialogPane().lookupButton(ButtonType.OK).addEventFilter(ActionEvent.ACTION, event -> {
 			PlatformResourceBundleLocator resourceBundleLocator =
-					new PlatformResourceBundleLocator(ResourceBundleLoader.DICTIONARY_BUNDLE, null, true);
+					new PlatformResourceBundleLocator(
+							com.cfar.swim.worldwind.util.ResourceBundleLoader.DICTIONARY_BUNDLE, null, true);
 			Validator validator = Validation.byProvider(HibernateValidator.class)
 					.configure()
 					.messageInterpolator(new ResourceBundleMessageInterpolator(resourceBundleLocator))

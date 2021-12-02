@@ -27,56 +27,29 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.cfar.swim.worldwind.ui.splash;
+package com.cfar.swim.worldwind.ui.util;
 
-import java.net.URL;
 import java.util.ResourceBundle;
 
-import javax.inject.Inject;
-
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-
 /**
- * Realizes a presenter for a splash view. The splash view is only shown when
- * the application starts.
+ * Realizes a resource bundle loader.
  * 
  * @author Stephan Heinemann
  *
  */
-public class SplashPresenter implements Initializable {
+public class ResourceBundleLoader {
 	
-	/** the UVic logo of the splash view */
-	@Inject
-	private String uvicLogo;
-	
-	/** the CfAR logo of the splash view */
-	@Inject
-	private String cfarLogo;
-	
-	/** the UVic image view of the splash view */
-	@FXML
-	private ImageView uvic;
-	
-	/** the CfAR image view of the splash view */
-	@FXML
-	private ImageView cfar;
+	/** the dictionary bundle */
+	public static final String DICTIONARY_BUNDLE = "com.cfar.swim.worldwind.ui.dictionaries.Dictionary";
 	
 	/**
-	 * Initializes this splash presenter.
+	 * Gets the dictionary bundle for the configured locale.
 	 * 
-	 * @param location unused
-	 * @param resources unused
-	 * 
-	 * @see Initializable#initialize(URL, ResourceBundle)
+	 * @return the dictionary bundle for the configured locale
 	 */
-	@Override
-	public void initialize(URL location, ResourceBundle resources) {
-		ClassLoader classLoader = this.getClass().getClassLoader();
-		uvic.setImage(new Image(classLoader.getResourceAsStream(uvicLogo)));
-		cfar.setImage(new Image(classLoader.getResourceAsStream(cfarLogo)));
+	public static ResourceBundle getDictionaryBundle() {
+		return com.cfar.swim.worldwind.util.ResourceBundleLoader
+				.getDictionaryBundle(ResourceBundleLoader.DICTIONARY_BUNDLE);
 	}
-
+	
 }

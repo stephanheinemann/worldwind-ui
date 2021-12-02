@@ -48,6 +48,7 @@ import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.ui.WorldwindPlanner;
+import com.cfar.swim.worldwind.ui.util.ResourceBundleLoader;
 import com.cfar.swim.worldwind.ui.world.WorldModel;
 
 import javafx.application.Platform;
@@ -65,16 +66,19 @@ import javafx.stage.FileChooser.ExtensionFilter;
  */
 public class SwimPresenter implements Initializable {
 	
-	// TODO: consider to move all visible UI text into properties files
-	
 	/** the file chooser open swim file title */
-	public static final String FILE_CHOOSER_TITLE_SWIM = "Open SWIM File";
+	public static final String FILE_CHOOSER_TITLE_SWIM =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("swim.dialog.file.title");
 	
 	/** the file chooser swim file description */
-	public static final String FILE_CHOOSER_SWIM = "SWIM Files";
+	public static final String FILE_CHOOSER_DESCRIPTION_SWIM =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("swim.dialog.file.description");
 	
 	/** the file chooser swim file extension */
-	public static final String FILE_CHOOSER_EXTENSION_SWIM = "*.xml";
+	@Inject
+	public static String swimFileExtension;
 	
 	/** the swim list of the swim view */
 	@FXML
@@ -148,8 +152,8 @@ public class SwimPresenter implements Initializable {
 		fileChooser.setTitle(SwimPresenter.FILE_CHOOSER_TITLE_SWIM);
 		fileChooser.getExtensionFilters().addAll(
 				new ExtensionFilter[] { new ExtensionFilter(
-						SwimPresenter.FILE_CHOOSER_SWIM,
-						SwimPresenter.FILE_CHOOSER_EXTENSION_SWIM)});
+						SwimPresenter.FILE_CHOOSER_DESCRIPTION_SWIM,
+						SwimPresenter.swimFileExtension)});
 		File file = fileChooser.showOpenDialog(null);
 		
 		if (null != file) {

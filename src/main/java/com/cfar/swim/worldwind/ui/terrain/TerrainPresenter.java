@@ -44,6 +44,7 @@ import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.ui.WorldwindPlanner;
+import com.cfar.swim.worldwind.ui.util.ResourceBundleLoader;
 import com.cfar.swim.worldwind.ui.world.WorldModel;
 
 import javafx.application.Platform;
@@ -61,16 +62,19 @@ import javafx.stage.FileChooser.ExtensionFilter;
  */
 public class TerrainPresenter implements Initializable {
 	
-	// TODO: consider to move all visible UI text into properties files
-	
 	/** the file chooser open terrain file title */
-	public static final String FILE_CHOOSER_TITLE_TERRAIN = "Open Terrain File";
+	public static final String FILE_CHOOSER_TITLE_TERRAIN =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("terrain.dialog.file.title");
 	
 	/** the file chooser terrain file description */
-	public static final String FILE_CHOOSER_TERRAIN = "Terrain Files";
+	public static final String FILE_CHOOSER_TERRAIN =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("terrain.dialog.file.description");
 	
 	/** the file chooser terrain file extension */
-	public static final String FILE_CHOOSER_EXTENSION_TERRAIN = "*.tif";
+	@Inject
+	public static String terrainFileExtension;
 	
 	/** the terrain list of the terrain view */
 	@FXML
@@ -142,7 +146,7 @@ public class TerrainPresenter implements Initializable {
 		fileChooser.getExtensionFilters().addAll(
 				new ExtensionFilter[] { new ExtensionFilter(
 						TerrainPresenter.FILE_CHOOSER_TERRAIN,
-						TerrainPresenter.FILE_CHOOSER_EXTENSION_TERRAIN)});
+						TerrainPresenter.terrainFileExtension)});
 		File file = fileChooser.showOpenDialog(null);
 		
 		if (null != file) {

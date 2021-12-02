@@ -32,6 +32,7 @@ package com.cfar.swim.worldwind.ui.plan.waypoint;
 import java.awt.image.BufferedImage;
 
 import com.cfar.swim.worldwind.planning.Waypoint;
+import com.cfar.swim.worldwind.ui.util.ResourceBundleLoader;
 
 import gov.nasa.worldwind.Configuration;
 import gov.nasa.worldwind.avlist.AVKey;
@@ -55,16 +56,24 @@ import javafx.scene.image.ImageView;
 public class WaypointDialog extends Dialog<Waypoint> {
 
 	/** the waypoint dialog title for addition */
-	public static final String TITLE_ADD = "Add Waypoint";
+	public static final String TITLE_ADD = ResourceBundleLoader
+			.getDictionaryBundle()
+			.getString("waypoint.dialog.add.title");
 	
 	/** the waypoint dialog header for addition */
-	public static final String HEADER_ADD = "Add a new waypoint";
+	public static final String HEADER_ADD = ResourceBundleLoader
+			.getDictionaryBundle()
+			.getString("waypoint.dialog.add.header");
 	
 	/** the waypoint dialog title for modification */
-	public static final String TITLE_EDIT = "Edit Waypoint";
+	public static final String TITLE_EDIT = ResourceBundleLoader
+			.getDictionaryBundle()
+			.getString("waypoint.dialog.edit.title");
 	
 	/** the waypoint dialog header for modification */
-	public static final String HEADER_EDIT = "Edit an existing waypoint";
+	public static final String HEADER_EDIT = ResourceBundleLoader
+			.getDictionaryBundle()
+			.getString("waypoint.dialog.edit.header");
 	
 	/** the waypoint latitude node identifier */
 	private static final String LATITUDE_ID = "#latitude";
