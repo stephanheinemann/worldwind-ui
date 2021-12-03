@@ -55,7 +55,7 @@ public class WorldModel {
 	public WorldModel() {
 		this.worldMode = WorldMode.VIEW;
 		this.prevWorldMode = WorldMode.VIEW;
-		this.viewMode = ViewMode.FIX;
+		this.viewMode = ViewMode.ENVIRONMENT_ABOVE;
 	}
 	
 	/**

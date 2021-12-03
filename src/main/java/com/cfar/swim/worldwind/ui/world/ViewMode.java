@@ -37,6 +37,7 @@ package com.cfar.swim.worldwind.ui.world;
  */
 public enum ViewMode {
 	FIX,
+	ENVIRONMENT_ABOVE,
 	PLANNED_ABOVE,
 	PLANNED_CHASE,
 	PLANNED_FPV,

@@ -489,7 +489,12 @@ public class WorldPresenter implements Initializable {
 					
 					if (view instanceof BasicOrbitView) {
 						BasicOrbitView basicOrbitView = (BasicOrbitView) view;
-						if (viewMode.equals(ViewMode.PLANNED_ABOVE)) {
+						if (viewMode.equals(ViewMode.ENVIRONMENT_ABOVE)) {
+							basicOrbitView.setCenterPosition(
+									scenario.getEnvironment().getCenterPosition());
+							basicOrbitView.setZoom(2d *
+									scenario.getEnvironment().getDiameter());
+						} else if (viewMode.equals(ViewMode.PLANNED_ABOVE)) {
 							if (scenario.hasAircraft()) {
 								basicOrbitView.setCenterPosition(
 										scenario.getAircraft().getReferencePosition());
@@ -1070,6 +1075,11 @@ public class WorldPresenter implements Initializable {
 					case FIX:
 						basicOrbitView = new BasicOrbitView();
 						basicOrbitView.setZoom(10000);
+						wwd.setView(basicOrbitView);
+						setViewMode(ViewMode.ENVIRONMENT_ABOVE);
+						break;
+					case ENVIRONMENT_ABOVE:
+						basicOrbitView = new BasicOrbitView();
 						wwd.setView(basicOrbitView);
 						setViewMode(ViewMode.PLANNED_ABOVE);
 						break;
