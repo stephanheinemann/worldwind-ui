@@ -1141,6 +1141,8 @@ public class WorldPresenter implements Initializable {
 						session.getManagerFactory().setSpecification(managerSpec);
 						manager = session.getManagerFactory().createInstance();
 						session.setManager(manager);
+					} else {
+						manager.setSourceScenario(session.getActiveScenario());
 					}
 					
 					setCommunications(manager);
