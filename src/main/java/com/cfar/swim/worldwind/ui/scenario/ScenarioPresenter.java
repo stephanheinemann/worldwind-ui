@@ -67,10 +67,15 @@ import javafx.util.StringConverter;
  */
 public class ScenarioPresenter implements Initializable {
 	
-	/** the file chooser open scenario file title */
-	public static final String FILE_CHOOSER_TITLE_SCENARIO =
+	/** the file chooser load scenario file title */
+	public static final String FILE_CHOOSER_TITLE_SCENARIO_LOAD =
 			ResourceBundleLoader.getDictionaryBundle()
-			.getString("scenario.dialog.file.title");
+			.getString("scenario.dialog.file.load.title");
+	
+	/** the file chooser save scenario file title */
+	public static final String FILE_CHOOSER_TITLE_SCENARIO_SAVE =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("scenario.dialog.file.save.title");
 	
 	/** the file chooser scenario file description */
 	public static final String FILE_CHOOSER_DESCRIPTION_SCENARIO =
@@ -180,7 +185,7 @@ public class ScenarioPresenter implements Initializable {
 	public void loadScenario() {
 		if (!this.scenarios.isEditable()) {
 			FileChooser fileChooser = new FileChooser();
-			fileChooser.setTitle(ScenarioPresenter.FILE_CHOOSER_TITLE_SCENARIO);
+			fileChooser.setTitle(ScenarioPresenter.FILE_CHOOSER_TITLE_SCENARIO_LOAD);
 			fileChooser.getExtensionFilters().addAll(
 					new ExtensionFilter[] { new ExtensionFilter(
 							ScenarioPresenter.FILE_CHOOSER_DESCRIPTION_SCENARIO,
@@ -217,7 +222,7 @@ public class ScenarioPresenter implements Initializable {
 			Scenario scenario = this.scenarios.getSelectionModel().getSelectedItem();
 			if (null != scenario) {
 				FileChooser fileChooser = new FileChooser();
-				fileChooser.setTitle(ScenarioPresenter.FILE_CHOOSER_TITLE_SCENARIO);
+				fileChooser.setTitle(ScenarioPresenter.FILE_CHOOSER_TITLE_SCENARIO_SAVE);
 				fileChooser.getExtensionFilters().addAll(
 						new ExtensionFilter[] { new ExtensionFilter(
 								ScenarioPresenter.FILE_CHOOSER_DESCRIPTION_SCENARIO,

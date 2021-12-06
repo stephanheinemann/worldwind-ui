@@ -66,10 +66,10 @@ import javafx.stage.FileChooser.ExtensionFilter;
  */
 public class SwimPresenter implements Initializable {
 	
-	/** the file chooser open swim file title */
-	public static final String FILE_CHOOSER_TITLE_SWIM =
+	/** the file chooser load swim file title */
+	public static final String FILE_CHOOSER_TITLE_SWIM_LOAD =
 			ResourceBundleLoader.getDictionaryBundle()
-			.getString("swim.dialog.file.title");
+			.getString("swim.dialog.file.load.title");
 	
 	/** the file chooser swim file description */
 	public static final String FILE_CHOOSER_DESCRIPTION_SWIM =
@@ -149,7 +149,7 @@ public class SwimPresenter implements Initializable {
 	 */
 	public void addSwimItem() {
 		FileChooser fileChooser = new FileChooser();
-		fileChooser.setTitle(SwimPresenter.FILE_CHOOSER_TITLE_SWIM);
+		fileChooser.setTitle(SwimPresenter.FILE_CHOOSER_TITLE_SWIM_LOAD);
 		fileChooser.getExtensionFilters().addAll(
 				new ExtensionFilter[] { new ExtensionFilter(
 						SwimPresenter.FILE_CHOOSER_DESCRIPTION_SWIM,

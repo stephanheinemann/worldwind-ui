@@ -62,10 +62,10 @@ import javafx.stage.FileChooser.ExtensionFilter;
  */
 public class TerrainPresenter implements Initializable {
 	
-	/** the file chooser open terrain file title */
-	public static final String FILE_CHOOSER_TITLE_TERRAIN =
+	/** the file chooser load terrain file title */
+	public static final String FILE_CHOOSER_TITLE_TERRAIN_LOAD =
 			ResourceBundleLoader.getDictionaryBundle()
-			.getString("terrain.dialog.file.title");
+			.getString("terrain.dialog.file.load.title");
 	
 	/** the file chooser terrain file description */
 	public static final String FILE_CHOOSER_TERRAIN =
@@ -142,7 +142,7 @@ public class TerrainPresenter implements Initializable {
 	 */
 	public void addTerrainItem() {
 		FileChooser fileChooser = new FileChooser();
-		fileChooser.setTitle(TerrainPresenter.FILE_CHOOSER_TITLE_TERRAIN);
+		fileChooser.setTitle(TerrainPresenter.FILE_CHOOSER_TITLE_TERRAIN_LOAD);
 		fileChooser.getExtensionFilters().addAll(
 				new ExtensionFilter[] { new ExtensionFilter(
 						TerrainPresenter.FILE_CHOOSER_TERRAIN,
