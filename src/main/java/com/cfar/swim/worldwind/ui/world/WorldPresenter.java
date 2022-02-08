@@ -56,6 +56,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import com.cfar.swim.worldwind.aircraft.Aircraft;
+import com.cfar.swim.worldwind.aircraft.Capabilities;
 import com.cfar.swim.worldwind.connections.Communication;
 import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.connections.DatalinkTracker;
@@ -71,6 +72,7 @@ import com.cfar.swim.worldwind.planning.CostInterval;
 import com.cfar.swim.worldwind.planning.Trajectory;
 import com.cfar.swim.worldwind.planning.Waypoint;
 import com.cfar.swim.worldwind.registries.Specification;
+import com.cfar.swim.worldwind.registries.aircraft.AircraftProperties;
 import com.cfar.swim.worldwind.render.annotations.ControlAnnotation;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
@@ -995,9 +997,12 @@ public class WorldPresenter implements Initializable {
 						
 						if (datalink.isConnected() && session.getActiveScenario().hasTrajectory()) {
 							// TODO: use datalink communication class, flight (envelope) setup
-							datalink.disableAircraftSafety();
-							datalink.armAircraft();
 							datalink.takeOff();
+							AircraftProperties aircraftProperties = (AircraftProperties)
+									session.getSetup().getAircraftSpecification().getProperties();
+							datalink.setGroundSpeed((int) Math.round(aircraftProperties.getCruiseSpeed()));
+							datalink.setClimbSpeed((int) Math.round(aircraftProperties.getCruiseClimbSpeed()));
+							datalink.setDescentSpeed((int) Math.round(aircraftProperties.getCruiseDescentSpeed()));
 						} else {
 							alert(
 								AlertType.ERROR,
@@ -1353,10 +1358,14 @@ public class WorldPresenter implements Initializable {
 									timingError, -timingError,
 									clearance);
 							if (clearance.isOk()) {
-								// TODO: proper sequence
-								this.getConnection().disableAircraftSafety();
-								this.getConnection().armAircraft();
 								this.getConnection().takeOff();
+								Capabilities capabilities = tracker.getAircraft().getCapabilities();
+								this.getConnection().setGroundSpeed((int)
+										Math.round(capabilities.getCruiseSpeed()));
+								this.getConnection().setClimbSpeed((int)
+										Math.round(capabilities.getCruiseClimbSpeed()));
+								this.getConnection().setDescentSpeed((int)
+										Math.round(capabilities.getCruiseDescentSpeed()));
 							}
 							performed = true;
 						}
