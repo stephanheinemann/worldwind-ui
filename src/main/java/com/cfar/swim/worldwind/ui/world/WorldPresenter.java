@@ -1000,7 +1000,8 @@ public class WorldPresenter implements Initializable {
 							datalink.takeOff();
 							AircraftProperties aircraftProperties = (AircraftProperties)
 									session.getSetup().getAircraftSpecification().getProperties();
-							datalink.setGroundSpeed((int) Math.round(aircraftProperties.getCruiseSpeed()));
+							//datalink.setGroundSpeed((int) Math.round(aircraftProperties.getCruiseSpeed()));
+							datalink.setAirspeed((int) Math.round(aircraftProperties.getCruiseSpeed()));
 							datalink.setClimbSpeed((int) Math.round(aircraftProperties.getCruiseClimbSpeed()));
 							datalink.setDescentSpeed((int) Math.round(aircraftProperties.getCruiseDescentSpeed()));
 						} else {
@@ -1360,7 +1361,9 @@ public class WorldPresenter implements Initializable {
 							if (clearance.isOk()) {
 								this.getConnection().takeOff();
 								Capabilities capabilities = tracker.getAircraft().getCapabilities();
-								this.getConnection().setGroundSpeed((int)
+								//this.getConnection().setGroundSpeed((int)
+								//		Math.round(capabilities.getCruiseSpeed()));
+								this.getConnection().setAirspeed((int)
 										Math.round(capabilities.getCruiseSpeed()));
 								this.getConnection().setClimbSpeed((int)
 										Math.round(capabilities.getCruiseClimbSpeed()));
