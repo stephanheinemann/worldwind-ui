@@ -1348,29 +1348,38 @@ public class WorldPresenter implements Initializable {
 					
 					@Override
 					public synchronized void perform() {
-						if (this.getConnection().isConnected() && !performed) {
-							long timingError = tracker.getMaxTakeOffError()
-									.getTimingError().getSeconds();
-							PlannerAlertResult clearance = new PlannerAlertResult();
-							countdownAlert(
-									AlertType.CONFIRMATION,
-									PlannerAlert.ALERT_TITLE_TAKEOFF_CONFIRM,
-									PlannerAlert.ALERT_HEADER_TAKEOFF_CONFIRM,
-									timingError, -timingError,
-									clearance);
-							if (clearance.isOk()) {
-								this.getConnection().takeOff();
-								Capabilities capabilities = tracker.getAircraft().getCapabilities();
-								//this.getConnection().setGroundSpeed((int)
-								//		Math.round(capabilities.getCruiseSpeed()));
-								this.getConnection().setAirspeed((int)
-										Math.round(capabilities.getCruiseSpeed()));
-								this.getConnection().setClimbSpeed((int)
-										Math.round(capabilities.getCruiseClimbSpeed()));
-								this.getConnection().setDescentSpeed((int)
-										Math.round(capabilities.getCruiseDescentSpeed()));
-							}
-							performed = true;
+						if (!this.isCommunicating() && !performed) {
+							this.setCommunicating(true);
+							this.getCommunicator().execute(new Runnable() {
+								@Override
+								public void run() {
+									if (getConnection().isConnected()) {
+										long timingError = tracker.getMaxTakeOffError()
+												.getTimingError().getSeconds();
+										PlannerAlertResult clearance = new PlannerAlertResult();
+										countdownAlert(
+												AlertType.CONFIRMATION,
+												PlannerAlert.ALERT_TITLE_TAKEOFF_CONFIRM,
+												PlannerAlert.ALERT_HEADER_TAKEOFF_CONFIRM,
+												timingError, -timingError,
+												clearance);
+										if (clearance.isOk()) {
+											getConnection().takeOff();
+											Capabilities capabilities = tracker.getAircraft().getCapabilities();
+											//this.getConnection().setGroundSpeed((int)
+											//		Math.round(capabilities.getCruiseSpeed()));
+											getConnection().setAirspeed((int)
+													Math.round(capabilities.getCruiseSpeed()));
+											getConnection().setClimbSpeed((int)
+													Math.round(capabilities.getCruiseClimbSpeed()));
+											getConnection().setDescentSpeed((int)
+													Math.round(capabilities.getCruiseDescentSpeed()));
+											performed = true;
+										}
+									}
+									setCommunicating(false);
+								}
+							});
 						}
 					}
 				});
@@ -1382,19 +1391,27 @@ public class WorldPresenter implements Initializable {
 					
 					@Override
 					public synchronized void perform() {
-						if (this.getConnection().isConnected() && !performed) {
-							PlannerAlertResult clearance = new PlannerAlertResult();
-							alert(
-								AlertType.CONFIRMATION,
-								PlannerAlert.ALERT_TITLE_LAND_CONFIRM,
-								PlannerAlert.ALERT_HEADER_LAND_CONFIRM,
-								PlannerAlert.ALERT_CONTENT_LAND_CONFIRM,
-								clearance);
-							if (clearance.isOk()) {
-								// TODO: proper sequence
-								this.getConnection().land();
-							}
-							performed = true;
+						if (!this.isCommunicating() && !performed) {
+							this.setCommunicating(true);
+							this.getCommunicator().execute(new Runnable() {
+								@Override
+								public void run() {
+									if (getConnection().isConnected()) {
+										PlannerAlertResult clearance = new PlannerAlertResult();
+										alert(
+											AlertType.CONFIRMATION,
+											PlannerAlert.ALERT_TITLE_LAND_CONFIRM,
+											PlannerAlert.ALERT_HEADER_LAND_CONFIRM,
+											PlannerAlert.ALERT_CONTENT_LAND_CONFIRM,
+											clearance);
+										if (clearance.isOk()) {
+											getConnection().land();
+											performed = true;
+										}
+									}
+									setCommunicating(false);
+								}
+							});
 						}
 					}
 				});
@@ -1406,49 +1423,64 @@ public class WorldPresenter implements Initializable {
 					
 					@Override
 					public synchronized void perform() {
-						if (this.getConnection().isConnected() && !performed) {
-							PlannerAlertResult clearance = new PlannerAlertResult();
-							alert(
-								AlertType.WARNING,
-								PlannerAlert.ALERT_TITLE_LAND_CONFIRM,
-								PlannerAlert.ALERT_HEADER_LAND_CONFIRM,
-								PlannerAlert.ALERT_CONTENT_LAND_CONFIRM,
-								clearance);
-							if (clearance.isOk()) {
-								// TODO: proper sequence
-								this.getConnection().land();
-							}
+						if (!this.isCommunicating() && !performed) {
+							this.setCommunicating(true);
+							this.getCommunicator().execute(new Runnable() {
+								@Override
+								public void run() {
+									if (getConnection().isConnected()) {
+										PlannerAlertResult clearance = new PlannerAlertResult();
+										alert(
+											AlertType.WARNING,
+											PlannerAlert.ALERT_TITLE_LAND_CONFIRM,
+											PlannerAlert.ALERT_HEADER_LAND_CONFIRM,
+											PlannerAlert.ALERT_CONTENT_LAND_CONFIRM,
+											clearance);
+										if (clearance.isOk()) {
+											getConnection().land();
+											performed = true;
+										}
+									}
+									setCommunicating(false);
+								}
+							});
 						}
-						performed = true;
 					}
 				});
 		
 		// establish datalink communication
 		tracker.setEstablishDatalink(
 				new Communication<Datalink>(tracker.getDatalink()) {
-
 					@Override
 					public synchronized void perform() {
-						if (!this.getConnection().isConnected()
-								|| !this.getConnection().isMonitoring()) {
-							PlannerAlertResult establish = new PlannerAlertResult();
-							alert(
-								AlertType.WARNING,
-								PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
-								PlannerAlert.ALERT_HEADER_DATALINK_INVALID,
-								PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
-								establish);
-							if (establish.isOk()) {
-								// TODO: proper sequence
-								if (!this.getConnection().isConnected()) {
-									this.getConnection().connect();
+						if (!this.isCommunicating()) {
+							this.setCommunicating(true);
+							this.getCommunicator().execute(new Runnable() {
+								@Override
+								public void run() {
+									if (!getConnection().isConnected()
+											|| !getConnection().isMonitoring()) {
+										PlannerAlertResult establish = new PlannerAlertResult();
+										alert(
+											AlertType.WARNING,
+											PlannerAlert.ALERT_TITLE_DATALINK_INVALID,
+											PlannerAlert.ALERT_HEADER_DATALINK_INVALID,
+											PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
+											establish);
+										if (establish.isOk()) {
+											if (getConnection().isConnected()) {
+												getConnection().connect();
+											}
+											if (getConnection().isConnected()) {
+												getConnection().addTrackChangeListener(trackCl);
+												getConnection().startMonitoring();
+											}
+											frameControl(datalinkControl, getConnection().isConnected());
+										}
+									}
+									setCommunicating(false);
 								}
-								if (this.getConnection().isConnected()) {
-									this.getConnection().addTrackChangeListener(trackCl);
-									this.getConnection().startMonitoring();
-								}
-								frameControl(datalinkControl, this.getConnection().isConnected());
-							}
+							});
 						}
 					}
 					
