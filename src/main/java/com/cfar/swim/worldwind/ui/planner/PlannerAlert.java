@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016, Stephan Heinemann (UVic Center for Aerospace Research)
+ * Copyright (c) 2021, Stephan Heinemann (UVic Center for Aerospace Research)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -29,6 +29,8 @@
  */
 package com.cfar.swim.worldwind.ui.planner;
 
+import com.cfar.swim.worldwind.ui.util.ResourceBundleLoader;
+
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.layout.Region;
@@ -42,55 +44,96 @@ import javafx.stage.StageStyle;
  *
  */
 public class PlannerAlert extends Alert {
-
+	
+	/** the title of an invalid properties setup alert */
+	public static final String ALERT_TITLE_PROPERTIES_INVALID =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("alert.invalid.properties.title");
+	
+	/** the header of an invalid properties setup alert */
+	public static final String ALERT_HEADER_PROPERTIES_INVALID =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("alert.invalid.properties.header");
+	
+	/** the content of an invalid properties setup alert */
+	public static final String ALERT_CONTENT_PROPERTIES_INVALID =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("alert.invalid.properties.content");
+	
 	/** the title of an invalid planner setup alert */
-	public static final String ALERT_TITLE_PLANNER_INVALID = "Planner Invalid";
+	public static final String ALERT_TITLE_PLANNER_INVALID =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("alert.invalid.planner.title");
 	
 	/** the header of an invalid planner setup alert */
-	public static final String ALERT_HEADER_PLANNER_INVALID = "The planner is invalid.";
+	public static final String ALERT_HEADER_PLANNER_INVALID =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("alert.invalid.planner.header");
 	
 	/** the content of an invalid planner setup alert */
 	public static final String ALERT_CONTENT_PLANNER_INVALID =
-			"Please check if the aircraft, environment and waypoints are supported.";
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("alert.invalid.planner.content");
 	
 	/** the title of an invalid SWIM setup alert */
-	public static final String ALERT_TITLE_SWIM_INVALID = "SWIM Invalid";
+	public static final String ALERT_TITLE_SWIM_INVALID =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("alert.invalid.swim.title");
 	
 	/** the header of an invalid SWIM setup alert */
-	public static final String ALERT_HEADER_SWIM_INVALID = "The SWIM connection is invalid.";
+	public static final String ALERT_HEADER_SWIM_INVALID =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("alert.invalid.swim.header");
 	
 	/** the content of an invalid SWIM setup alert */
-	public static final String ALERT_CONTENT_SWIM_INVALID = "Please check the SWIM connection setup.";
+	public static final String ALERT_CONTENT_SWIM_INVALID =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("alert.invalid.swim.content");
 	
 	/** the title of an invalid datalink setup alert */
-	public static final String ALERT_TITLE_DATALINK_INVALID = "Datalink Invalid";
+	public static final String ALERT_TITLE_DATALINK_INVALID =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("alert.invalid.datalink.title");
 	
 	/** the header of an invalid datalink setup alert */
-	public static final String ALERT_HEADER_DATALINK_INVALID = "The datalink or trajectory are invalid.";
+	public static final String ALERT_HEADER_DATALINK_INVALID =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("alert.invalid.datalink.header");
 	
 	/** the content of an invalid datalink setup alert */
 	public static final String ALERT_CONTENT_DATALINK_INVALID =
-			"Please check the datalink setup and the computed trajectory.";
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("alert.invalid.datalink.content");
 	
 	/** the title of a take-off confirmation alert */
-	public static final String ALERT_TITLE_TAKEOFF_CONFIRM = "Confirm Take-Off";
+	public static final String ALERT_TITLE_TAKEOFF_CONFIRM =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("alert.confirm.takeoff.title");
 	
 	/** the header of a take-off confirmation alert */
-	public static final String ALERT_HEADER_TAKEOFF_CONFIRM = "Confirm the take-off clearance.";
+	public static final String ALERT_HEADER_TAKEOFF_CONFIRM =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("alert.confirm.takeoff.header");
 	
 	/** the content of a take-off confirmation alert */
 	public static final String ALERT_CONTENT_TAKEOFF_CONFIRM =
-			"Please confirm the take-off clearance. The aircraft is about to take-off.";
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("alert.confirm.takeoff.content");
 	
 	/** the title of a land confirmation alert */
-	public static final String ALERT_TITLE_LAND_CONFIRM = "Confirm Landing";
+	public static final String ALERT_TITLE_LAND_CONFIRM =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("alert.confirm.land.title");
 	
 	/** the header of a land confirmation alert */
-	public static final String ALERT_HEADER_LAND_CONFIRM = "Confirm the landing clearance.";
+	public static final String ALERT_HEADER_LAND_CONFIRM =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("alert.confirm.land.header");
 	
 	/** the content of a land confirmation alert */
 	public static final String ALERT_CONTENT_LAND_CONFIRM =
-			"Please confirm the landing clearance. The aircraft is about to land.";
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("alert.confirm.land.content");
 	
 	/**
 	 * Constructs a new planner alert with a specified alert type.

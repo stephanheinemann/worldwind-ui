@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016, Stephan Heinemann (UVic Center for Aerospace Research)
+ * Copyright (c) 2021, Stephan Heinemann (UVic Center for Aerospace Research)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -40,9 +40,11 @@ import com.cfar.swim.worldwind.ui.environment.EnvironmentView;
 import com.cfar.swim.worldwind.ui.plan.PlanView;
 import com.cfar.swim.worldwind.ui.scenario.ScenarioView;
 import com.cfar.swim.worldwind.ui.swim.SwimView;
+import com.cfar.swim.worldwind.ui.terrain.TerrainView;
 import com.cfar.swim.worldwind.ui.threshold.ThresholdView;
 import com.cfar.swim.worldwind.ui.time.TimeView;
 import com.cfar.swim.worldwind.ui.timer.TimerView;
+import com.cfar.swim.worldwind.ui.util.ResourceBundleLoader;
 import com.cfar.swim.worldwind.ui.world.WorldModel;
 import com.cfar.swim.worldwind.ui.world.WorldView;
 
@@ -88,21 +90,24 @@ public class PlannerPresenter implements Initializable {
 	@FXML
 	private ProgressIndicator progressIndicator;
 	
-	/** the world model of the world presenter */
+	/** the world model of this planner presenter */
 	@Inject
 	private WorldModel worldModel;
 	
 	/** the title of the about dialog (planner alert) */
-	@Inject
-	private String aboutTitle;
+	private static final String ABOUT_TITLE =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("application.dialog.about.title");
 	
 	/** the header of the about dialog (planner alert) */ 
-	@Inject
-	private String aboutHeader;
+	private static final String ABOUT_HEADER =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("application.dialog.about.header");
 	
 	/** the content of the about dialog (planner alert) */
-	@Inject
-	private String aboutContent;
+	private static final String ABOUT_CONTENT =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("application.dialog.about.content");
 	
 	/**
 	 * Initializes this planner presenter.
@@ -135,6 +140,9 @@ public class PlannerPresenter implements Initializable {
 		SwimView swimView = new SwimView();
 		this.swimAccordion.getPanes().add(swimView.getView());
 		
+		TerrainView terrainView = new TerrainView();
+		this.swimAccordion.getPanes().add(terrainView.getView());
+		
 		ScenarioView scenarioView = new ScenarioView();
 		this.plannerAccordion.getPanes().add(scenarioView.getView());
 		
@@ -162,9 +170,9 @@ public class PlannerPresenter implements Initializable {
 	 */
 	public void about() {
 		PlannerAlert about = new PlannerAlert(AlertType.INFORMATION);
-		about.setTitle(this.aboutTitle);
-		about.setHeaderText(this.aboutHeader);
-		about.setContentText(this.aboutContent);
+		about.setTitle(PlannerPresenter.ABOUT_TITLE);
+		about.setHeaderText(PlannerPresenter.ABOUT_HEADER);
+		about.setContentText(PlannerPresenter.ABOUT_CONTENT);
 		about.showAndWait();
 	}
 	
@@ -191,10 +199,13 @@ public class PlannerPresenter implements Initializable {
 				public void run() {
 					switch (worldModel.getWorldMode()) {
 					case PLANNING:
-					case LOADING:
 					case UPLOADING:
 					case LAUNCHING:
 					case LANDING:
+					case MANAGING:
+					case TERMINATING:
+					case LOADING:
+					case SAVING:
 						progressBar.setProgress(-1d);
 						progressIndicator.toFront();
 						progressIndicator.setVisible(true);

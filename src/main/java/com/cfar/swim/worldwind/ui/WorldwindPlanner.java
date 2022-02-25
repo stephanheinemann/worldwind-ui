@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016, Stephan Heinemann (UVic Center for Aerospace Research)
+ * Copyright (c) 2021, Stephan Heinemann (UVic Center for Aerospace Research)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -33,6 +33,7 @@ import com.airhacks.afterburner.injection.Injector;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.ui.planner.PlannerView;
+import com.cfar.swim.worldwind.ui.util.ResourceBundleLoader;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -49,7 +50,9 @@ import javafx.stage.Stage;
 public class WorldwindPlanner extends Application {
 
 	/** the title (and session identifier) of this application */
-	public static final String APPLICATION_TITLE = "Worldwind Planner";
+	public static final String APPLICATION_TITLE = ResourceBundleLoader
+			.getDictionaryBundle()
+			.getString("application.title");
 	
 	/**
 	 * Starts this planner application.
@@ -67,7 +70,13 @@ public class WorldwindPlanner extends Application {
 			Map<Object, Object> customProperties = new HashMap<>();
 	        customProperties.put("date", date);
 	        Injector.setConfigurationSource(customProperties::get);
-	        */
+			Injector.setConfigurationSource(o -> {
+				if (o instanceof String) {
+					return ResourceBundleLoader.getDictionaryBundle().getString((String) o);
+				} else {
+					return null;
+				}});
+			*/
 			SessionManager.getInstance().addSession(new Session(WorldwindPlanner.APPLICATION_TITLE));
 			PlannerView plannerView = new PlannerView();
 			Scene scene = new Scene(plannerView.getView());

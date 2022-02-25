@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016, Stephan Heinemann (UVic Center for Aerospace Research)
+ * Copyright (c) 2021, Stephan Heinemann (UVic Center for Aerospace Research)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -32,22 +32,24 @@ package com.cfar.swim.worldwind.ui.swim;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
-import java.io.FileInputStream;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-import org.xml.sax.InputSource;
+import javax.inject.Inject;
 
-import com.cfar.swim.worldwind.iwxxm.IwxxmLoader;
+import com.cfar.swim.worldwind.data.SwimLoader;
+import com.cfar.swim.worldwind.data.SwimResource;
 import com.cfar.swim.worldwind.render.Obstacle;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.ui.WorldwindPlanner;
+import com.cfar.swim.worldwind.ui.util.ResourceBundleLoader;
+import com.cfar.swim.worldwind.ui.world.WorldModel;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -64,20 +66,27 @@ import javafx.stage.FileChooser.ExtensionFilter;
  */
 public class SwimPresenter implements Initializable {
 	
-	// TODO: consider to move all visible UI text into properties files
-	
-	/** the file chooser open swim file title */
-	public static final String FILE_CHOOSER_TITLE_SWIM = "Open SWIM File";
+	/** the file chooser load swim file title */
+	public static final String FILE_CHOOSER_TITLE_SWIM_LOAD =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("swim.dialog.file.load.title");
 	
 	/** the file chooser swim file description */
-	public static final String FILE_CHOOSER_SWIM = "SWIM Files";
+	public static final String FILE_CHOOSER_DESCRIPTION_SWIM =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("swim.dialog.file.description");
 	
 	/** the file chooser swim file extension */
-	public static final String FILE_CHOOSER_EXTENSION_SWIM = "*.xml";
+	@Inject
+	public static String swimFileExtension;
 	
 	/** the swim list of the swim view */
 	@FXML
 	private ListView<String> swimList;
+	
+	/** the world model of this swim presenter */
+	@Inject
+	private WorldModel worldModel;
 	
 	/** the active scenario of this swim presenter */
 	private Scenario scenario = null;
@@ -86,7 +95,7 @@ public class SwimPresenter implements Initializable {
 	private ObstaclesChangeListener ocl = new ObstaclesChangeListener();
 	
 	/** the executor of this swim presenter */
-	private final Executor executor = Executors.newSingleThreadScheduledExecutor();
+	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 	
 	/**
 	 * Initializes this swim presenter.
@@ -120,14 +129,13 @@ public class SwimPresenter implements Initializable {
 	 * Initializes the obstacles of this swim presenter.
 	 */
 	private void initObstacles() {
+		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+		Set<Obstacle> obstacles = session.getActiveScenario().getObstacles();
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
 				swimList.getItems().clear();
-				Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-				swimList.getItems().addAll(
-					session.getActiveScenario().getObstacles()
-						.stream()
+				swimList.getItems().addAll(obstacles.stream()
 						.map(o -> o.getCostInterval().getId())
 						.distinct()
 						.collect(Collectors.toSet()));
@@ -140,41 +148,28 @@ public class SwimPresenter implements Initializable {
 	 * Adds a swim item to the swim view.
 	 */
 	public void addSwimItem() {
-		Platform.runLater(new Runnable() {
-			@Override
-			public void run() {
-				FileChooser fileChooser = new FileChooser();
-				fileChooser.setTitle(SwimPresenter.FILE_CHOOSER_TITLE_SWIM);
-				fileChooser.getExtensionFilters().addAll(
-						new ExtensionFilter[] { new ExtensionFilter(
-								SwimPresenter.FILE_CHOOSER_SWIM,
-								SwimPresenter.FILE_CHOOSER_EXTENSION_SWIM)});
-				File file = fileChooser.showOpenDialog(null);
-				
-				if (null != file) {
-					// TODO: this and other concurrent scenario modifications
-					// need to be controlled by a scenario executor
-					// TODO: status and progress bar available to all presenters
-					executor.execute(new Runnable() {
-						@Override
-						public void run() {
-							try {
-								//setWorldMode(WorldMode.LOADING);
-								// TODO: generic SWIM loader
-								IwxxmLoader loader = new IwxxmLoader();
-								Set<Obstacle> obstacles = loader.load(new InputSource(new FileInputStream(file)));
-								for (Obstacle obstacle : obstacles) {
-									scenario.addObstacle(obstacle);
-								}
-								//setWorldMode(WorldMode.VIEW);
-							} catch (Exception e) {
-								e.printStackTrace();
-							}
-						}
-					});
+		FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle(SwimPresenter.FILE_CHOOSER_TITLE_SWIM_LOAD);
+		fileChooser.getExtensionFilters().addAll(
+				new ExtensionFilter[] { new ExtensionFilter(
+						SwimPresenter.FILE_CHOOSER_DESCRIPTION_SWIM,
+						SwimPresenter.swimFileExtension)});
+		File file = fileChooser.showOpenDialog(null);
+		
+		if (null != file) {
+			executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					if (worldModel.load()) {
+						SwimResource resource = new SwimResource(file.toURI());
+						SwimLoader loader = new SwimLoader();
+						Set<Obstacle> obstacles = loader.load(resource);
+						scenario.submitAddObstacles(obstacles);
+						worldModel.loaded();
+					}
 				}
-			}
-		});
+			});
+		}
 	}
 	
 	/**
@@ -182,20 +177,29 @@ public class SwimPresenter implements Initializable {
 	 */
 	public void removeSwimItem() {
 		String swimId = swimList.getSelectionModel().getSelectedItem();
-		if (null != swimId) {
-			scenario.removeObstacles(swimId);
-			swimList.getItems().remove(swimId);
-			swimList.refresh();
-		}
+		this.executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				if (null != swimId) {
+					Set<Obstacle> obstacles = scenario.getObstacles().stream()
+							.filter(o -> o.getCostInterval().getId().equals(swimId))
+							.collect(Collectors.toSet());
+					scenario.submitRemoveObstacles(obstacles);
+				}
+			}
+		});
 	}
 	
 	/**
 	 * Removes all swim items from the swim view.
 	 */
 	public void clearSwimItems() {
-		scenario.clearObstacles();
-		swimList.getItems().clear();
-		swimList.refresh();
+		this.executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				scenario.submitClearObstacles();
+			}
+		});
 	}
 	
 	/**
@@ -203,9 +207,17 @@ public class SwimPresenter implements Initializable {
 	 */
 	public void enableSwimItem() {
 		String swimId = swimList.getSelectionModel().getSelectedItem();
-		if (null != swimId) {
-			scenario.enableObstacles(swimId);
-		}
+		this.executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				if (null != swimId) {
+					Set<Obstacle> obstacles = scenario.getObstacles().stream()
+							.filter(o -> o.getCostInterval().getId().equals(swimId))
+							.collect(Collectors.toSet());
+					scenario.submitEnableObstacles(obstacles);
+				}
+			}
+		});
 	}
 	
 	/**
@@ -213,9 +225,17 @@ public class SwimPresenter implements Initializable {
 	 */
 	public void disableSwimItem() {
 		String swimId = swimList.getSelectionModel().getSelectedItem();
-		if (null != swimId) {
-			scenario.disableObstacles(swimId);
-		}
+		this.executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				if (null != swimId) {
+					Set<Obstacle> obstacles = scenario.getObstacles().stream()
+							.filter(o -> o.getCostInterval().getId().equals(swimId))
+							.collect(Collectors.toSet());
+					scenario.submitDisableObstacles(obstacles);
+				}
+			}
+		});
 	}
 	
 	/**

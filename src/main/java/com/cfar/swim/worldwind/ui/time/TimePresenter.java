@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016, Stephan Heinemann (UVic Center for Aerospace Research)
+ * Copyright (c) 2021, Stephan Heinemann (UVic Center for Aerospace Research)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -37,6 +37,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ResourceBundle;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
@@ -73,6 +75,9 @@ public class TimePresenter implements Initializable {
 	
 	/** the active scenario of this time presenter */
 	private Scenario scenario = null;
+	
+	/** the executor of this time presenter */
+	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 	
 	/**
 	 * Initializes this time presenter.
@@ -114,10 +119,11 @@ public class TimePresenter implements Initializable {
 	 * Initializes the time of this time presenter.
 	 */
 	public void initTime() {
+		LocalDateTime localDateTime = scenario.getTime().toLocalDateTime();
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				picker.setLocalDateTime(scenario.getTime().toLocalDateTime());
+				picker.setLocalDateTime(localDateTime);
 				picker.layout();
 			}
 		});
@@ -140,9 +146,15 @@ public class TimePresenter implements Initializable {
 		 */
 		@Override
 		public Boolean call(LocalDateTime localDateTime) {
-			if ((null != localDateTime) && !scenario.isTimed()) {
-				scenario.setTime(ZonedDateTime.of(localDateTime, ZoneId.of("UTC")));
-			}
+			executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					if ((null != localDateTime) && !scenario.isTimed()) {
+						scenario.setTime(ZonedDateTime.of(localDateTime, ZoneId.of("UTC")));
+					}
+				}
+			});
+			
 			return true;
 		}
 	}

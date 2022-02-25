@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016, Stephan Heinemann (UVic Center for Aerospace Research)
+ * Copyright (c) 2021, Stephan Heinemann (UVic Center for Aerospace Research)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -37,6 +37,7 @@ package com.cfar.swim.worldwind.ui.world;
  */
 public enum ViewMode {
 	FIX,
+	ENVIRONMENT_ABOVE,
 	PLANNED_ABOVE,
 	PLANNED_CHASE,
 	PLANNED_FPV,

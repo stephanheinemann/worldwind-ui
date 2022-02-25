@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016, Stephan Heinemann (UVic Center for Aerospace Research)
+ * Copyright (c) 2021, Stephan Heinemann (UVic Center for Aerospace Research)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -49,10 +49,12 @@ import javafx.scene.image.ImageView;
 public class SplashPresenter implements Initializable {
 	
 	/** the UVic logo of the splash view */
-	@Inject private String uvicLogo;
+	@Inject
+	private String uvicLogo;
 	
 	/** the CfAR logo of the splash view */
-	@Inject private String cfarLogo;
+	@Inject
+	private String cfarLogo;
 	
 	/** the UVic image view of the splash view */
 	@FXML

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016, Stephan Heinemann (UVic Center for Aerospace Research)
+ * Copyright (c) 2021, Stephan Heinemann (UVic Center for Aerospace Research)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -41,8 +41,11 @@ public enum WorldMode {
 	ENVIRONMENT,
 	WAYPOINT,
 	PLANNING,
-	LOADING,
 	UPLOADING,
 	LAUNCHING,
-	LANDING
+	LANDING,
+	MANAGING,
+	TERMINATING,
+	LOADING,
+	SAVING
 }

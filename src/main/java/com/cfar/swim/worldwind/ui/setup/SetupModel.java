@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016, Stephan Heinemann (UVic Center for Aerospace Research)
+ * Copyright (c) 2021, Stephan Heinemann (UVic Center for Aerospace Research)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -29,11 +29,14 @@
  */
 package com.cfar.swim.worldwind.ui.setup;
 
-import com.cfar.swim.worldwind.ai.Planner;
+import javax.validation.Valid;
+
 import com.cfar.swim.worldwind.aircraft.Aircraft;
 import com.cfar.swim.worldwind.connections.Datalink;
 import com.cfar.swim.worldwind.connections.SwimConnection;
-import com.cfar.swim.worldwind.planning.Environment;
+import com.cfar.swim.worldwind.environments.Environment;
+import com.cfar.swim.worldwind.managers.AutonomicManager;
+import com.cfar.swim.worldwind.planners.Planner;
 import com.cfar.swim.worldwind.registries.Properties;
 
 /**
@@ -48,19 +51,28 @@ import com.cfar.swim.worldwind.registries.Properties;
 public class SetupModel {
 	
 	/** the aircraft properties of this setup model */
+	@Valid
 	private Properties<Aircraft> aircraftProperties = null;
 	
 	/** the environment properties of this setup model */
+	@Valid
 	private Properties<Environment> environmentProperties = null;
 	
 	/** the planner properties of this setup model */
+	@Valid
 	private Properties<Planner> plannerProperties = null;
 	
 	/** the SWIM connection properties of this setup model */
+	@Valid
 	private Properties<SwimConnection> swimConnectionProperties = null;
 	
 	/** the datalink properties of this setup model */
+	@Valid
 	private Properties<Datalink> datalinkProperties = null;
+	
+	/** the manager properties of this setup model */
+	@Valid
+	private Properties<AutonomicManager> managerProperties = null;
 	
 	/**
 	 * Gets the aircraft properties of this setup model.
@@ -150,6 +162,24 @@ public class SetupModel {
 	 */
 	public void setDatalinkProperties(Properties<Datalink> datalinkProperties) {
 		this.datalinkProperties = datalinkProperties;
+	}
+	
+	/**
+	 * Gets the manager properties of this setup model.
+	 * 
+	 * @return the manager properties of this setup model
+	 */
+	public Properties<AutonomicManager> getManagerProperties() {
+		return this.managerProperties;
+	}
+	
+	/**
+	 * Sets the manager properties of this setup model.
+	 * 
+	 * @param managerProperties the manager properties of this setup model
+	 */
+	public void setManagerProperties(Properties<AutonomicManager> managerProperties) {
+		this.managerProperties = managerProperties;
 	}
 	
 }

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2016, Stephan Heinemann (UVic Center for Aerospace Research)
+# Copyright (c) 2021, Stephan Heinemann (UVic Center for Aerospace Research)
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without modification,

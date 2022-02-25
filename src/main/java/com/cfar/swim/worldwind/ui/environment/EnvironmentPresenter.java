@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016, Stephan Heinemann (UVic Center for Aerospace Research)
+ * Copyright (c) 2021, Stephan Heinemann (UVic Center for Aerospace Research)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -33,8 +33,13 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.cfar.swim.worldwind.planning.Environment;
+import com.cfar.swim.worldwind.environments.Environment;
+import com.cfar.swim.worldwind.environments.HierarchicalEnvironment;
+import com.cfar.swim.worldwind.environments.MultiResolutionEnvironment;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
@@ -60,12 +65,20 @@ public class EnvironmentPresenter implements Initializable {
 	@FXML
 	private TreeView<Environment> environment;
 	
+	/** indicates whether or not the environment tree is being updated */
+	private AtomicBoolean isUpdating = new AtomicBoolean(false);
+	
+	/** indicates whether or not the environment tree requires an update */
+	private AtomicBoolean requiresUpdate = new AtomicBoolean(false);
+	
 	/** the active planning scenario (model) of this environment presenter */
-	Scenario scenario = null;
+	private Scenario scenario = null;
 	
 	/** the environment change listener of this environment presenter */
 	private final EnvironmentChangeListener ecl = new EnvironmentChangeListener();
 	
+	/** the sequential executor of this environment presenter */
+	private final Executor executor = Executors.newSingleThreadExecutor();
 	
 	/**
 	 * Initializes this environment presenter.
@@ -102,13 +115,17 @@ public class EnvironmentPresenter implements Initializable {
 	 * the environment view according to the active scenario.
 	 */
 	public void initEnvironment() {
+		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+		Environment activeEnvironment = session.getActiveScenario().getEnvironment();
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				Environment activeEnvironment = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario().getEnvironment();
-				environment.setRoot(new TreeItem<Environment>(activeEnvironment));
-				environment.getRoot().setExpanded(false);
-				initEnvironment(environment.getRoot());
+				while (requiresUpdate.getAndSet(false)) {					
+					environment.setRoot(new TreeItem<Environment>(activeEnvironment));
+					environment.getRoot().setExpanded(false);
+					initEnvironment(environment.getRoot());
+				}
+				isUpdating.set(false);
 			}
 		});
 	}
@@ -119,19 +136,17 @@ public class EnvironmentPresenter implements Initializable {
 	 * 
 	 * @param parentItem the parent environment item to be populated
 	 */
-	public void initEnvironment(TreeItem<Environment> parentItem) {
-		Platform.runLater(new Runnable() {
-			@Override
-			public void run() {
-				if (parentItem.getValue().isRefined()) {
-					for (Environment child : parentItem.getValue().getRefinements()) {
-						TreeItem<Environment> childItem = new TreeItem<>(child);
-						parentItem.getChildren().add(childItem);
-						initEnvironment(childItem);
-					}
+	private void initEnvironment(TreeItem<Environment> parentItem) {
+		if (parentItem.getValue() instanceof HierarchicalEnvironment) {
+			HierarchicalEnvironment environment = (HierarchicalEnvironment) parentItem.getValue();
+			if (environment.hasChildren()) {
+				for (Environment child : environment.getChildren()) {
+					TreeItem<Environment> childItem = new TreeItem<>(child);
+					parentItem.getChildren().add(childItem);
+					initEnvironment(childItem);
 				}
 			}
-		});
+		}
 	}
 	
 	/**
@@ -139,12 +154,17 @@ public class EnvironmentPresenter implements Initializable {
 	 * resolution environment.
 	 */
 	public void refineEnvironment() {
-		Environment selectedEnv = this.environment.getSelectionModel().getSelectedItem().getValue();
-		if (!selectedEnv.isRefined()) {
-			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-			selectedEnv.refine(2);
-			session.getActiveScenario().notifyEnvironmentChange();
-		}
+		Environment selectedEnv = environment.getSelectionModel().getSelectedItem().getValue();
+		this.executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				if (selectedEnv instanceof MultiResolutionEnvironment) {
+					if (!((MultiResolutionEnvironment) selectedEnv).isRefined()) {
+						((MultiResolutionEnvironment) selectedEnv).refine(2);
+					}
+				}
+			}
+		});
 	}
 	
 	/**
@@ -152,12 +172,17 @@ public class EnvironmentPresenter implements Initializable {
 	 * resolution environment.
 	 */
 	public void coarsenEnvironment() {
-		Environment selectedEnv = this.environment.getSelectionModel().getSelectedItem().getValue();
-		if (selectedEnv.isRefined()) {
-			Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
-			selectedEnv.coarsen();
-			session.getActiveScenario().notifyEnvironmentChange();
-		}
+		Environment selectedEnv = environment.getSelectionModel().getSelectedItem().getValue();
+		this.executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				if (selectedEnv instanceof MultiResolutionEnvironment) {
+					if (((MultiResolutionEnvironment) selectedEnv).isRefined()) {
+						((MultiResolutionEnvironment) selectedEnv).coarsen(2);
+					}
+				}
+			}
+		});
 	}
 	
 	/**
@@ -173,19 +198,25 @@ public class EnvironmentPresenter implements Initializable {
 		 * 
 		 * @param environment the environment
 		 * 
-		 * @return the refinement degree string representation of the environment
+		 * @return the string representation of the environment
 		 * 
 		 * @see StringConverter#toString()
 		 */
 		@Override
 		public String toString(Environment environment) {
-			return Integer.toString(environment.getRefinements().size());
+			int size = 0;
+			
+			if (environment instanceof HierarchicalEnvironment) {
+				size = ((HierarchicalEnvironment) environment).getChildren().size();
+			}
+			
+			return Integer.toString(size);
 		}
 		
 		/**
 		 * Converts a string representation to an environment.
 		 * 
-		 * @param environment the string represenation of the environment
+		 * @param environment the string representation of the environment
 		 * 
 		 * @return null (read-only environment view)
 		 * 
@@ -215,7 +246,10 @@ public class EnvironmentPresenter implements Initializable {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			initScenario();
-			initEnvironment();
+			requiresUpdate.set(true);
+			if (!isUpdating.getAndSet(true)) {
+				initEnvironment();
+			}
 		}
 	}
 	
@@ -236,7 +270,13 @@ public class EnvironmentPresenter implements Initializable {
 		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			initEnvironment();
+			// restrict updates to avoid structural changes (edge creation) in
+			// a planning continuum to cause invoke-later overflow and rapid
+			// heap increase potentially leading to an out-of-memory error
+			requiresUpdate.set(true);
+			if (!isUpdating.getAndSet(true)) {
+				initEnvironment();
+			}
 		}
 	}
 

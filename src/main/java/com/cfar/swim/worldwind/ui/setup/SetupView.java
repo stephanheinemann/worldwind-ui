@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016, Stephan Heinemann (UVic Center for Aerospace Research)
+ * Copyright (c) 2021, Stephan Heinemann (UVic Center for Aerospace Research)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -102,6 +102,16 @@ public class SetupView extends FXMLView {
 	@SuppressWarnings("unchecked")
 	public ComboBox<String> getSwimConnection() {
 		return (ComboBox<String>) this.getView().lookup("#swimConnection");
+	}
+	
+	/**
+	 * Gets the manager selector of this setup view.
+	 * 
+	 * @return the manager selector of this setup view
+	 */
+	@SuppressWarnings("unchecked")
+	public ComboBox<String> getManager() {
+		return (ComboBox<String>) this.getView().lookup("#manager");
 	}
 	
 }

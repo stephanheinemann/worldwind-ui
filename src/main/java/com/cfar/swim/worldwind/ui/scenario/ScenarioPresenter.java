@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016, Stephan Heinemann (UVic Center for Aerospace Research)
+ * Copyright (c) 2021, Stephan Heinemann (UVic Center for Aerospace Research)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -31,13 +31,22 @@ package com.cfar.swim.worldwind.ui.scenario;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import javax.inject.Inject;
+
+import com.cfar.swim.worldwind.jaxb.ScenarioMarshaller;
+import com.cfar.swim.worldwind.jaxb.ScenarioUnmarshaller;
 import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.ui.WorldwindPlanner;
+import com.cfar.swim.worldwind.ui.util.ResourceBundleLoader;
+import com.cfar.swim.worldwind.ui.world.WorldModel;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -46,6 +55,8 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.util.StringConverter;
 
 /**
@@ -56,9 +67,35 @@ import javafx.util.StringConverter;
  */
 public class ScenarioPresenter implements Initializable {
 	
+	/** the file chooser load scenario file title */
+	public static final String FILE_CHOOSER_TITLE_SCENARIO_LOAD =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("scenario.dialog.file.load.title");
+	
+	/** the file chooser save scenario file title */
+	public static final String FILE_CHOOSER_TITLE_SCENARIO_SAVE =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("scenario.dialog.file.save.title");
+	
+	/** the file chooser scenario file description */
+	public static final String FILE_CHOOSER_DESCRIPTION_SCENARIO =
+			ResourceBundleLoader.getDictionaryBundle()
+			.getString("scenario.dialog.file.description");
+	
+	/** the file chooser scenario file extension */
+	@Inject
+	public static String scenarioFileExtension;
+	
 	/** the list of scenarios of the scenario view */
 	@FXML
 	private ListView<Scenario> scenarios;
+	
+	/** the world model of this scenario presenter */
+	@Inject
+	private WorldModel worldModel;
+	
+	/** the executor of this scenario presenter */
+	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 	
 	/**
 	 * Initializes this scenario presenter.
@@ -84,7 +121,13 @@ public class ScenarioPresenter implements Initializable {
 		if (!this.scenarios.isEditable()) {
 			Scenario scenario = this.scenarios.getSelectionModel().getSelectedItem();
 			if (null != scenario) {
-				SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).setActiveScenario(scenario);
+				this.executor.execute(new Runnable() {
+					@Override
+					public void run() {
+						SessionManager.getInstance().getSession(
+								WorldwindPlanner.APPLICATION_TITLE).setActiveScenario(scenario);
+					}
+				});
 			}
 		}
 	}
@@ -94,7 +137,7 @@ public class ScenarioPresenter implements Initializable {
 	 */
 	public void addScenario() {
 		if (!this.scenarios.isEditable()) {
-			Scenario scenario = new Scenario("New Scenario");
+			Scenario scenario = new Scenario(Scenario.NEW_SCENARIO_ID);
 			this.scenarios.getItems().add(scenario);
 			this.scenarios.layout(); // without layout, edit will not work
 			this.scenarios.setEditable(true);
@@ -110,7 +153,13 @@ public class ScenarioPresenter implements Initializable {
 		if (!this.scenarios.isEditable()) {
 			Scenario scenario = this.scenarios.getSelectionModel().getSelectedItem();
 			if (null != scenario) {
-				SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).removeScenario(scenario);
+				this.executor.execute(new Runnable() {
+					@Override
+					public void run() {
+						SessionManager.getInstance().getSession(
+								WorldwindPlanner.APPLICATION_TITLE).removeScenario(scenario);
+					}
+				});
 			}
 		}
 	}
@@ -120,7 +169,83 @@ public class ScenarioPresenter implements Initializable {
 	 */
 	public void clearScenarios() {
 		if (!this.scenarios.isEditable()) {
-			SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).clearScenarios();
+			this.executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					SessionManager.getInstance().getSession(
+							WorldwindPlanner.APPLICATION_TITLE).clearScenarios();
+				}
+			});
+		}
+	}
+	
+	/**
+	 * Loads a scenario.
+	 */
+	public void loadScenario() {
+		if (!this.scenarios.isEditable()) {
+			FileChooser fileChooser = new FileChooser();
+			fileChooser.setTitle(ScenarioPresenter.FILE_CHOOSER_TITLE_SCENARIO_LOAD);
+			fileChooser.getExtensionFilters().addAll(
+					new ExtensionFilter[] { new ExtensionFilter(
+							ScenarioPresenter.FILE_CHOOSER_DESCRIPTION_SCENARIO,
+							ScenarioPresenter.scenarioFileExtension)});
+			File file = fileChooser.showOpenDialog(null);
+			
+			if (null != file) {
+				executor.execute(new Runnable() {
+					@Override
+					public void run() {
+						if (worldModel.load()) {
+							try {
+								ScenarioUnmarshaller marshaller = new ScenarioUnmarshaller();
+								Scenario scenario = marshaller.unmarshalScenario(file);
+								if ((null != scenario)) {
+									SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).addScenario(scenario);
+								}
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+							worldModel.loaded();
+						}
+					}
+				});
+			}
+		}
+	}
+	
+	/**
+	 * Saves a scenario.
+	 */
+	public void saveScenario() {
+		if (!this.scenarios.isEditable()) {
+			Scenario scenario = this.scenarios.getSelectionModel().getSelectedItem();
+			if (null != scenario) {
+				FileChooser fileChooser = new FileChooser();
+				fileChooser.setTitle(ScenarioPresenter.FILE_CHOOSER_TITLE_SCENARIO_SAVE);
+				fileChooser.getExtensionFilters().addAll(
+						new ExtensionFilter[] { new ExtensionFilter(
+								ScenarioPresenter.FILE_CHOOSER_DESCRIPTION_SCENARIO,
+								ScenarioPresenter.scenarioFileExtension)});
+				File file = fileChooser.showSaveDialog(null);
+				
+				if (null != file) {
+					executor.execute(new Runnable() {
+						@Override
+						public void run() {
+							if (worldModel.save()) {
+								try {
+									ScenarioMarshaller marshaller = new ScenarioMarshaller();
+									marshaller.marshalScenario(scenario, file);
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+								worldModel.saved();
+							}
+						}
+					});
+				}
+			}
 		}
 	}
 	
@@ -220,7 +345,13 @@ public class ScenarioPresenter implements Initializable {
 			if (!scenarios.getItems().contains(scenario) && !scenario.getId().trim().isEmpty()) {
 				super.commitEdit(scenario);
 				scenarios.setEditable(false);
-				SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).addScenario(scenario);
+				executor.execute(new Runnable() {
+					@Override
+					public void run() {
+						SessionManager.getInstance().getSession(
+								WorldwindPlanner.APPLICATION_TITLE).addScenario(scenario);
+					}
+				});
 			}
 		}
 		
