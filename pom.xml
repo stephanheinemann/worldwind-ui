@@ -298,12 +298,12 @@
 		<dependency>
 			<groupId>com.uvic-cfar.swim</groupId>
 			<artifactId>worldwind</artifactId>
-			<version>1.0.0-alpha4-SNAPSHOT</version><!-- 1.0.0-alpha4 -->
+			<version>2.0.0-alpha1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.uvic-cfar.swim</groupId>
 			<artifactId>worldwind-jaxb</artifactId>
-			<version>1.0.0-alpha1-SNAPSHOT</version><!-- 1.0.0-alpha1 -->
+			<version>2.0.0-alpha1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.controlsfx</groupId>
