@@ -29,15 +29,19 @@
  */
 package com.cfar.swim.worldwind.ui.threshold;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.cfar.swim.worldwind.session.Scenario;
 import com.cfar.swim.worldwind.session.Session;
 import com.cfar.swim.worldwind.session.SessionManager;
 import com.cfar.swim.worldwind.ui.WorldwindPlanner;
 
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -52,9 +56,15 @@ import javafx.scene.input.InputEvent;
  */
 public class ThresholdPresenter implements Initializable {
 	
-	/** the threshold cost slider of the threshold view */
+	/** the cost threshold slider of the threshold view */
 	@FXML
 	private Slider thresholdSlider;
+	
+	/** the cost threshold change listener of this threshold presenter */
+	private final ThresholdChangeListener tcl = new ThresholdChangeListener();
+	
+	/** the active scenario of this threshold presenter */
+	private Scenario scenario = null;
 	
 	/** the executor of this threshold presenter */
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -69,23 +79,54 @@ public class ThresholdPresenter implements Initializable {
 	 */
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		thresholdSlider.setOnMouseReleased(new ThresholdCostInputHandler());
-		thresholdSlider.setOnKeyPressed(new ThresholdCostInputHandler());
+		thresholdSlider.setOnMouseReleased(new ThresholdInputHandler());
+		thresholdSlider.setOnKeyPressed(new ThresholdInputHandler());
+		
+		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
+		session.addActiveScenarioChangeListener(new ActiveScenarioChangeListener());
+		
+		this.initScenario();
+		this.initThreshold();
 	}
 	
 	/**
-	 * Realizes a threshold cost input handler.
+	 * Initializes the scenario of this threshold presenter.
+	 */
+	public void initScenario() {
+		if (null != this.scenario) {
+			this.scenario.removePropertyChangeListener(this.tcl);
+		}
+		this.scenario = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario();
+		this.scenario.addThresholdChangeListener(this.tcl);
+	}
+	
+	/**
+	 * Initializes the cost threshold of this threshold presenter.
+	 */
+	public void initThreshold() {
+		double threshold = scenario.getThreshold();
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				thresholdSlider.setValue(threshold);
+				thresholdSlider.layout();
+			}
+		});
+	}
+	
+	/**
+	 * Realizes a cost threshold input handler.
 	 * 
 	 * @author Stephan Heinemann
 	 *
 	 */
-	private class ThresholdCostInputHandler implements EventHandler<InputEvent> {
+	private class ThresholdInputHandler implements EventHandler<InputEvent> {
 		
 		/**
-		 * Handles a threshold cost input updating the threshold cost
-		 * of the active scenario.
+		 * Handles a cost threshold input updating the cost threshold of the
+		 * active scenario.
 		 * 
-		 * @param event the input event associated with the threshold cost input
+		 * @param event the input event associated with the cost threshold input
 		 * 
 		 * @see EventHandler#handle(javafx.event.Event)
 		 */
@@ -98,6 +139,49 @@ public class ThresholdPresenter implements Initializable {
 					session.getActiveScenario().setThreshold(thresholdSlider.getValue());
 				}
 			});
+		}
+	}
+	
+	/**
+	 * Realizes a cost threshold change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
+	private class ThresholdChangeListener implements PropertyChangeListener {
+		
+		/**
+		 * Initializes the cost threshold if the cost threshold changes.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+		 */
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			initThreshold();
+		}
+	}
+	
+	/**
+	 * Realizes an active scenario change listener.
+	 * 
+	 * @author Stephan Heinemann
+	 *
+	 */
+	private class ActiveScenarioChangeListener implements PropertyChangeListener {
+		
+		/**
+		 * Initializes the scenario and cost threshold if the active scenario changes.
+		 * 
+		 * @param evt the property change event
+		 * 
+		 * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+		 */
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			initScenario();
+			initThreshold();
 		}
 	}
 	

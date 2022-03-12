@@ -298,7 +298,7 @@
 		<dependency>
 			<groupId>com.uvic-cfar.swim</groupId>
 			<artifactId>worldwind</artifactId>
-			<version>2.0.0-alpha1</version>
+			<version>2.0.0-alpha2-SNAPSHOT</version><!--version>2.0.0-alpha2</version-->
 		</dependency>
 		<dependency>
 			<groupId>com.uvic-cfar.swim</groupId>

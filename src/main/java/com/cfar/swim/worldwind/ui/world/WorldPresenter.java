@@ -45,6 +45,7 @@ import java.net.URL;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -267,9 +268,8 @@ public class WorldPresenter implements Initializable {
 	/** the status annotation of this world presenter */
 	private ScreenAnnotation statusAnnotation;
 	
-	/** the world model of this world presenter */
-	@Inject
-	private WorldModel worldModel;
+	/** the world models of this world presenter */
+	private HashMap<Scenario, WorldModel> worldModels = new HashMap<>();
 	
 	/** the setup model of this world presenter */
 	@Inject
@@ -350,7 +350,7 @@ public class WorldPresenter implements Initializable {
 		} catch (InvocationTargetException | InterruptedException e) {
 			e.printStackTrace();
 		}
-		this.worldModel.addWorldModeChangeListener(new ModeChangeListener());
+		
 		Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 		session.addActiveScenarioChangeListener(new ActiveScenarioChangeListener());
 		
@@ -373,8 +373,8 @@ public class WorldPresenter implements Initializable {
 	 * Initializes the scenario of this world presenter.
 	 */
 	public void initScenario() {
-		// remove change listeners from the previous scenario if any
 		if (null != this.scenario) {
+			// remove change listeners from the previous scenario
 			this.scenario.removePropertyChangeListener(this.timeCl);
 			this.scenario.removePropertyChangeListener(this.thresholdCl);
 			this.scenario.removePropertyChangeListener(this.aircraftCl);
@@ -383,7 +383,10 @@ public class WorldPresenter implements Initializable {
 			this.scenario.removePropertyChangeListener(this.trajectoryCl);
 			this.scenario.removePropertyChangeListener(this.obstaclesCl);
 		}
+		
 		this.scenario = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE).getActiveScenario();
+		
+		// add change listeners to active scenario
 		this.scenario.addTimeChangeListener(this.timeCl);
 		this.scenario.addThresholdChangeListener(this.thresholdCl);
 		this.scenario.addAircraftChangeListener(this.aircraftCl);
@@ -391,6 +394,16 @@ public class WorldPresenter implements Initializable {
 		this.scenario.addWaypointsChangeListener(this.waypointsCl);
 		this.scenario.addTrajectoryChangeListener(this.trajectoryCl);
 		this.scenario.addObstaclesChangeListener(this.obstaclesCl);
+		
+		if (!this.worldModels.containsKey(this.scenario)) {
+			WorldModel worldModel = new WorldModel();
+			worldModel.addWorldModeChangeListener(new ModeChangeListener());
+			this.worldModels.put(this.scenario, worldModel);
+		}
+		this.getWorldModel().notifyWorldModeChangeListeners();
+		
+		frameControl(swimControl, scenario.getSwimConnection().isConnected());
+		frameControl(datalinkControl, scenario.getDatalink().isConnected());
 		
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
@@ -556,12 +569,21 @@ public class WorldPresenter implements Initializable {
 	}
 	
 	/**
+	 * Gets the world model of this world presenter.
+	 * 
+	 * @return the world model of this world presenter
+	 */
+	private WorldModel getWorldModel() {
+		return this.worldModels.get(this.scenario);
+	}
+	
+	/**
 	 * Gets the view mode of this world presenter.
 	 * 
 	 * @return the view mode of this world presenter
 	 */
 	private ViewMode getViewMode() {
-		return this.worldModel.getViewMode();
+		return this.getWorldModel().getViewMode();
 	}
 	
 	/**
@@ -570,7 +592,7 @@ public class WorldPresenter implements Initializable {
 	 * @param viewMode the view mode to be set
 	 */
 	private void setViewMode(ViewMode viewMode) {
-		this.worldModel.setViewMode(viewMode);
+		this.getWorldModel().setViewMode(viewMode);
 	}
 	
 	/**
@@ -705,7 +727,7 @@ public class WorldPresenter implements Initializable {
 		this.executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				if (worldModel.environment()) {
+				if (getWorldModel().environment()) {
 					sectorSelector.enable();
 				}
 			}
@@ -719,7 +741,7 @@ public class WorldPresenter implements Initializable {
 		this.executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				if (worldModel.isEnvironment()) {
+				if (getWorldModel().isEnvironment()) {
 					Sector envSector = sectorSelector.getSector();
 					if (null != envSector) {
 						Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
@@ -730,7 +752,7 @@ public class WorldPresenter implements Initializable {
 						session.getActiveScenario().setEnvironment(env);
 						initEnvironment();
 					}
-					worldModel.view();
+					getWorldModel().view();
 				}
 				sectorSelector.disable();
 			}
@@ -744,7 +766,7 @@ public class WorldPresenter implements Initializable {
 		this.executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				worldModel.aircraft();
+				getWorldModel().aircraft();
 			}
 		});
 	}
@@ -765,7 +787,7 @@ public class WorldPresenter implements Initializable {
 		this.executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				worldModel.waypoint();
+				getWorldModel().waypoint();
 			}
 		});
 	}
@@ -786,7 +808,7 @@ public class WorldPresenter implements Initializable {
 		this.executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				if (worldModel.terminate()) {
+				if (getWorldModel().terminate()) {
 					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 					Planner planner = session.getActiveScenario().getPlanner();
 					
@@ -794,7 +816,7 @@ public class WorldPresenter implements Initializable {
 					if (planner instanceof LifelongPlanner) {
 						((LifelongPlanner) planner).terminate();
 					}
-				} else if (worldModel.plan()) {
+				} else if (getWorldModel().plan()) {
 					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 					Planner planner = session.getActiveScenario().getPlanner();
 					
@@ -853,7 +875,7 @@ public class WorldPresenter implements Initializable {
 							PlannerAlert.ALERT_CONTENT_PLANNER_INVALID,
 							null);
 					}
-					worldModel.view();
+					getWorldModel().view();
 				}
 			}
 		});
@@ -954,7 +976,7 @@ public class WorldPresenter implements Initializable {
 		this.executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				if (worldModel.upload()) {
+				if (getWorldModel().upload()) {
 					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 					Datalink datalink = session.getActiveScenario().getDatalink();
 					
@@ -969,7 +991,7 @@ public class WorldPresenter implements Initializable {
 							PlannerAlert.ALERT_CONTENT_DATALINK_INVALID,
 							null);
 					}
-					worldModel.view();
+					getWorldModel().view();
 				}
 			}
 		});
@@ -982,7 +1004,7 @@ public class WorldPresenter implements Initializable {
 		this.executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				if (worldModel.launch()) {
+				if (getWorldModel().launch()) {
 					PlannerAlertResult clearance = new PlannerAlertResult();
 					alert(
 						AlertType.CONFIRMATION,
@@ -1013,7 +1035,7 @@ public class WorldPresenter implements Initializable {
 								null);
 						}
 					}
-					worldModel.view();
+					getWorldModel().view();
 				}
 			}
 		});
@@ -1029,7 +1051,7 @@ public class WorldPresenter implements Initializable {
 		this.executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				if (worldModel.land()) {
+				if (getWorldModel().land()) {
 					PlannerAlertResult clearance = new PlannerAlertResult();
 					alert(
 						AlertType.CONFIRMATION,
@@ -1058,7 +1080,7 @@ public class WorldPresenter implements Initializable {
 								null);
 						}
 					}
-					worldModel.view();
+					getWorldModel().view();
 				}
 			}
 		});
@@ -1132,12 +1154,12 @@ public class WorldPresenter implements Initializable {
 		this.executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				if (worldModel.terminate()) {
+				if (getWorldModel().terminate()) {
 					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 					if (session.hasManager()) {
 						session.getManager().terminate();
 					}
-				} else if (worldModel.manage()) {
+				} else if (getWorldModel().manage()) {
 					Session session = SessionManager.getInstance().getSession(WorldwindPlanner.APPLICATION_TITLE);
 					AutonomicManager manager = session.getManager();
 					
@@ -1153,7 +1175,7 @@ public class WorldPresenter implements Initializable {
 					
 					setCommunications(manager);
 					manager.manage(session);
-					worldModel.view();
+					getWorldModel().view();
 				}
 			}
 		});
@@ -1507,9 +1529,9 @@ public class WorldPresenter implements Initializable {
 			executor.execute(new Runnable() {
 				@Override
 				public void run() {
-					if (worldModel.isAircraft()) {
+					if (getWorldModel().isAircraft()) {
 						aircraft(new AircraftMouseHandler());
-					} else if (worldModel.isWaypoint()) {
+					} else if (getWorldModel().isWaypoint()) {
 						waypoint(new WaypointMouseHandler());
 					}
 				}
@@ -1585,7 +1607,7 @@ public class WorldPresenter implements Initializable {
 				
 				aircraft.moveTo(waypoint);
 				scenario.setAircraft(aircraft);
-				worldModel.view();
+				getWorldModel().view();
 			}
 		}
 	}
@@ -2145,7 +2167,7 @@ public class WorldPresenter implements Initializable {
 		 */
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			WorldMode worldMode = worldModel.getWorldMode();
+			WorldMode worldMode = getWorldModel().getWorldMode();
 			
 			// display status according to world mode
 			displayStatus(worldMode.toString());

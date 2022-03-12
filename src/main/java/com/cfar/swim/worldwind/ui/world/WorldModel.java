@@ -45,7 +45,7 @@ public class WorldModel {
 	
 	/** the view mode of the world model */
 	private ViewMode viewMode;
-
+	
 	/** the property change support of this world model */
 	private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 	
@@ -106,12 +106,26 @@ public class WorldModel {
 	}
 	
 	/**
+	 * Notifies the world mode change listeners of this world model.
+	 */
+	public synchronized void notifyWorldModeChangeListeners() {
+		this.pcs.firePropertyChange("worldMode", null, this.worldMode);
+	}
+	
+	/**
 	 * Adds a view mode change listener to this world model.
 	 * 
 	 * @param listener the view mode change listener to be added
 	 */
 	public synchronized void addViewModeChangeListener(PropertyChangeListener listener) {
 		this.pcs.addPropertyChangeListener("viewMode", listener);
+	}
+	
+	/**
+	 * Notifies the view mode change listeners of this world model.
+	 */
+	public synchronized void notifyViewModeChangeListeners() {
+		this.pcs.firePropertyChange("viewMode", null, this.viewMode);
 	}
 	
 	/**
